@@ -8,7 +8,14 @@ data/*.db-wal
 data/*.log
 data/screenshots/
 data/browser-profile/
+data/browser-research-profile/
+data/backups/
+data/workspace-backups/
+data/workspace-edit-proposals/
+data/project_registry.json
 data/vtuber_models/
 data/game_playbooks/
+data/manga/
+scratch/
 *.log
 .DS_Store

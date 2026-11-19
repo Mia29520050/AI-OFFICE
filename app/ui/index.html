@@ -782,9 +782,36 @@ button.tab:not(.active):hover{background:#1a273b;color:var(--text)}
 /* Use the canonical Lucide Settings geometry without custom approximations. */
 .activity .act.bottom{width:42px;height:42px;min-width:42px;padding:0;display:grid;place-items:center}
 .activity .act.bottom svg{width:21px;height:21px;display:block;overflow:visible;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+
+/* Manga Studio Styles */
+.manga-header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:18px;flex-wrap:wrap}
+.manga-subnav{display:flex;gap:6px;border-bottom:1px solid #28415d;margin-bottom:18px;padding-bottom:1px;overflow-x:auto}
+.manga-nav-tab{padding:8px 16px;border:1px solid transparent;border-bottom:none;border-radius:8px 8px 0 0;background:#132135;color:#94acca;font-size:12px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:.15s}
+.manga-nav-tab:hover{background:#1c314e;color:#e6f3ff}
+.manga-nav-tab.active{background:#1f3756;color:#3ae2f2;border-color:#2e557d;border-bottom:2px solid #3ae2f2}
+.manga-pane{display:flex;flex-direction:column;gap:16px}
+.manga-toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+.manga-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+.manga-card{background:linear-gradient(145deg,#16263b,#111e30);border:1px solid #283e58;border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:10px;box-shadow:0 6px 18px #0002}
+.manga-card h3{margin:0;font-size:16px;color:#f0f6ff}
+.manga-badge{display:inline-block;padding:2px 8px;border-radius:99px;font-size:10px;font-weight:700;border:1px solid #326084;background:#13324b;color:#67d3f2}
+.manga-badge.bw{border-color:#555;background:#222;color:#eee}
+.manga-badge.color{border-color:#a8437d;background:#441631;color:#f48cd1}
+.manga-stats{display:flex;gap:10px;font-size:11px;color:#8da5c1}
+.manga-preview-box{display:grid;grid-template-columns:1fr 340px;gap:16px;align-items:start}
+@media(max-width:960px){.manga-preview-box{grid-template-columns:1fr}}
+.manga-page-render{background:#0b121c;border:2px solid #273b52;border-radius:8px;padding:12px;display:flex;justify-content:center;align-items:center;min-height:480px}
+.manga-page-render img{max-width:100%;max-height:75vh;border-radius:4px;box-shadow:0 8px 32px #0006}
+.manga-dialogue-item{padding:8px 10px;border-radius:7px;background:#182b42;border:1px solid #2b4566;margin-bottom:6px;font-size:11px}
+.manga-bubble-tag{font-size:9px;font-weight:800;padding:1px 5px;border-radius:4px;background:#284d72;color:#9de7ff;margin-right:4px}
+.manga-job-row{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border:1px solid #243b55;background:#142337;border-radius:8px;font-size:12px}
+.manga-status-badge{font-size:10px;font-weight:700;padding:2px 7px;border-radius:99px}
+.manga-status-badge.completed{background:#113a28;color:#5de49c;border:1px solid #256b46}
+.manga-status-badge.running{background:#15374e;color:#47cbff;border:1px solid #285d85}
+.manga-status-badge.failed{background:#45161c;color:#ff7d8d;border:1px solid #7c2632}
 </style></head>
 <body><div class="app">
-<header class="menu"><img class="logo-small" src="/assets/ai-office-icon.png" alt="AI Office"><span class="brand">AI Office</span><div class="menu-entry"><button class="menu-trigger" type="button" data-menu-toggle="workspace" aria-expanded="false" aria-controls="menu-workspace">Không gian làm việc</button><div class="menu-popover" id="menu-workspace" role="menu" hidden><button class="menu-item" role="menuitem" data-view="workspace"><span class="menu-symbol">▱</span>Mở Workspace</button><button class="menu-item" role="menuitem" data-view="tasks"><span class="menu-symbol">☑</span>Nhiệm vụ</button><button class="menu-item" role="menuitem" data-view="agents"><span class="menu-symbol">♙</span>Tác nhân AI</button><button class="menu-item" role="menuitem" data-view="skills"><span class="menu-symbol">◇</span>Kỹ năng</button></div></div><div class="menu-entry"><button class="menu-trigger" type="button" data-menu-toggle="view" aria-expanded="false" aria-controls="menu-view">Hiển thị</button><div class="menu-popover" id="menu-view" role="menu" hidden><button class="menu-item" role="menuitem" data-view="home"><span class="menu-symbol">∞</span>Trang chủ</button><button class="menu-item" role="menuitem" data-view="models"><span class="menu-symbol">◉</span>Mô hình</button><button class="menu-item" role="menuitem" data-view="tools"><span class="menu-symbol">⌘</span>Công cụ & điều khiển máy</button><button class="menu-item" role="menuitem" data-view="game"><span class="menu-symbol">◈</span>Chơi Game & AI VTuber</button><div class="menu-separator"></div><button class="menu-item" role="menuitem" data-view="settings"><span class="menu-symbol">⚙</span>Cài đặt bố cục</button></div></div><div class="menu-entry"><button class="menu-trigger" type="button" data-menu-toggle="window" aria-expanded="false" aria-controls="menu-window">Cửa sổ</button><div class="menu-popover" id="menu-window" role="menu" hidden><button class="menu-item" role="menuitem" data-window-action="reload"><span class="menu-symbol">↻</span>Tải lại giao diện</button><button class="menu-item" role="menuitem" data-window-action="reset-layout"><span class="menu-symbol">▣</span>Đặt lại bố cục</button><div class="menu-separator"></div><div class="menu-hint">Thu nhỏ · Phóng to · Đóng: thanh tiêu đề Windows</div></div></div><button class="menu-trigger settings-menu-link" type="button" data-view="settings">Cài đặt</button></header>
+<header class="menu"><img class="logo-small" src="/assets/ai-office-icon.png" alt="AI Office"><span class="brand">AI Office</span><div class="menu-entry"><button class="menu-trigger" type="button" data-menu-toggle="workspace" aria-expanded="false" aria-controls="menu-workspace">Không gian làm việc</button><div class="menu-popover" id="menu-workspace" role="menu" hidden><button class="menu-item" role="menuitem" data-view="workspace"><span class="menu-symbol">▱</span>Mở Workspace</button><button class="menu-item" role="menuitem" data-view="tasks"><span class="menu-symbol">☑</span>Nhiệm vụ</button><button class="menu-item" role="menuitem" data-view="agents"><span class="menu-symbol">♙</span>Tác nhân AI</button><button class="menu-item" role="menuitem" data-view="skills"><span class="menu-symbol">◇</span>Kỹ năng</button></div></div><div class="menu-entry"><button class="menu-trigger" type="button" data-menu-toggle="view" aria-expanded="false" aria-controls="menu-view">Hiển thị</button><div class="menu-popover" id="menu-view" role="menu" hidden><button class="menu-item" role="menuitem" data-view="home"><span class="menu-symbol">∞</span>Trang chủ</button><button class="menu-item" role="menuitem" data-view="models"><span class="menu-symbol">◉</span>Mô hình</button><button class="menu-item" role="menuitem" data-view="tools"><span class="menu-symbol">⌘</span>Công cụ & điều khiển máy</button><button class="menu-item" role="menuitem" data-view="game"><span class="menu-symbol">◈</span>Chơi Game & AI VTuber</button><button class="menu-item" role="menuitem" data-view="manga"><span class="menu-symbol">📖</span>Manga Studio</button><div class="menu-separator"></div><button class="menu-item" role="menuitem" data-view="settings"><span class="menu-symbol">⚙</span>Cài đặt bố cục</button></div></div><div class="menu-entry"><button class="menu-trigger" type="button" data-menu-toggle="window" aria-expanded="false" aria-controls="menu-window">Cửa sổ</button><div class="menu-popover" id="menu-window" role="menu" hidden><button class="menu-item" role="menuitem" data-window-action="reload"><span class="menu-symbol">↻</span>Tải lại giao diện</button><button class="menu-item" role="menuitem" data-window-action="reset-layout"><span class="menu-symbol">▣</span>Đặt lại bố cục</button><div class="menu-separator"></div><div class="menu-hint">Thu nhỏ · Phóng to · Đóng: thanh tiêu đề Windows</div></div></div><button class="menu-trigger settings-menu-link" type="button" data-view="settings">Cài đặt</button></header>
 <div class="body">
 <nav class="activity" aria-label="Điều hướng chính">
 <button class="act" type="button" title="Explorer" aria-label="Explorer" data-layout-toggle="explorer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h7l2 2h9v11H3z"/><path d="M3 10h18"/></svg></button>
@@ -795,6 +822,7 @@ button.tab:not(.active):hover{background:#1a273b;color:var(--text)}
 <button class="act" type="button" title="Mô hình" aria-label="Mô hình" data-view="models"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2"/><rect x="9" y="9" width="6" height="6" rx="1"/><path d="M9 2v4m6-4v4M9 18v4m6-4v4M2 9h4m-4 6h4m12-6h4m-4 6h4"/></svg></button>
 <button class="act" type="button" title="Tools và Computer Use" aria-label="Tools và Computer Use" data-view="tools"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/><circle cx="8" cy="7" r="2"/><circle cx="15" cy="12" r="2"/><circle cx="10" cy="17" r="2"/></svg></button>
 <button class="act" type="button" title="Game & AI VTuber" aria-label="Game & AI VTuber" data-view="game"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="6" width="20" height="12" rx="4"/><path d="M6 12h4M8 10v4"/><circle cx="15.5" cy="11" r="1"/><circle cx="18" cy="13" r="1"/></svg></button>
+<button class="act" type="button" title="Manga Studio" aria-label="Manga Studio" data-view="manga"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 3v18M3 15h4M11 8h6M11 12h6M11 16h4"/></svg></button>
 <button class="act" type="button" title="Kỹ năng" aria-label="Kỹ năng" data-view="skills"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9L12 3z"/><path d="m19 16 .9 2.1L22 19l-2.1.9L19 22l-.9-2.1L16 19l2.1-.9L19 16z"/><path d="m5 2 .7 1.8L7.5 4.5l-1.8.7L5 7l-.7-1.8-1.8-.7 1.8-.7L5 2z"/></svg></button>
 <span class="rail-separator"></span>
 
@@ -828,7 +856,7 @@ button.tab:not(.active):hover{background:#1a273b;color:var(--text)}
 <div class="claude-toolbar-right"><button class="send" id="sendbtn" type="submit" title="Gửi tin nhắn" aria-label="Gửi tin nhắn"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5"/><path d="m6 11 6-6 6 6"/></svg></button></div>
 </div>
 <input id="chat-files" type="file" multiple accept="image/png,image/jpeg,image/webp,.md,.txt,.py,.js,.ts,.html,.css,.json,.yaml,.yml,.toml,.ini,.bat,.ps1,.sql,.xml,.csv,.log" hidden><input id="chat-folder" type="file" webkitdirectory directory multiple hidden>
-</div></form></section></div><section id="dynamic-page" class="dynamic-page" hidden></section></main>
+</div></form></section></div><section id="dynamic-page" class="dynamic-page" hidden></section><section id="page-manga" class="dynamic-page" hidden></section></main>
 <aside class="right"><div class="righthead"><img src="/assets/ai-office-icon.png"><div><strong>Tổng quan không gian làm việc</strong><small>AI OFFICE · CỤC BỘ</small></div><span class="righthead-live"><i class="pulse-dot"></i> SẴN SÀNG</span><button class="panel-collapse" type="button" title="Thu gọn Tổng quan không gian làm việc" aria-label="Thu gọn Tổng quan không gian làm việc" data-layout-toggle="sidebar">›</button></div>
 <section class="section"><div class="sect-title">▣ Nhiệm vụ <button class="add" id="newtask">+</button></div><div class="status"><span class="status-label"><i class="sdot blue"></i>Đang thực hiện</span><span class="count" id="running-count">0</span></div><div class="status"><span class="status-label"><i class="sdot wait"></i>Chờ xử lý</span><span class="count" id="waiting-count">0</span></div><div class="status"><span class="status-label"><i class="sdot"></i>Đã hoàn thành</span><span class="count" id="done-count">0</span></div><div class="status"><span class="status-label">◷ Tạm dừng</span><span class="count" id="paused-count">0</span></div></section>
 <section class="section"><div class="sect-title">▧ Trạng thái hệ thống</div><div class="cap"><i class="sdot" id="ollama-dot"></i><span id="ollama-status">Ollama · đang kiểm tra</span></div><div class="cap"><i class="sdot" id="vision-dot"></i>Vision · Qwen3.5-4B</div><div class="cap"><i class="sdot" id="computer-dot"></i>Điều khiển máy · Tự động hóa giao diện</div><div class="cap"><i class="sdot wait" id="browser-dot"></i>Trình duyệt · hồ sơ riêng</div><div class="cap"><i class="sdot wait" id="workspace-dot"></i>Chỉnh sửa Workspace · So sánh và khôi phục</div></section>
@@ -1167,7 +1195,7 @@ window.addEventListener('DOMContentLoaded', () => { setTimeout(() => $('chatinpu
  const empty=msg=>'<div class="empty-state">'+esc(msg)+'</div>';
  const setPage=(view,title)=>{
    const prev=activeView;
-   activeView=view; home.hidden=view!=='home'; page.hidden=view==='home';
+   activeView=view; home.hidden=view!=='home'; const dynPage=byId('dynamic-page'); const mangaPage=byId('page-manga'); if(view==='home'){if(dynPage)dynPage.hidden=true;if(mangaPage)mangaPage.hidden=true;}else if(view==='manga'){if(dynPage)dynPage.hidden=true;if(mangaPage)mangaPage.hidden=false;}else{if(dynPage)dynPage.hidden=false;if(mangaPage)mangaPage.hidden=true;}
    if(prev==='game'&&view!=='game'){stopGamePolling();if(window.AIOfficeLive2D)window.AIOfficeLive2D.dispose();}
    document.querySelectorAll('.act[data-view]').forEach(x=>x.classList.toggle('active',x.dataset.view===view));
    const tabChat=byId('tab-chat');
@@ -1182,7 +1210,7 @@ window.addEventListener('DOMContentLoaded', () => { setTimeout(() => $('chatinpu
        tabChat.classList.remove('active');
        tabWb.style.display='inline-flex';
        tabWb.classList.add('active');
-       const label=({workspace:'Workspace',tasks:'Nhiệm vụ',agents:'Tác nhân AI',skills:'Kỹ năng',models:'Mô hình',tools:'Công cụ',game:'Game & VTuber'}[view]||title||view);
+       const label=({workspace:'Workspace',tasks:'Nhiệm vụ',agents:'Tác nhân AI',skills:'Kỹ năng',models:'Mô hình',tools:'Công cụ',game:'Game & VTuber',manga:'Manga Studio'}[view]||title||view);
        if(tabWbLabel) tabWbLabel.textContent=label;
      }
    }
@@ -1889,7 +1917,766 @@ window.addEventListener('DOMContentLoaded', () => { setTimeout(() => $('chatinpu
     byId('settings-clear-history').addEventListener('click',async()=>{if(!confirm('Xóa toàn bộ lịch sử trò chuyện? Thao tác này không thể hoàn tác.'))return;const r=await fetch('/api/conversations',{method:'DELETE'});const d=await r.json();if(!r.ok){alert(d.detail||'Không xóa được lịch sử.');return;}await createNewConversation();renderSettings()});
   }
 async function renderModels(){setPage('models','Mô hình');page.innerHTML=header('Mô hình','Tình trạng model đang kết nối (Ollama local hoặc Cloud Vision tùy chọn).','<button type="button" class="secondary-btn" id="models-open-settings">⚙ Cấu hình Model / Cloud API</button>')+'<div id="model-grid" class="view-grid">'+empty('Đang kiểm tra...')+'</div>';byId('models-open-settings').addEventListener('click',()=>navigate('settings'));try{const [s,cfg]=await Promise.all([getJson('/api/status'),getJson('/api/settings/model')]);const mg=byId('model-grid');if(!mg)return;mg.innerHTML='<article class="view-card"><h3>Local · Ollama</h3><p>'+esc(s.model.model)+'</p><div class="meta">Ollama: '+(s.model.online?'Online':'Offline')+'</div><div class="meta">Model: '+(s.model.model_ready?'Ready':'Not loaded')+'</div><div class="meta">Ngữ cảnh: '+esc(cfg.local_num_ctx||2048)+' tokens</div></article><article class="view-card"><h3>Tuyến suy luận đang bật</h3><p>'+esc((s.model_route?.mode||'local').toUpperCase()+' · '+(s.model_route?.model||s.model.model))+'</p><div class="meta">Cloud Vision/LLM: '+(cfg.cloud_enabled?'Đã bật':'Đang tắt (100% local)')+'</div><div class="meta">API Key: '+(cfg.cloud_api_key_set?esc(cfg.cloud_api_key_preview):'Chưa cấu hình')+'</div></article>'; }catch(e){const mg=byId('model-grid');if(mg)mg.innerHTML=errorBox(e)}}
- async function navigate(view){stopGamePolling();if(view==='home')return showHome();if(view==='workspace')return renderWorkspace('');if(view==='tasks')return renderTasks();if(view==='agents')return renderAgents();if(view==='skills')return renderSkills();if(view==='tools')return renderTools();if(view==='game')return renderGameVTuber();if(view==='models')return renderModels();if(view==='settings')return renderSettings();}
+  let mangaActiveTab = 'hub';
+  let mangaActiveSeriesId = null;
+  let mangaActiveChapterId = null;
+  let mangaActivePageId = null;
+  let mangaSeriesCache = [];
+  let mangaLastContinuityReport = null;
+
+  async function renderManga() {
+    setPage('manga', 'Manga Studio');
+    const host = byId('page-manga');
+    if (!host) return;
+
+    host.innerHTML =
+      '<div class="manga-header">' +
+        '<div><div class="page-head" style="margin-bottom:4px"><div><h1>Manga Studio</h1><p>Quy trình Manga chuyên nghiệp: Story Studio (Ollama) → ComfyUI Adapter (ResourceScheduler) → Manga Composer (Bóng thoại Unicode & Xuất CBZ/PDF)</p></div></div></div>' +
+        '<div class="page-actions">' +
+          '<select id="manga-series-select" class="field" style="min-width:190px"><option value="">-- Chọn Series --</option></select>' +
+          '<button type="button" class="primary-btn" id="manga-btn-seed">★ Nạp Demo Lớp Học Ánh Trăng</button>' +
+          '<button type="button" class="secondary-btn" id="manga-btn-new-series">✦ Tạo Series Mới</button>' +
+        '</div>' +
+      '</div>' +
+      '<nav class="manga-subnav">' +
+        '<button type="button" class="manga-nav-tab ' + (mangaActiveTab === 'hub' ? 'active' : '') + '" data-manga-tab="hub">📚 Series Hub</button>' +
+        '<button type="button" class="manga-nav-tab ' + (mangaActiveTab === 'story' ? 'active' : '') + '" data-manga-tab="story">🖋 Story Studio</button>' +
+        '<button type="button" class="manga-nav-tab ' + (mangaActiveTab === 'storyboard' ? 'active' : '') + '" data-manga-tab="storyboard">🖼 Storyboard & Art</button>' +
+        '<button type="button" class="manga-nav-tab ' + (mangaActiveTab === 'composer' ? 'active' : '') + '" data-manga-tab="composer">💬 Manga Composer</button>' +
+        '<button type="button" class="manga-nav-tab ' + (mangaActiveTab === 'export' ? 'active' : '') + '" data-manga-tab="export">📦 Export Queue</button>' +
+      '</nav>' +
+      '<div id="manga-tab-view" class="manga-pane">' + empty('Đang nạp Manga Studio...') + '</div>';
+
+    host.querySelectorAll('[data-manga-tab]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        mangaActiveTab = btn.dataset.mangaTab;
+        renderManga();
+      });
+    });
+
+    byId('manga-btn-seed')?.addEventListener('click', async () => {
+      const btn = byId('manga-btn-seed');
+      btn.disabled = true;
+      btn.textContent = 'Đang nạp demo...';
+      try {
+        const r = await fetch('/api/manga/series/sample', { method: 'POST' });
+        const d = await r.json();
+        if (!r.ok) throw new Error(d.detail || 'Lỗi khi nạp demo.');
+        mangaActiveSeriesId = d.id;
+        if (d.chapters && d.chapters.length) mangaActiveChapterId = d.chapters[0].id;
+        mangaActiveTab = 'hub';
+        await renderManga();
+      } catch (err) {
+        alert('Không nạp được demo: ' + (err.message || err));
+        btn.disabled = false;
+        btn.textContent = '★ Nạp Demo Lớp Học Ánh Trăng';
+      }
+    });
+
+    byId('manga-btn-new-series')?.addEventListener('click', () => {
+      showMangaNewSeriesModal();
+    });
+
+    try {
+      mangaSeriesCache = await getJson('/api/manga/series');
+      const select = byId('manga-series-select');
+      if (select) {
+        select.innerHTML = '<option value="">-- Chọn Series --</option>' +
+          mangaSeriesCache.map(s => '<option value="' + esc(s.id) + '" ' + (s.id === mangaActiveSeriesId ? 'selected' : '') + '>' + esc(s.title) + ' (' + (s.art_style === 'bw' ? 'B&W' : 'Màu') + ')</option>').join('');
+        select.addEventListener('change', () => {
+          mangaActiveSeriesId = select.value || null;
+          mangaActiveChapterId = null;
+          mangaActivePageId = null;
+          renderActiveMangaTab();
+        });
+      }
+      if (!mangaActiveSeriesId && mangaSeriesCache.length > 0) {
+        mangaActiveSeriesId = mangaSeriesCache[0].id;
+        if (select) select.value = mangaActiveSeriesId;
+      }
+    } catch (e) {
+      console.error(e);
+    }
+
+    await renderActiveMangaTab();
+  }
+
+  async function renderActiveMangaTab() {
+    const pane = byId('manga-tab-view');
+    if (!pane) return;
+    if (mangaActiveTab === 'hub') return renderMangaHub(pane);
+    if (mangaActiveTab === 'story') return renderMangaStory(pane);
+    if (mangaActiveTab === 'storyboard') return renderMangaStoryboard(pane);
+    if (mangaActiveTab === 'composer') return renderMangaComposer(pane);
+    if (mangaActiveTab === 'export') return renderMangaExport(pane);
+  }
+
+  async function renderMangaHub(pane) {
+    if (!mangaSeriesCache.length) {
+      pane.innerHTML = '<div class="empty-state" style="padding:40px 20px">' +
+        '<h3>Chưa có bộ truyện Manga nào</h3>' +
+        '<p style="margin:8px 0 16px;color:var(--muted)">Hãy tạo dự án manga mới hoặc nạp bộ mẫu Moonlight Classroom (Lớp Học Ánh Trăng).</p>' +
+        '<div class="page-actions" style="justify-content:center">' +
+          '<button type="button" class="primary-btn" id="manga-hub-seed">★ Nạp Demo Lớp Học Ánh Trăng</button>' +
+          '<button type="button" class="secondary-btn" id="manga-hub-new">✦ Tạo Series Mới</button>' +
+        '</div>' +
+      '</div>';
+      byId('manga-hub-seed')?.addEventListener('click', () => byId('manga-btn-seed')?.click());
+      byId('manga-hub-new')?.addEventListener('click', () => showMangaNewSeriesModal());
+      return;
+    }
+
+    const cardsHtml = mangaSeriesCache.map(s => {
+      const isCurrent = s.id === mangaActiveSeriesId;
+      return '<div class="manga-card" style="' + (isCurrent ? 'border-color:#36cbe4;box-shadow:0 0 16px #36cbe422' : '') + '">' +
+        '<div style="display:flex;justify-content:space-between;align-items:flex-start">' +
+          '<div><h3>' + esc(s.title) + '</h3><small class="subtle">' + esc(s.genre || 'Manga') + ' · Hướng đọc ' + (s.reading_direction === 'rtl' ? 'Phải sang Trái' : 'Trái sang Phải') + '</small></div>' +
+          '<span class="manga-badge ' + esc(s.art_style) + '">' + (s.art_style === 'bw' ? 'Trắng đen (B&W)' : 'Manga Màu') + '</span>' +
+        '</div>' +
+        '<p style="margin:4px 0;font-size:12px;color:#a8bdd6;min-height:36px">' + esc(s.synopsis || 'Chưa có tóm tắt.') + '</p>' +
+        '<div class="manga-stats">' +
+          '<span>📚 ' + esc(s.volume_count || 0) + ' tập</span>' +
+          '<span>📖 ' + esc(s.chapter_count || 0) + ' chương</span>' +
+          '<span>👤 ' + esc(s.character_count || 0) + ' nhân vật</span>' +
+        '</div>' +
+        '<div class="page-actions" style="margin-top:8px">' +
+          '<button type="button" class="primary-btn" data-manga-select-series="' + esc(s.id) + '">' + (isCurrent ? 'Đang chọn ✓' : 'Chọn series này') + '</button>' +
+          '<button type="button" class="secondary-btn" data-manga-open-story="' + esc(s.id) + '">Mở Story Studio →</button>' +
+          '<button type="button" class="danger-btn" style="margin-left:auto;padding:6px 10px" data-manga-del-series="' + esc(s.id) + '">✕</button>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+
+    let detailHtml = '';
+    if (mangaActiveSeriesId) {
+      try {
+        const sDetail = await getJson('/api/manga/series/' + encodeURIComponent(mangaActiveSeriesId));
+        const chapRows = (sDetail.chapters || []).map(c =>
+          '<div class="task-row" style="display:flex;justify-content:space-between;align-items:center">' +
+            '<div><strong>Chương ' + esc(c.number) + ': ' + esc(c.title) + '</strong><small class="subtle">' + esc(c.synopsis || '') + ' · Trạng thái: ' + esc(c.status) + '</small></div>' +
+            '<div class="page-actions">' +
+              '<button type="button" class="secondary-btn" data-open-chap-story="' + esc(c.id) + '">Kịch bản</button>' +
+              '<button type="button" class="secondary-btn" data-open-chap-board="' + esc(c.id) + '">Storyboard</button>' +
+              '<button type="button" class="primary-btn" data-open-chap-comp="' + esc(c.id) + '">Composer</button>' +
+            '</div>' +
+          '</div>'
+        ).join('') || empty('Chưa có chương nào. Hãy tạo chương đầu tiên bên dưới.');
+
+        detailHtml = '<section class="view-card" style="margin-top:20px">' +
+          '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">' +
+            '<div><h3>Danh sách Chương — ' + esc(sDetail.title) + '</h3><small class="subtle">Quản lý các chương kịch bản và phân trang storyboard</small></div>' +
+            '<button type="button" class="secondary-btn" id="manga-btn-add-chap">＋ Thêm Chương Mới</button>' +
+          '</div>' +
+          '<div class="file-list">' + chapRows + '</div>' +
+          '<form id="manga-new-chap-form" class="view-card" style="margin-top:14px;display:none;background:#101a27">' +
+            '<h4>Thêm Chương Mới</h4>' +
+            '<div style="display:grid;grid-template-columns:120px 1fr;gap:10px;margin:8px 0">' +
+              '<input class="field" type="number" id="manga-new-chap-num" step="0.5" value="' + ((sDetail.chapters?.length || 0) + 1) + '" required placeholder="Số thứ tự">' +
+              '<input class="field" type="text" id="manga-new-chap-title" placeholder="Tên chương (ví dụ: Cuộc Gặp Dưới Ánh Trăng)" required>' +
+            '</div>' +
+            '<textarea class="field" id="manga-new-chap-synopsis" rows="2" placeholder="Tóm tắt nội dung chương..."></textarea>' +
+            '<div class="page-actions" style="margin-top:8px">' +
+              '<button type="submit" class="primary-btn">Lưu Chương</button>' +
+              '<button type="button" class="secondary-btn" id="manga-cancel-chap">Hủy</button>' +
+            '</div>' +
+          '</form>' +
+        '</section>';
+      } catch (err) {
+        detailHtml = errorBox(err);
+      }
+    }
+
+    pane.innerHTML = '<div class="manga-grid">' + cardsHtml + '</div>' + detailHtml;
+
+    pane.querySelectorAll('[data-manga-select-series]').forEach(b => {
+      b.addEventListener('click', () => {
+        mangaActiveSeriesId = b.dataset.mangaSelectSeries;
+        renderManga();
+      });
+    });
+
+    pane.querySelectorAll('[data-manga-open-story]').forEach(b => {
+      b.addEventListener('click', () => {
+        mangaActiveSeriesId = b.dataset.mangaOpenStory;
+        mangaActiveTab = 'story';
+        renderManga();
+      });
+    });
+
+    pane.querySelectorAll('[data-manga-del-series]').forEach(b => {
+      b.addEventListener('click', async () => {
+        if (!confirm('Xóa toàn bộ series này và dữ liệu liên quan?')) return;
+        try {
+          await fetch('/api/manga/series/' + encodeURIComponent(b.dataset.mangaDelSeries), { method: 'DELETE' });
+          if (mangaActiveSeriesId === b.dataset.mangaDelSeries) mangaActiveSeriesId = null;
+          renderManga();
+        } catch (e) { alert(e.message); }
+      });
+    });
+
+    pane.querySelectorAll('[data-open-chap-story]').forEach(b => {
+      b.addEventListener('click', () => {
+        mangaActiveChapterId = b.dataset.openChapStory;
+        mangaActiveTab = 'story';
+        renderManga();
+      });
+    });
+
+    pane.querySelectorAll('[data-open-chap-board]').forEach(b => {
+      b.addEventListener('click', () => {
+        mangaActiveChapterId = b.dataset.openChapBoard;
+        mangaActiveTab = 'storyboard';
+        renderManga();
+      });
+    });
+
+    pane.querySelectorAll('[data-open-chap-comp]').forEach(b => {
+      b.addEventListener('click', () => {
+        mangaActiveChapterId = b.dataset.openChapComp;
+        mangaActiveTab = 'composer';
+        renderManga();
+      });
+    });
+
+    const addChapBtn = byId('manga-btn-add-chap');
+    const chapForm = byId('manga-new-chap-form');
+    addChapBtn?.addEventListener('click', () => {
+      if (chapForm) chapForm.style.display = 'block';
+    });
+    byId('manga-cancel-chap')?.addEventListener('click', () => {
+      if (chapForm) chapForm.style.display = 'none';
+    });
+    chapForm?.addEventListener('submit', async e => {
+      e.preventDefault();
+      const num = parseFloat(byId('manga-new-chap-num').value);
+      const title = byId('manga-new-chap-title').value.trim();
+      const synopsis = byId('manga-new-chap-synopsis').value.trim();
+      if (!title) return;
+      try {
+        const r = await fetch('/api/manga/series/' + encodeURIComponent(mangaActiveSeriesId) + '/chapters', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ number: num, title: title, synopsis: synopsis })
+        });
+        const d = await r.json();
+        if (!r.ok) throw new Error(d.detail || 'Lỗi khi tạo chương.');
+        mangaActiveChapterId = d.id;
+        renderManga();
+      } catch (err) { alert(err.message); }
+    });
+  }
+
+  function showMangaNewSeriesModal() {
+    const title = prompt('Nhập tên bộ truyện Manga mới (Ví dụ: Thám Tử Học Đường):');
+    if (!title || !title.trim()) return;
+    const synopsis = prompt('Tóm tắt cốt truyện:') || '';
+    const artStyle = confirm('Chọn phong cách Trắng Đen (B&W)?\nBấm OK để chọn B&W, bấm Cancel để chọn Manga Màu.') ? 'bw' : 'color';
+
+    fetch('/api/manga/series', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title: title.trim(), synopsis: synopsis.trim(), art_style: artStyle, reading_direction: 'rtl' })
+    }).then(r => r.json()).then(d => {
+      mangaActiveSeriesId = d.id;
+      mangaActiveTab = 'hub';
+      renderManga();
+    }).catch(e => alert(e.message));
+  }
+
+  async function renderMangaStory(pane) {
+    if (!mangaActiveSeriesId) {
+      pane.innerHTML = empty('Hãy chọn hoặc tạo một bộ Manga trong Series Hub trước khi vào Story Studio.');
+      return;
+    }
+
+    let sDetail = null;
+    try {
+      sDetail = await getJson('/api/manga/series/' + encodeURIComponent(mangaActiveSeriesId));
+    } catch (e) {
+      pane.innerHTML = errorBox(e);
+      return;
+    }
+
+    const chapters = sDetail.chapters || [];
+    if (!mangaActiveChapterId && chapters.length > 0) {
+      mangaActiveChapterId = chapters[0].id;
+    }
+
+    const chapOptions = chapters.map(c =>
+      '<option value="' + esc(c.id) + '" ' + (c.id === mangaActiveChapterId ? 'selected' : '') + '>Chương ' + esc(c.number) + ': ' + esc(c.title) + '</option>'
+    ).join('');
+
+    const charactersHtml = (sDetail.characters || []).map(ch =>
+      '<div class="manga-card" style="padding:12px">' +
+        '<strong>' + esc(ch.name) + '</strong>' +
+        '<small class="subtle">' + esc(ch.identity?.role || 'Nhân vật') + ' · ' + esc(ch.identity?.japanese_name || '') + '</small>' +
+        '<p style="font-size:11px;margin:4px 0;color:#9bb2ce">' + esc(ch.personality?.description || ch.identity?.one_line || 'Chưa có mô tả.') + '</p>' +
+        '<div style="font-size:10px;color:#7aa2c7">Khẩu khí: <i>' + esc(ch.speech_rules?.tone || 'Tự nhiên') + '</i> · Cửa miệng: "' + esc((ch.speech_rules?.catchphrases || []).join('", "') || '...') + '"</div>' +
+      '</div>'
+    ).join('') || empty('Chưa có nhân vật. Nhấn "Thêm nhân vật" để định hình tính cách và giọng điệu.');
+
+    let scenesHtml = empty('Chưa có phân cảnh nào cho chương này. Hãy bấm "AI Sinh kịch bản chương" để tạo tự động bằng Qwen3.5-4B.');
+    let scenesList = [];
+    if (mangaActiveChapterId) {
+      try {
+        scenesList = await getJson('/api/manga/chapters/' + encodeURIComponent(mangaActiveChapterId) + '/scenes');
+        if (scenesList.length > 0) {
+          scenesHtml = scenesList.map(sc =>
+            '<div class="task-row">' +
+              '<div style="display:flex;justify-content:space-between;margin-bottom:4px">' +
+                '<strong>Cảnh ' + esc(sc.position) + ' · ' + esc(sc.location || 'Địa điểm') + '</strong>' +
+                '<span class="chip">' + esc((sc.characters || []).join(', ') || 'Nhân vật') + '</span>' +
+              '</div>' +
+              '<p style="margin:2px 0 6px;font-size:12px;color:#d7e5f5">' + esc(sc.summary) + '</p>' +
+              '<small class="subtle">Thoại dự kiến: ' + esc(sc.content?.dialogue_preview || '...') + '</small>' +
+            '</div>'
+          ).join('');
+        }
+      } catch (e) {
+        scenesHtml = errorBox(e);
+      }
+    }
+
+    let reportHtml = '';
+    if (mangaLastContinuityReport) {
+      const score = mangaLastContinuityReport.score || 100;
+      const issues = mangaLastContinuityReport.issues || [];
+      reportHtml = '<div class="view-card" style="margin-top:14px;border-color:' + (score >= 90 ? '#267352' : '#7b441f') + '">' +
+        '<div style="display:flex;justify-content:space-between;align-items:center">' +
+          '<h4>✓ Báo Cáo Kiểm Định Nhất Quán (Continuity Report)</h4>' +
+          '<span class="manga-status-badge ' + (score >= 90 ? 'completed' : 'running') + '">Điểm: ' + score + '/100</span>' +
+        '</div>' +
+        '<p style="font-size:12px;margin:6px 0">' + esc(mangaLastContinuityReport.summary || '') + '</p>' +
+        (issues.length ? issues.map(iss => '<div class="log-item" style="border-color:#e48734"><strong>Cảnh ' + esc(iss.scene_position || '?') + ':</strong> ' + esc(iss.message) + '<br><small class="subtle">Đề xuất: ' + esc(iss.suggestion || '') + '</small></div>').join('') : '<div style="color:#5ce09b;font-size:12px">✓ Không phát hiện mâu thuẫn nhân vật hay sự kiện canon.</div>') +
+      '</div>';
+    }
+
+    pane.innerHTML =
+      '<div class="view-card">' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">' +
+          '<div><h3>Hồ Sơ Nhân Vật & Lời Thoại (Character Studio)</h3><small class="subtle">Khóa nét nhân vật (Locked traits) và quy chuẩn cách xưng hô tiếng Việt</small></div>' +
+          '<button type="button" class="secondary-btn" id="manga-add-char-btn">＋ Thêm Nhân Vật Mới</button>' +
+        '</div>' +
+        '<div class="manga-grid" style="margin-top:12px">' + charactersHtml + '</div>' +
+      '</div>' +
+      '<div class="view-card" style="margin-top:16px">' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:12px">' +
+          '<div style="display:flex;align-items:center;gap:10px">' +
+            '<h3>Phân Cảnh Kịch Bản (Chapter Scenes)</h3>' +
+            '<select id="manga-story-chap-select" class="field" style="min-width:200px">' + (chapOptions || '<option>Chưa có chương</option>') + '</select>' +
+          '</div>' +
+          '<div class="page-actions">' +
+            '<button type="button" class="primary-btn" id="manga-btn-gen-scenes">✦ AI Sinh kịch bản (Qwen3.5-4B)</button>' +
+            '<button type="button" class="secondary-btn" id="manga-btn-check-cont">✓ Kiểm định nhất quán</button>' +
+            '<button type="button" class="secondary-btn" id="manga-btn-to-board">⚡ Tự động tạo Storyboard</button>' +
+          '</div>' +
+        '</div>' +
+        '<div class="file-list">' + scenesHtml + '</div>' +
+        reportHtml +
+      '</div>';
+
+    byId('manga-story-chap-select')?.addEventListener('change', e => {
+      mangaActiveChapterId = e.target.value;
+      renderMangaStory(pane);
+    });
+
+    byId('manga-btn-gen-scenes')?.addEventListener('click', async () => {
+      if (!mangaActiveChapterId) return alert('Hãy chọn hoặc tạo một chương trước.');
+      const btn = byId('manga-btn-gen-scenes');
+      btn.disabled = true;
+      btn.textContent = 'Đang sinh kịch bản (Qwen3.5)...';
+      try {
+        const r = await fetch('/api/manga/story/generate-scenes', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ chapter_id: mangaActiveChapterId, scene_count: 4 })
+        });
+        const d = await r.json();
+        if (!r.ok) throw new Error(d.detail || 'Lỗi khi sinh kịch bản.');
+        await renderMangaStory(pane);
+      } catch (err) {
+        alert(err.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '✦ AI Sinh kịch bản (Qwen3.5-4B)';
+      }
+    });
+
+    byId('manga-btn-check-cont')?.addEventListener('click', async () => {
+      if (!mangaActiveChapterId) return alert('Hãy chọn một chương trước.');
+      const btn = byId('manga-btn-check-cont');
+      btn.disabled = true;
+      btn.textContent = 'Đang kiểm tra...';
+      try {
+        const r = await fetch('/api/manga/story/check-continuity', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ chapter_id: mangaActiveChapterId })
+        });
+        mangaLastContinuityReport = await r.json();
+        await renderMangaStory(pane);
+      } catch (err) {
+        alert(err.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '✓ Kiểm định nhất quán';
+      }
+    });
+
+    byId('manga-btn-to-board')?.addEventListener('click', async () => {
+      if (!mangaActiveChapterId) return alert('Hãy chọn một chương trước.');
+      const btn = byId('manga-btn-to-board');
+      btn.disabled = true;
+      btn.textContent = 'Đang chuyển Storyboard...';
+      try {
+        const r = await fetch('/api/manga/chapters/' + encodeURIComponent(mangaActiveChapterId) + '/auto-storyboard', { method: 'POST' });
+        const d = await r.json();
+        if (!r.ok) throw new Error(d.detail || 'Lỗi khi tạo Storyboard.');
+        mangaActiveTab = 'storyboard';
+        renderManga();
+      } catch (err) {
+        alert(err.message);
+        btn.disabled = false;
+        btn.textContent = '⚡ Tự động tạo Storyboard';
+      }
+    });
+
+    byId('manga-add-char-btn')?.addEventListener('click', () => {
+      const name = prompt('Nhập tên nhân vật mới (Ví dụ: Kurogane Ren):');
+      if (!name || !name.trim()) return;
+      const role = prompt('Vai trò (protagonist, rival, supporting):', 'protagonist') || 'protagonist';
+      const concept = prompt('Mô tả đặc điểm ngoại hình hoặc tính cách:', 'Học sinh chuyển trường bí ẩn') || '';
+      fetch('/api/manga/story/generate-character', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ series_id: mangaActiveSeriesId, name: name.trim(), role: role, concept: concept })
+      }).then(r => r.json()).then(() => renderMangaStory(pane)).catch(e => alert(e.message));
+    });
+  }
+
+  async function renderMangaStoryboard(pane) {
+    if (!mangaActiveChapterId) {
+      pane.innerHTML = empty('Hãy chọn hoặc tạo một Chương trong Series Hub / Story Studio trước khi vào Storyboard.');
+      return;
+    }
+
+    let comfyStatus = { is_online: false, mode: 'mock' };
+    try { comfyStatus = await getJson('/api/manga/comfy/status'); } catch {}
+
+    let pages = [];
+    try {
+      pages = await getJson('/api/manga/chapters/' + encodeURIComponent(mangaActiveChapterId) + '/pages');
+    } catch (e) {
+      pane.innerHTML = errorBox(e);
+      return;
+    }
+
+    if (!pages.length) {
+      pane.innerHTML = '<div class="empty-state" style="padding:30px">' +
+        '<h3>Chương này chưa có Storyboard</h3>' +
+        '<p style="margin:8px 0 16px;color:var(--muted)">Nhấn "Tự động tạo Storyboard" để tự sinh 4-panel từ các cảnh đã viết kịch bản.</p>' +
+        '<button type="button" class="primary-btn" id="manga-auto-board-btn">⚡ Tự động tạo Storyboard từ kịch bản</button>' +
+      '</div>';
+      byId('manga-auto-board-btn')?.addEventListener('click', async () => {
+        try {
+          await fetch('/api/manga/chapters/' + encodeURIComponent(mangaActiveChapterId) + '/auto-storyboard', { method: 'POST' });
+          renderMangaStoryboard(pane);
+        } catch (err) { alert(err.message); }
+      });
+      return;
+    }
+
+    if (!mangaActivePageId || !pages.some(p => p.id === mangaActivePageId)) {
+      mangaActivePageId = pages[0].id;
+    }
+
+    const curPage = pages.find(p => p.id === mangaActivePageId) || pages[0];
+
+    const pageNavHtml = pages.map(p =>
+      '<button type="button" class="secondary-btn ' + (p.id === mangaActivePageId ? 'primary-btn' : '') + '" data-select-page="' + esc(p.id) + '">' +
+        'Trang ' + esc(p.page_number) + ' (' + (p.panels?.length || 0) + ' ô)' +
+      '</button>'
+    ).join('');
+
+    const panelsHtml = (curPage.panels || []).map(pan => {
+      const promptText = pan.prompt?.positive || 'Chưa có prompt';
+      const dialogues = (pan.dialogue || []).map(d => '<div class="manga-dialogue-item"><span class="manga-bubble-tag">' + esc(d.speaker || 'Thoại') + '</span> ' + esc(d.text) + '</div>').join('');
+      const imgUrl = pan.image_asset_id ? '/api/manga/assets/' + encodeURIComponent(pan.image_asset_id) : '';
+
+      return '<div class="manga-card">' +
+        '<div style="display:flex;justify-content:space-between;align-items:center">' +
+          '<strong>[Ô ' + esc(pan.panel_number) + ']</strong>' +
+          '<span class="manga-status-badge ' + (pan.status === 'generated' ? 'completed' : 'running') + '">' + esc(pan.status) + '</span>' +
+        '</div>' +
+        '<div style="min-height:160px;background:#0d1622;border:1px dashed #283e58;border-radius:8px;display:flex;align-items:center;justify-content:center;overflow:hidden">' +
+          (imgUrl ? '<img src="' + esc(imgUrl) + '" style="max-width:100%;max-height:200px;object-fit:cover">' : '<span class="subtle">Chưa sinh tranh panel</span>') +
+        '</div>' +
+        '<div style="font-size:11px;color:#a9bfd7"><b>Prompt:</b> ' + esc(promptText.slice(0, 110)) + '...</div>' +
+        '<div>' + (dialogues || '<small class="subtle">Không có thoại</small>') + '</div>' +
+        '<div class="page-actions" style="margin-top:6px">' +
+          '<button type="button" class="primary-btn" data-gen-panel="' + esc(pan.id) + '">✦ Sinh tranh ô này</button>' +
+          '<label class="subtle" style="font-size:10px;display:flex;align-items:center;gap:4px"><input type="checkbox" id="mock-' + esc(pan.id) + '" checked> Mock Safe</label>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+
+    pane.innerHTML =
+      '<div class="view-card" style="padding:12px 16px;background:#112033;border-color:#2a486c;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">' +
+        '<div style="display:flex;align-items:center;gap:12px">' +
+          '<span class="pulse-dot" style="background:' + (comfyStatus.is_online ? '#4ce29b' : '#39d5e8') + '"></span>' +
+          '<div><strong>ComfyUI Adapter: ' + (comfyStatus.is_online ? 'Trực tuyến (127.0.0.1:8188)' : 'Chế độ Mock Template An Toàn') + '</strong><br>' +
+          '<small class="subtle">Bộ điều phối phần cứng: Semaphore(1) khóa GPU · Bảo vệ RAM 12GB / VRAM 6GB</small></div>' +
+        '</div>' +
+        '<button type="button" class="primary-btn" id="manga-batch-gen-btn">⚡ Sinh toàn bộ tranh chương</button>' +
+      '</div>' +
+      '<div style="display:flex;gap:8px;align-items:center;margin:12px 0;flex-wrap:wrap">' +
+        pageNavHtml +
+        '<button type="button" class="secondary-btn" id="manga-add-page-btn">＋ Thêm Trang</button>' +
+      '</div>' +
+      '<div class="manga-grid">' + panelsHtml + '</div>';
+
+    pane.querySelectorAll('[data-select-page]').forEach(b => {
+      b.addEventListener('click', () => {
+        mangaActivePageId = b.dataset.selectPage;
+        renderMangaStoryboard(pane);
+      });
+    });
+
+    pane.querySelectorAll('[data-gen-panel]').forEach(b => {
+      b.addEventListener('click', async () => {
+        const pid = b.dataset.genPanel;
+        const useMock = byId('mock-' + pid)?.checked ?? true;
+        b.disabled = true;
+        b.textContent = 'Đang sinh tranh...';
+        try {
+          const r = await fetch('/api/manga/comfy/generate-panel', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ panel_id: pid, use_mock: useMock })
+          });
+          const d = await r.json();
+          if (!r.ok) throw new Error(d.detail || 'Lỗi sinh tranh.');
+          renderMangaStoryboard(pane);
+        } catch (err) {
+          alert(err.message);
+          b.disabled = false;
+          b.textContent = '✦ Sinh tranh ô này';
+        }
+      });
+    });
+
+    byId('manga-batch-gen-btn')?.addEventListener('click', async () => {
+      const btn = byId('manga-batch-gen-btn');
+      btn.disabled = true;
+      btn.textContent = 'Đang sinh toàn bộ tranh...';
+      try {
+        const r = await fetch('/api/manga/chapters/' + encodeURIComponent(mangaActiveChapterId) + '/generate-all', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ chapter_id: mangaActiveChapterId, use_mock: true })
+        });
+        const d = await r.json();
+        if (!r.ok) throw new Error(d.detail || 'Lỗi khi sinh tranh hàng loạt.');
+        renderMangaStoryboard(pane);
+      } catch (err) {
+        alert(err.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '⚡ Sinh toàn bộ tranh chương';
+      }
+    });
+
+    byId('manga-add-page-btn')?.addEventListener('click', async () => {
+      const nextNum = pages.length + 1;
+      try {
+        await fetch('/api/manga/chapters/' + encodeURIComponent(mangaActiveChapterId) + '/pages', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ page_number: nextNum, layout_template: '4-panel' })
+        });
+        renderMangaStoryboard(pane);
+      } catch (e) { alert(e.message); }
+    });
+  }
+
+  async function renderMangaComposer(pane) {
+    if (!mangaActiveChapterId) {
+      pane.innerHTML = empty('Hãy chọn Chương trước khi mở Manga Composer.');
+      return;
+    }
+
+    let pages = [];
+    try {
+      pages = await getJson('/api/manga/chapters/' + encodeURIComponent(mangaActiveChapterId) + '/pages');
+    } catch (e) {
+      pane.innerHTML = errorBox(e);
+      return;
+    }
+
+    if (!pages.length) {
+      pane.innerHTML = empty('Chương này chưa có trang nào để dàn trang. Hãy vào Storyboard để tạo trang trước.');
+      return;
+    }
+
+    if (!mangaActivePageId || !pages.some(p => p.id === mangaActivePageId)) {
+      mangaActivePageId = pages[0].id;
+    }
+
+    const curPage = pages.find(p => p.id === mangaActivePageId) || pages[0];
+
+    const pageNavHtml = pages.map(p =>
+      '<button type="button" class="secondary-btn ' + (p.id === mangaActivePageId ? 'primary-btn' : '') + '" data-comp-page="' + esc(p.id) + '">' +
+        'Trang ' + esc(p.page_number) +
+      '</button>'
+    ).join('');
+
+    pane.innerHTML =
+      '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:12px">' +
+        '<div style="display:flex;gap:8px;align-items:center">' + pageNavHtml + '</div>' +
+        '<div class="page-actions">' +
+          '<button type="button" class="primary-btn" id="manga-btn-render-page">✦ Render Trang Hoàn Chỉnh</button>' +
+          '<button type="button" class="secondary-btn" id="manga-btn-go-export">Đi tới Xuất Bản (Export) →</button>' +
+        '</div>' +
+      '</div>' +
+      '<div class="manga-preview-box">' +
+        '<div class="manga-page-render" id="manga-page-canvas">' +
+          '<div style="text-align:center"><div class="subtle" style="margin-bottom:12px">Nhấn "Render Trang Hoàn Chỉnh" để dàn panel và vẽ bóng thoại tiếng Việt</div>' +
+          '<button type="button" class="primary-btn" id="manga-btn-render-quick">✦ Render ngay</button></div>' +
+        '</div>' +
+        '<div class="view-card">' +
+          '<h4>Bóng Thoại Tiếng Việt (Speech Bubbles)</h4>' +
+          '<small class="subtle">Font Unicode tiếng Việt chuẩn (Inter-Variable.ttf) vẽ vector nét căng</small>' +
+          '<div style="margin-top:12px">' +
+            (curPage.panels || []).map(pan =>
+              '<div style="margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid #283e58">' +
+                '<strong style="font-size:11px">Ô ' + esc(pan.panel_number) + '</strong>' +
+                ((pan.dialogue || []).map(d =>
+                  '<div class="manga-dialogue-item" style="margin-top:4px">' +
+                    '<span class="manga-bubble-tag">' + esc(d.speaker || 'Thoại') + '</span> ' + esc(d.text) +
+                  '</div>'
+                ).join('') || '<div class="subtle" style="font-size:10px">Không có thoại</div>') +
+              '</div>'
+            ).join('') +
+          '</div>' +
+        '</div>' +
+      '</div>';
+
+    pane.querySelectorAll('[data-comp-page]').forEach(b => {
+      b.addEventListener('click', () => {
+        mangaActivePageId = b.dataset.compPage;
+        renderMangaComposer(pane);
+      });
+    });
+
+    fetch('/api/manga/pages/' + encodeURIComponent(curPage.id) + '/image').then(res => {
+      if (res.ok) {
+        const c = byId('manga-page-canvas');
+        if (c) c.innerHTML = '<img src="/api/manga/pages/' + encodeURIComponent(curPage.id) + '/image?t=' + Date.now() + '" alt="Trang hoàn chỉnh">';
+      }
+    }).catch(() => {});
+
+    const doRender = async () => {
+      const btn = byId('manga-btn-render-page');
+      if (btn) { btn.disabled = true; btn.textContent = 'Đang render trang...'; }
+      try {
+        const r = await fetch('/api/manga/composer/render-page/' + encodeURIComponent(curPage.id), { method: 'POST' });
+        const d = await r.json();
+        if (!r.ok) throw new Error(d.detail || 'Lỗi render trang.');
+        const c = byId('manga-page-canvas');
+        if (c && d.image_url) {
+          c.innerHTML = '<img src="' + esc(d.image_url) + '?t=' + Date.now() + '" alt="Trang hoàn chỉnh">';
+        }
+      } catch (err) {
+        alert(err.message);
+      } finally {
+        if (btn) { btn.disabled = false; btn.textContent = '✦ Render Trang Hoàn Chỉnh'; }
+      }
+    };
+
+    byId('manga-btn-render-page')?.addEventListener('click', doRender);
+    byId('manga-btn-render-quick')?.addEventListener('click', doRender);
+    byId('manga-btn-go-export')?.addEventListener('click', () => {
+      mangaActiveTab = 'export';
+      renderManga();
+    });
+  }
+
+  async function renderMangaExport(pane) {
+    if (!mangaActiveChapterId) {
+      pane.innerHTML = empty('Hãy chọn Chương trước khi vào Export Queue.');
+      return;
+    }
+
+    let exportsList = [];
+    let jobsList = [];
+    try {
+      [exportsList, jobsList] = await Promise.all([
+        getJson('/api/manga/exports?chapter_id=' + encodeURIComponent(mangaActiveChapterId)),
+        getJson('/api/manga/jobs?limit=15')
+      ]);
+    } catch {}
+
+    const exportsRows = exportsList.map(ex =>
+      '<div class="task-row" style="display:flex;justify-content:space-between;align-items:center">' +
+        '<div><strong>' + esc(ex.chapter_title || 'Chương') + ' (' + esc(ex.format.toUpperCase()) + ')</strong><br><small class="subtle">' + esc(ex.output_path) + '</small></div>' +
+        '<div class="page-actions">' +
+          '<a href="/api/manga/exports/' + encodeURIComponent(ex.id) + '/download" class="primary-btn" style="text-decoration:none;display:inline-block" download>⬇ Tải Về</a>' +
+        '</div>' +
+      '</div>'
+    ).join('') || empty('Chưa có lịch sử xuất bản nào cho chương này.');
+
+    const jobsRows = jobsList.map(j =>
+      '<div class="manga-job-row">' +
+        '<div><strong>Job #' + esc(j.id.slice(0, 8)) + '</strong> · ' + esc(j.created_at?.slice(11, 19) || '') + '</div>' +
+        '<span class="manga-status-badge ' + esc(j.status) + '">' + esc(j.status) + '</span>' +
+      '</div>'
+    ).join('') || empty('Hàng đợi trống.');
+
+    pane.innerHTML =
+      '<div class="view-card">' +
+        '<h3>Xuất Bản Chương Truyện (Multi-Format Export)</h3>' +
+        '<p style="margin:6px 0 16px;color:#a3b8d2">Hỗ trợ xuất đồng thời: file nén đọc truyện tranh CBZ (Comic Book Zip), tài liệu PDF nhiều trang in ấn sắc nét, và bộ ảnh PNG phân giải cao.</p>' +
+        '<div class="page-actions" style="margin-bottom:12px">' +
+          '<label class="subtle"><input type="radio" name="manga-exp-fmt" value="all" checked> Toàn bộ (CBZ + PDF + PNG)</label>' +
+          '<label class="subtle"><input type="radio" name="manga-exp-fmt" value="cbz"> Chỉ CBZ</label>' +
+          '<label class="subtle"><input type="radio" name="manga-exp-fmt" value="pdf"> Chỉ PDF</label>' +
+          '<button type="button" class="primary-btn" id="manga-btn-start-export" style="margin-left:auto">✦ Bắt Đầu Xuất Bản</button>' +
+        '</div>' +
+      '</div>' +
+      '<div class="view-card" style="margin-top:16px">' +
+        '<h4>Lịch Sử File Đã Xuất</h4>' +
+        '<div class="file-list" style="margin-top:10px">' + exportsRows + '</div>' +
+      '</div>' +
+      '<div class="view-card" style="margin-top:16px">' +
+        '<h4>Hàng Đợi Sinh Tranh ComfyUI (ResourceScheduler Queue)</h4>' +
+        '<div style="display:flex;flex-direction:column;gap:6px;margin-top:10px">' + jobsRows + '</div>' +
+      '</div>';
+
+    byId('manga-btn-start-export')?.addEventListener('click', async () => {
+      const btn = byId('manga-btn-start-export');
+      const fmt = document.querySelector('input[name="manga-exp-fmt"]:checked')?.value || 'all';
+      btn.disabled = true;
+      btn.textContent = 'Đang đóng gói xuất bản...';
+      try {
+        const r = await fetch('/api/manga/composer/export-chapter', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ chapter_id: mangaActiveChapterId, format: fmt })
+        });
+        const d = await r.json();
+        if (!r.ok) throw new Error(d.detail || 'Lỗi xuất bản.');
+        alert('✓ Xuất bản thành công: ' + (d.cbz_path || d.pdf_path || 'Hoàn tất!'));
+        renderMangaExport(pane);
+      } catch (err) {
+        alert(err.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '✦ Bắt Đầu Xuất Bản';
+      }
+    });
+  }
+
+ async function navigate(view){stopGamePolling();if(view==='home')return showHome();if(view==='workspace')return renderWorkspace('');if(view==='tasks')return renderTasks();if(view==='agents')return renderAgents();if(view==='skills')return renderSkills();if(view==='tools')return renderTools();if(view==='game')return renderGameVTuber();if(view==='models')return renderModels();if(view==='settings')return renderSettings();if(view==='manga')return renderManga();}
  window.navigate=navigate;
  document.addEventListener('aioffice:open-workspace-editor',e=>{
    const goal=String((e.detail&&e.detail.goal)||'');

@@ -175,6 +175,8 @@ def init_db() -> None:
         db.execute("CREATE INDEX IF NOT EXISTS idx_chat_attachments_message ON chat_attachments(message_id)")
         db.execute("CREATE INDEX IF NOT EXISTS idx_messages_conversation ON messages(conversation_id,id)")
         db.execute("CREATE INDEX IF NOT EXISTS idx_conversations_updated ON conversations(updated_at DESC)")
+        from manga_studio import init_manga_db
+        init_manga_db(db)
     MODEL_MANAGER.ensure_table()
 
 
@@ -1245,6 +1247,8 @@ register_workspace_editor_routes(
     hidden_names=WORKSPACE_HIDDEN, ollama_chat=ollama_chat,
     load_skill=load_skill, role_skills=ROLE_SKILLS,
 )
+from manga_studio import register_manga_routes
+register_manga_routes(app)
 
 
 if __name__ == "__main__":
