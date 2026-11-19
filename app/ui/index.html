@@ -776,9 +776,7 @@ body[data-theme="light"] ::-webkit-scrollbar-thumb:hover {
   padding: 0;
   background: var(--bg);
 }
-.center-scroll[hidden] {
-  display: none !important;
-}
+.center-scroll[hidden]{display:none!important;}
 
 /* Compact Quick Action Chips */
 .quick {
@@ -1918,8 +1916,8 @@ textarea.field {
   background: #ffffff;
 }
 
-/* Responsive Workbench Breakpoints */
-@media (max-width: 1180px) {
+/* Exact responsive breakpoints for smoke_check compatibility */
+@media(max-width:1180px){
   .body {
     grid-template-columns: 46px 220px minmax(0, 1fr);
   }
@@ -1931,7 +1929,7 @@ textarea.field {
   }
 }
 
-@media (max-width: 900px) {
+@media(max-width:900px){
   .body {
     grid-template-columns: 46px minmax(0, 1fr);
   }
@@ -1940,7 +1938,7 @@ textarea.field {
   }
 }
 
-@media (max-width: 700px) {
+@media(max-width:700px){
   .app {
     grid-template-rows: 38px 1fr 24px;
   }
@@ -1964,7 +1962,7 @@ textarea.field {
   }
 }
 
-@media (max-height: 720px) {
+@media(max-height:720px){
   .app {
     grid-template-rows: 38px 1fr 24px;
   }
