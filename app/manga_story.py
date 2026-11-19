@@ -138,6 +138,7 @@ class PanelPlan(BaseModel):
     ] = Field(default="medium_shot", description="Góc quay và cỡ cảnh")
     visual_description: str = Field(..., description="Mô tả chi tiết bố cục, hành động, nét mặt, hậu cảnh để sinh ảnh")
     characters_in_panel: list[str] = Field(default_factory=list, description="Tên các nhân vật xuất hiện trong ô này")
+    characters_present: list[str] = Field(default_factory=list, description="Tên nhân vật có mặt (alias của characters_in_panel)")
     diffusion_prompt_en: str = Field(default="", description="Prompt tiếng Anh dịch sẵn tích hợp locked traits nhân vật")
     diffusion_negative_prompt: str = Field(default="", description="Negative prompt cho ô tranh này")
     dialogues: list[DialogueLine] = Field(default_factory=list, description="Danh sách lời thoại đặt trong ô tranh")
@@ -464,26 +465,65 @@ def check_deterministic_continuity(
                             )
                         )
 
-            # 1.3 Kiểm tra Locked Traits trong Prompt hình ảnh
-            for p_char in panel.characters_in_panel:
+            # 1.3 Kiểm tra Locked Traits trong Prompt hình ảnh và Mô tả thị giác
+            chars_in_p = list(getattr(panel, "characters_in_panel", []))
+            for extra_attr in ("characters_present", "characters"):
+                if hasattr(panel, extra_attr) and getattr(panel, extra_attr):
+                    chars_in_p.extend(getattr(panel, extra_attr))
+            for c_name in char_names_lower:
+                if c_name in panel.visual_description.lower() or any(c_name == (d.speaker or "").lower() for d in panel.dialogues):
+                    if c_name not in [x.lower() for x in chars_in_p]:
+                        chars_in_p.append(c_name)
+
+            for p_char in chars_in_p:
                 p_key = p_char.strip().lower()
                 if p_key in char_names_lower:
                     c_profile = char_names_lower[p_key]
                     lt = c_profile.locked_traits
 
-                    # Ví dụ tóc đen nhưng prompt ghi blonde hair
+                    # 1.3.1 Tóc: Ví dụ tóc đen nhưng mô tả blonde/vàng/bạc
                     if lt.hair_color and lt.hair_color.lower() in ("black", "đen"):
-                        if re.search(r"\b(blonde|yellow|white)\s+hair\b", panel.diffusion_prompt_en, re.IGNORECASE):
+                        if re.search(r"\b(blonde|yellow|white)\s+hair\b", panel.diffusion_prompt_en, re.IGNORECASE) or \
+                           re.search(r"tóc\s+(vàng|bạch kim|trắng|đỏ)", panel.visual_description, re.IGNORECASE):
                             issues.append(
                                 ContinuityIssue(
                                     issue_type="appearance_conflict",
                                     severity="critical",
                                     entity_affected=c_profile.name,
-                                    description=f"Prompt của Panel {panel.panel_number} mô tả tóc màu khác với Locked Trait ({lt.hair_color}) của nhân vật '{c_profile.name}'.",
-                                    quote_or_location=panel.diffusion_prompt_en[:90],
-                                    fix_suggestion=f"Đồng bộ lại prompt: dùng '{lt.hair_color} hair'."
+                                    description=f"Panel {panel.panel_number} mô tả tóc khác với Locked Trait ({lt.hair_color}) của nhân vật '{c_profile.name}'.",
+                                    quote_or_location=panel.visual_description[:90] or panel.diffusion_prompt_en[:90],
+                                    fix_suggestion=f"Đồng bộ lại: dùng tóc màu '{lt.hair_color}'."
                                 )
                             )
+
+                    # 1.3.2 Mắt: Ví dụ mắt hổ phách nhưng mô tả mắt đỏ rực / xanh
+                    if lt.eye_color:
+                        lt_eye = lt.eye_color.lower()
+                        if "hổ phách" in lt_eye or "amber" in lt_eye:
+                            if re.search(r"mắt\s+(màu\s+)?(đỏ|xanh|đen)", panel.visual_description, re.IGNORECASE) or \
+                               re.search(r"\b(red|blue|crimson)\s+eyes\b", panel.diffusion_prompt_en, re.IGNORECASE):
+                                issues.append(
+                                    ContinuityIssue(
+                                        issue_type="appearance_conflict",
+                                        severity="critical",
+                                        entity_affected=c_profile.name,
+                                        description=f"Panel {panel.panel_number} mô tả mắt khác với Locked Trait mắt '{lt.eye_color}' của nhân vật '{c_profile.name}'.",
+                                        quote_or_location=panel.visual_description[:90] or panel.diffusion_prompt_en[:90],
+                                        fix_suggestion=f"Đồng bộ lại màu mắt: dùng mắt '{lt.eye_color}'."
+                                    )
+                                )
+                        elif "đen" in lt_eye or "black" in lt_eye:
+                            if re.search(r"mắt\s+(màu\s+)?(đỏ|xanh|vàng)", panel.visual_description, re.IGNORECASE):
+                                issues.append(
+                                    ContinuityIssue(
+                                        issue_type="appearance_conflict",
+                                        severity="critical",
+                                        entity_affected=c_profile.name,
+                                        description=f"Panel {panel.panel_number} mô tả mắt khác với Locked Trait mắt '{lt.eye_color}' của nhân vật '{c_profile.name}'.",
+                                        quote_or_location=panel.visual_description[:90],
+                                        fix_suggestion=f"Đồng bộ lại màu mắt: dùng mắt '{lt.eye_color}'."
+                                    )
+                                )
 
     # 2. Kiểm tra xung đột quy tắc thế giới (Canon Facts)
     for fact in canon_facts:

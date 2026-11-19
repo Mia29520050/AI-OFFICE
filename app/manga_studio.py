@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import hashlib
 import io
 import json
 import logging
@@ -1411,11 +1412,12 @@ async def generate_panel_art(body: GeneratePanelArtRequest):
         img.save(str(panel_img_path), "PNG")
 
     # Update SQLite database
+    checksum = hashlib.sha256(panel_img_path.read_bytes()).hexdigest() if panel_img_path.exists() else ""
     with connect() as db:
         db.execute("""
-            INSERT INTO manga_assets (id, series_id, owner_type, owner_id, file_path, metadata_json, created_at)
-            VALUES (?, ?, 'panel', ?, ?, '{}', ?)
-        """, (asset_id, series_id, body.panel_id, str(panel_img_path), stamp))
+            INSERT INTO manga_assets (id, series_id, owner_type, owner_id, file_path, metadata_json, checksum, created_at)
+            VALUES (?, ?, 'panel', ?, ?, '{}', ?, ?)
+        """, (asset_id, series_id, body.panel_id, str(panel_img_path), checksum, stamp))
 
         db.execute("""
             UPDATE manga_panels
