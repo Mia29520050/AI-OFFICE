@@ -17,6 +17,7 @@ from main import app, init_db
 
 ROOT = Path(__file__).resolve().parents[1]
 LOG = ROOT / "data" / "launcher.log"
+RELAUNCH_GUARD = ROOT / "data" / ".relaunch_guard"
 APP_USER_MODEL_ID = "OpenAI.AIOffice.Desktop"
 
 
@@ -197,9 +198,26 @@ def main() -> None:
     allow_elevated = "--allow-elevated" in sys.argv[1:]
     # Keep WebView2 at the same integrity level as UniKey/EVKey unless explicitly opted into Admin for elevated games.
     if is_elevated() and not allow_elevated:
-        if relaunch_without_elevation():
-            return
-        raise RuntimeError("AI Office must run without Administrator privileges for IME input.")
+        already_attempted = False
+        try:
+            if RELAUNCH_GUARD.exists():
+                age = time.time() - RELAUNCH_GUARD.stat().st_mtime
+                if age < 15:
+                    already_attempted = True
+                RELAUNCH_GUARD.unlink(missing_ok=True)
+        except Exception:
+            pass
+
+        if not already_attempted:
+            try:
+                RELAUNCH_GUARD.parent.mkdir(parents=True, exist_ok=True)
+                RELAUNCH_GUARD.write_text(str(time.time()), encoding="utf-8")
+            except Exception:
+                pass
+            if relaunch_without_elevation():
+                return
+        # If de-elevation was already attempted once or relaunch failed, do not loop endlessly.
+        # Proceed with execution; the UI handles elevated mode and shows the admin-ime-warning.
 
     # Must be set before creating the native WebView window so Windows uses
     # the AI Office identity instead of grouping it under pythonw.exe.
