@@ -30,7 +30,7 @@ from PIL import (
     ImageFont,
     ImageOps,
 )
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 # ---------------------------------------------------------------------------
 # Constants & Font Paths
@@ -127,6 +127,7 @@ class FitMode(str, Enum):
 class SpeechBubble(BaseModel):
     """Configuration for a speech bubble or SFX overlay."""
     text: str
+    speaker: str = ""
     bubble_type: BubbleType = BubbleType.REGULAR
     x: float = 0.5                        # Center x (0.0-1.0 normalized or absolute px)
     y: float = 0.5                        # Center y (0.0-1.0 normalized or absolute px)
@@ -146,6 +147,16 @@ class SpeechBubble(BaseModel):
     stroke_width: int = 0                 # Text outline width
     auto_size: bool = True                # Auto-scale font or bubble bounds
     align: str = "center"                 # "center", "left", "right"
+
+    @model_validator(mode="before")
+    @classmethod
+    def handle_aliases(cls, data: Any) -> Any:
+        if isinstance(data, dict):
+            if "center_x" in data and ("x" not in data or data.get("x") is None):
+                data["x"] = data["center_x"]
+            if "center_y" in data and ("y" not in data or data.get("y") is None):
+                data["y"] = data["center_y"]
+        return data
 
 
 class PanelConfig(BaseModel):
