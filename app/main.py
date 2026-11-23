@@ -1251,6 +1251,8 @@ from manga_studio import register_manga_routes
 register_manga_routes(app)
 from manga_koharu import register_routes as register_koharu_routes
 register_koharu_routes(app)
+from motion_comic_routes import register_routes as register_motion_comic_routes
+register_motion_comic_routes(app)
 
 
 if __name__ == "__main__":

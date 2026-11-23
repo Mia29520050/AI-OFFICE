@@ -2602,9 +2602,120 @@ textarea.field {
   font-size: 10.5px;
   color: #94a3b8;
 }
+
+/* Motion Comic Studio Styles */
+.mc-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+.mc-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--line);
+}
+.mc-grid {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 24px;
+}
+@media (max-width: 1024px) {
+  .mc-grid {
+    grid-template-columns: 1fr;
+  }
+}
+.mc-card {
+  background: var(--pane);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.mc-card-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  padding-bottom: 10px;
+}
+.mc-timeline-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 520px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+.mc-panel-card {
+  display: grid;
+  grid-template-columns: 110px 1fr 32px;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 10px;
+  align-items: start;
+  transition: border-color 0.15s;
+}
+.mc-panel-card:hover {
+  border-color: rgba(99, 102, 241, 0.5);
+}
+.mc-panel-thumb {
+  width: 110px;
+  height: 90px;
+  object-fit: cover;
+  border-radius: 4px;
+  background: #000;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+.mc-panel-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.mc-panel-row {
+  display: flex;
+  gap: 8px;
+}
+.mc-video-wrapper {
+  background: #000;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 240px;
+}
+.mc-video-preview {
+  width: 100%;
+  max-height: 420px;
+}
+.mc-badge-pro {
+  background: linear-gradient(135deg, #ec4899, #8b5cf6);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 10px;
+  letter-spacing: 0.04em;
+}
+
 </style></head>
 <body><div class="app">
-<header class="menu"><img class="logo-small" src="/assets/ai-office-icon.png" alt="AI Office"><span class="brand">AI Office</span><div class="menu-entry"><button class="menu-trigger" type="button" data-menu-toggle="workspace" aria-expanded="false" aria-controls="menu-workspace">Không gian làm việc</button><div class="menu-popover" id="menu-workspace" role="menu" hidden><button class="menu-item" role="menuitem" data-view="workspace"><span class="menu-symbol">▱</span>Mở Workspace</button><button class="menu-item" role="menuitem" data-view="tasks"><span class="menu-symbol">☑</span>Nhiệm vụ</button><button class="menu-item" role="menuitem" data-view="agents"><span class="menu-symbol">♙</span>Tác nhân AI</button><button class="menu-item" role="menuitem" data-view="skills"><span class="menu-symbol">◇</span>Kỹ năng</button></div></div><div class="menu-entry"><button class="menu-trigger" type="button" data-menu-toggle="view" aria-expanded="false" aria-controls="menu-view">Hiển thị</button><div class="menu-popover" id="menu-view" role="menu" hidden><button class="menu-item" role="menuitem" data-view="home"><span class="menu-symbol">∞</span>Trang chủ</button><button class="menu-item" role="menuitem" data-view="models"><span class="menu-symbol">◉</span>Mô hình</button><button class="menu-item" role="menuitem" data-view="tools"><span class="menu-symbol">⌘</span>Công cụ & điều khiển máy</button><button class="menu-item" role="menuitem" data-view="game"><span class="menu-symbol">◈</span>Chơi Game & AI VTuber</button><button class="menu-item" role="menuitem" data-view="manga"><span class="menu-symbol">📖</span>Manga Studio</button><div class="menu-separator"></div><button class="menu-item" role="menuitem" data-view="settings"><span class="menu-symbol">⚙</span>Cài đặt bố cục</button></div></div><div class="menu-entry"><button class="menu-trigger" type="button" data-menu-toggle="window" aria-expanded="false" aria-controls="menu-window">Cửa sổ</button><div class="menu-popover" id="menu-window" role="menu" hidden><button class="menu-item" role="menuitem" data-window-action="reload"><span class="menu-symbol">↻</span>Tải lại giao diện</button><button class="menu-item" role="menuitem" data-window-action="reset-layout"><span class="menu-symbol">▣</span>Đặt lại bố cục</button><div class="menu-separator"></div><div class="menu-hint">Thu nhỏ · Phóng to · Đóng: thanh tiêu đề Windows</div></div></div><button class="menu-trigger settings-menu-link" type="button" data-view="settings">Cài đặt</button></header>
+<header class="menu"><img class="logo-small" src="/assets/ai-office-icon.png" alt="AI Office"><span class="brand">AI Office</span><div class="menu-entry"><button class="menu-trigger" type="button" data-menu-toggle="workspace" aria-expanded="false" aria-controls="menu-workspace">Không gian làm việc</button><div class="menu-popover" id="menu-workspace" role="menu" hidden><button class="menu-item" role="menuitem" data-view="workspace"><span class="menu-symbol">▱</span>Mở Workspace</button><button class="menu-item" role="menuitem" data-view="tasks"><span class="menu-symbol">☑</span>Nhiệm vụ</button><button class="menu-item" role="menuitem" data-view="agents"><span class="menu-symbol">♙</span>Tác nhân AI</button><button class="menu-item" role="menuitem" data-view="skills"><span class="menu-symbol">◇</span>Kỹ năng</button></div></div><div class="menu-entry"><button class="menu-trigger" type="button" data-menu-toggle="view" aria-expanded="false" aria-controls="menu-view">Hiển thị</button><div class="menu-popover" id="menu-view" role="menu" hidden><button class="menu-item" role="menuitem" data-view="home"><span class="menu-symbol">∞</span>Trang chủ</button><button class="menu-item" role="menuitem" data-view="models"><span class="menu-symbol">◉</span>Mô hình</button><button class="menu-item" role="menuitem" data-view="tools"><span class="menu-symbol">⌘</span>Công cụ & điều khiển máy</button><button class="menu-item" role="menuitem" data-view="game"><span class="menu-symbol">◈</span>Chơi Game & AI VTuber</button><button class="menu-item" role="menuitem" data-view="manga"><span class="menu-symbol">📖</span>Manga Studio</button>
+<button class="menu-item" role="menuitem" data-view="motion-comic"><span class="menu-symbol">🎬</span>Motion Comic & Video Studio</button><div class="menu-separator"></div><button class="menu-item" role="menuitem" data-view="settings"><span class="menu-symbol">⚙</span>Cài đặt bố cục</button></div></div><div class="menu-entry"><button class="menu-trigger" type="button" data-menu-toggle="window" aria-expanded="false" aria-controls="menu-window">Cửa sổ</button><div class="menu-popover" id="menu-window" role="menu" hidden><button class="menu-item" role="menuitem" data-window-action="reload"><span class="menu-symbol">↻</span>Tải lại giao diện</button><button class="menu-item" role="menuitem" data-window-action="reset-layout"><span class="menu-symbol">▣</span>Đặt lại bố cục</button><div class="menu-separator"></div><div class="menu-hint">Thu nhỏ · Phóng to · Đóng: thanh tiêu đề Windows</div></div></div><button class="menu-trigger settings-menu-link" type="button" data-view="settings">Cài đặt</button></header>
 <div class="body">
 <nav class="activity" aria-label="Điều hướng chính">
 <button class="act" type="button" title="Explorer" aria-label="Explorer" data-layout-toggle="explorer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h7l2 2h9v11H3z"/><path d="M3 10h18"/></svg></button>
@@ -2616,6 +2727,7 @@ textarea.field {
 <button class="act" type="button" title="Tools và Computer Use" aria-label="Tools và Computer Use" data-view="tools"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/><circle cx="8" cy="7" r="2"/><circle cx="15" cy="12" r="2"/><circle cx="10" cy="17" r="2"/></svg></button>
 <button class="act" type="button" title="Game & AI VTuber" aria-label="Game & AI VTuber" data-view="game"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="6" width="20" height="12" rx="4"/><path d="M6 12h4M8 10v4"/><circle cx="15.5" cy="11" r="1"/><circle cx="18" cy="13" r="1"/></svg></button>
 <button class="act" type="button" title="Manga Studio" aria-label="Manga Studio" data-view="manga"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 3v18M3 15h4M11 8h6M11 12h6M11 16h4"/></svg></button>
+<button class="act" type="button" title="Motion Comic Studio" aria-label="Motion Comic Studio" data-view="motion-comic"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="2" width="20" height="20" rx="2"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="2" y1="7" x2="7" y2="7"/><line x1="2" y1="17" x2="7" y2="17"/><line x1="17" y1="17" x2="22" y2="17"/><line x1="17" y1="7" x2="22" y2="7"/></svg></button>
 <button class="act" type="button" title="Kỹ năng" aria-label="Kỹ năng" data-view="skills"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9L12 3z"/><path d="m19 16 .9 2.1L22 19l-2.1.9L19 22l-.9-2.1L16 19l2.1-.9L19 16z"/><path d="m5 2 .7 1.8L7.5 4.5l-1.8.7L5 7l-.7-1.8-1.8-.7 1.8-.7L5 2z"/></svg></button>
 <span class="rail-separator"></span>
 
@@ -2670,6 +2782,10 @@ textarea.field {
       <span class="hub-icon">🎨</span>
       <div><strong>Tẩy chữ Manga (Koharu)</strong><small>Xóa chữ bóng thoại giữ nét vẽ</small></div>
     </button>
+    <button type="button" class="hub-item" id="hub-motion-comic">
+      <span class="hub-icon">🎬</span>
+      <div><strong>Motion Comic Studio</strong><small>Xuất video hoạt họa YouTube / TikTok 4K</small></div>
+    </button>
     <button type="button" class="hub-item" id="hub-quick-calc">
       <span class="hub-icon">⚡</span>
       <div><strong>Máy tính siêu tốc</strong><small>Tính số lớn 12+ chữ số trong 1ms</small></div>
@@ -2692,7 +2808,7 @@ textarea.field {
 <div class="claude-toolbar-right"><button class="send" id="sendbtn" type="submit" title="Gửi tin nhắn" aria-label="Gửi tin nhắn"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5"/><path d="m6 11 6-6 6 6"/></svg></button></div>
 </div>
 <input id="chat-files" type="file" multiple accept="image/png,image/jpeg,image/webp,.md,.txt,.py,.js,.ts,.html,.css,.json,.yaml,.yml,.toml,.ini,.bat,.ps1,.sql,.xml,.csv,.log" hidden><input id="chat-folder" type="file" webkitdirectory directory multiple hidden>
-</div></form></section></div><section id="dynamic-page" class="dynamic-page" hidden></section><section id="page-manga" class="dynamic-page" hidden></section></main>
+</div></form></section></div><section id="dynamic-page" class="dynamic-page" hidden></section><section id="page-manga" class="dynamic-page" hidden></section><section id="page-motion-comic" class="dynamic-page" hidden></section></main>
 <aside class="right"><div class="righthead"><img src="/assets/ai-office-icon.png"><div><strong>Tổng quan không gian làm việc</strong><small>AI OFFICE · CỤC BỘ</small></div><span class="righthead-live"><i class="pulse-dot"></i> SẴN SÀNG</span><button class="panel-collapse" type="button" title="Thu gọn Tổng quan không gian làm việc" aria-label="Thu gọn Tổng quan không gian làm việc" data-layout-toggle="sidebar">›</button></div>
 <section class="section"><div class="sect-title">▣ Nhiệm vụ <button class="add" id="newtask">+</button></div><div class="status"><span class="status-label"><i class="sdot blue"></i>Đang thực hiện</span><span class="count" id="running-count">0</span></div><div class="status"><span class="status-label"><i class="sdot wait"></i>Chờ xử lý</span><span class="count" id="waiting-count">0</span></div><div class="status"><span class="status-label"><i class="sdot"></i>Đã hoàn thành</span><span class="count" id="done-count">0</span></div><div class="status"><span class="status-label">◷ Tạm dừng</span><span class="count" id="paused-count">0</span></div></section>
 <section class="section"><div class="sect-title">▧ Trạng thái hệ thống</div><div class="cap"><i class="sdot" id="ollama-dot"></i><span id="ollama-status">Ollama · đang kiểm tra</span></div><div class="cap"><i class="sdot" id="vision-dot"></i>Vision · Qwen3.5-4B</div><div class="cap"><i class="sdot" id="computer-dot"></i>Điều khiển máy · Tự động hóa giao diện</div><div class="cap"><i class="sdot wait" id="browser-dot"></i>Trình duyệt · hồ sơ riêng</div><div class="cap"><i class="sdot wait" id="workspace-dot"></i>Chỉnh sửa Workspace · So sánh và khôi phục</div></section>
@@ -3197,7 +3313,7 @@ window.addEventListener('DOMContentLoaded', () => { setTimeout(() => $('chatinpu
  const empty=msg=>'<div class="empty-state">'+esc(msg)+'</div>';
  const setPage=(view,title)=>{
    const prev=activeView;
-   activeView=view; home.hidden=view!=='home'; const dynPage=byId('dynamic-page'); const mangaPage=byId('page-manga'); if(view==='home'){if(dynPage)dynPage.hidden=true;if(mangaPage)mangaPage.hidden=true;}else if(view==='manga'){if(dynPage)dynPage.hidden=true;if(mangaPage)mangaPage.hidden=false;}else{if(dynPage)dynPage.hidden=false;if(mangaPage)mangaPage.hidden=true;}
+   activeView=view; home.hidden=view!=='home'; const dynPage=byId('dynamic-page'); const mangaPage=byId('page-manga'); const mcPage=byId('page-motion-comic'); if(view==='home'){if(dynPage)dynPage.hidden=true;if(mangaPage)mangaPage.hidden=true;if(mcPage)mcPage.hidden=true;}else if(view==='manga'){if(dynPage)dynPage.hidden=true;if(mangaPage)mangaPage.hidden=false;if(mcPage)mcPage.hidden=true;}else if(view==='motion-comic'){if(dynPage)dynPage.hidden=true;if(mangaPage)mangaPage.hidden=true;if(mcPage)mcPage.hidden=false;}else{if(dynPage)dynPage.hidden=false;if(mangaPage)mangaPage.hidden=true;if(mcPage)mcPage.hidden=true;}
    if(prev==='game'&&view!=='game'){stopGamePolling();if(window.AIOfficeLive2D)window.AIOfficeLive2D.dispose();}if(view==='game'&&window.AIOfficeLive2D&&window.AIOfficeLive2D.resize){setTimeout(()=>{try{window.AIOfficeLive2D.resize();}catch{}},60);}
    document.querySelectorAll('.act[data-view]').forEach(x=>x.classList.toggle('active',x.dataset.view===view));
    const tabChat=byId('tab-chat');
@@ -3212,7 +3328,7 @@ window.addEventListener('DOMContentLoaded', () => { setTimeout(() => $('chatinpu
        tabChat.classList.remove('active');
        tabWb.style.display='inline-flex';
        tabWb.classList.add('active');
-       const label=({workspace:'Workspace',tasks:'Nhiệm vụ',agents:'Tác nhân AI',skills:'Kỹ năng',models:'Mô hình',tools:'Công cụ',game:'Game & VTuber',manga:'Manga Studio'}[view]||title||view);
+       const label=({workspace:'Workspace',tasks:'Nhiệm vụ',agents:'Tác nhân AI',skills:'Kỹ năng',models:'Mô hình',tools:'Công cụ',game:'Game & VTuber',manga:'Manga Studio','motion-comic':'Motion Comic Studio'}[view]||title||view);
        if(tabWbLabel) tabWbLabel.textContent=label;
      }
    }
@@ -3960,6 +4076,7 @@ async function renderModels(){setPage('models','Mô hình');page.innerHTML=heade
         '<button type="button" class="manga-nav-tab ' + (mangaActiveTab === 'story' ? 'active' : '') + '" data-manga-tab="story">🖋 Story Studio</button>' +
         '<button type="button" class="manga-nav-tab ' + (mangaActiveTab === 'storyboard' ? 'active' : '') + '" data-manga-tab="storyboard">🖼 Storyboard & Art</button>' +
         '<button type="button" class="manga-nav-tab ' + (mangaActiveTab === 'composer' ? 'active' : '') + '" data-manga-tab="composer">💬 Manga Composer</button>' +
+        '<button type="button" class="manga-nav-tab ' + (mangaActiveTab === 'motion' ? 'active' : '') + '" data-manga-tab="motion">🎬 Motion Comic</button>' +
         '<button type="button" class="manga-nav-tab ' + (mangaActiveTab === 'export' ? 'active' : '') + '" data-manga-tab="export">📦 Export Queue</button>' +
       '</nav>' +
       '<div id="manga-tab-view" class="manga-pane">' + empty('Đang nạp Manga Studio...') + '</div>';
@@ -4693,7 +4810,7 @@ async function renderModels(){setPage('models','Mô hình');page.innerHTML=heade
     });
   }
 
- async function navigate(view){stopGamePolling();if(view==='home')return showHome();if(view==='workspace')return renderWorkspace('');if(view==='tasks')return renderTasks();if(view==='agents')return renderAgents();if(view==='skills')return renderSkills();if(view==='tools')return renderTools();if(view==='game')return renderGameVTuber();if(view==='models')return renderModels();if(view==='settings')return renderSettings();if(view==='manga')return renderManga();}
+ async function navigate(view){stopGamePolling();if(view==='home')return showHome();if(view==='workspace')return renderWorkspace('');if(view==='tasks')return renderTasks();if(view==='agents')return renderAgents();if(view==='skills')return renderSkills();if(view==='tools')return renderTools();if(view==='game')return renderGameVTuber();if(view==='models')return renderModels();if(view==='settings')return renderSettings();if(view==='manga')return renderManga();if(view==='motion-comic')return renderMotionComic();}
  window.navigate=navigate;
  document.addEventListener('aioffice:open-workspace-editor',e=>{
    const goal=String((e.detail&&e.detail.goal)||'');

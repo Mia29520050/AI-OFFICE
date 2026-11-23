@@ -17,9 +17,12 @@ F:\AI-Office\
 │   │   │   ├── ai-office-icon.png   # Icon hiển thị trên thanh header & UI
 │   │   │   └── Inter-Variable.ttf   # Font chữ hiển thị chuẩn Unicode tiếng Việt
 │   │   └── index.html               # Giao diện SPA (Activity Rail, Explorer, Manga Studio, Editor...)
+│   ├── anime4k_upscaler.py          # Khử mờ và làm đậm nét mực Manga 4K siêu tốc (0 MB VRAM)
 │   ├── browser.py                   # Engine tự động hóa trình duyệt web (Playwright / Chrome profile)
+│   ├── codebase_graph.py            # AST Knowledge Graph lập bản đồ quan hệ class & hàm toàn codebase
 │   ├── computer.py                  # Quan sát desktop, chụp ảnh màn hình, trích xuất UI Automation tree
 │   ├── computer_use.py              # Bộ lập kế hoạch thao tác máy tính (Computer Use planner)
+│   ├── fast_calc.py                 # Fast-path router & máy tính số học siêu tốc 1ms (12+ chữ số)
 │   ├── game_agent.py                # Agent điều khiển tương tác game / Live2D
 │   ├── game_playbooks.py            # Kịch bản và quy tắc tương tác game
 │   ├── launcher.py                  # Khởi chạy cửa sổ pywebview + WebView2 (hạ quyền tránh chặn tiếng Việt)
@@ -28,15 +31,20 @@ F:\AI-Office\
 │   ├── manga_comfy.py               # Adapter ComfyUI, GPU ResourceScheduler lock, model registry
 │   ├── manga_composer.py            # Manga Compositor: render trang, bong bóng thoại tiếng Việt, CBZ/PDF
 │   ├── manga_illustrator.py         # Đặc tả tạo hình nhân vật & tổng hợp prompt diffusion
+│   ├── manga_koharu.py              # Adapter Koharu sidecar (LaMa inpainting, xóa bóng thoại giữ nét)
 │   ├── manga_metrics.py             # Tính toán chỉ số chất lượng ảnh, độ tương phản và continuity
 │   ├── manga_story.py               # Story Engine: lorebook, locked traits, speech rules, continuity QA
 │   ├── manga_studio.py              # Router REST API cho toàn bộ tính năng Manga Studio
 │   ├── manga_validator.py           # Kiểm định chất lượng hình ảnh & phát hiện bất thường mỹ thuật
 │   ├── model_provider.py            # Quản lý kết nối Ollama (qwen3.5:4b), inference serialization
+│   ├── motion_comic.py              # Motion Comic Video Studio Engine (16:9 4K & TikTok 9:16, Ken Burns)
+│   ├── motion_comic_routes.py       # REST API Router điều khiển Motion Comic & xuất video MP4
 │   ├── ocr_helper.py                # Nhận diện chữ trên ảnh màn hình (OCR)
 │   ├── research_tools.py            # Công cụ tìm kiếm tệp và nghiên cứu tri thức
+│   ├── security_guard.py            # Lá chắn bảo mật: lọc ký tự ẩn Zero-width, cấm eval/exec/pickle độc
 │   ├── task_context.py              # Quản lý ngữ cảnh, nhật ký thực thi và lịch sử nhiệm vụ trong SQLite
 │   ├── task_qa.py                   # QA Agent kiểm tra acceptance conditions
+│   ├── voice_engine.py              # Neural Voice Dubbing (Edge-TTS), procedural SFX & phụ đề SRT/VTT
 │   ├── vtuber_models.py             # Quản lý và nạp mô hình Live2D / 3D Avatar
 │   └── workspace_editor.py          # Workspace Editor Agent: đọc tệp an toàn, unified diff, SHA-256 backup
 ├── data\                            # Kho lưu trữ runtime cục bộ (được ignore trong git)
