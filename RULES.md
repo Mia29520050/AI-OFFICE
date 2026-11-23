@@ -10,3 +10,4 @@
 8. Keep user data local by default. Do not call cloud model APIs unless the user enables them.
 9. Add a focused test for every new capability and run the smoke check before release.
 10. Stop after three failed attempts on one unit and report the evidence.
+11. Strictly follow the directory structure defined in `PROJECT_STRUCTURE.md`: place test suites in `tests/`, standalone/CLI tools in `scripts/`, documentation in `docs/`, runtime state in `data/`, and throwaway experiments in `scratch/`. Keep the project root clean and organized.

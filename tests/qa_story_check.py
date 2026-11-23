@@ -314,11 +314,14 @@ def run_e2e_story_qa() -> dict[str, any]:
     print("\n[PHASE 5] Panel Art Pipeline: Generating Panel Assets with ResourceScheduler...")
     t0 = time.time()
 
-    gen_art_resp = client.post("/api/manga/comfy/generate-panel", json={
-        "panel_id": p_id,
-        "use_mock": True
-    })
-    assert gen_art_resp.status_code == 200, f"Generate panel art failed: {gen_art_resp.text}"
+    # Generate artwork for all panels on the page so the image passes the QA gate
+    for panel in first_page["panels"]:
+        gen_art_resp = client.post("/api/manga/comfy/generate-panel", json={
+            "panel_id": panel["id"],
+            "use_mock": True
+        })
+        assert gen_art_resp.status_code == 200, f"Generate panel art failed: {gen_art_resp.text}"
+
     art_data = gen_art_resp.json()
     assert art_data["status"] == "completed"
     asset_id = art_data["asset_id"]

@@ -51,7 +51,7 @@ export class Live2DStageController {
     this._lastMoodExpr = null;
 
     if (fallbackEl) fallbackEl.hidden = false;
-    container.hidden = true;
+    container.hidden = false;
     container.innerHTML = "";
     onStatus("loading", "Đang tải model Live2D...");
 

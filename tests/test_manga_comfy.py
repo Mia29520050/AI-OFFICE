@@ -43,7 +43,7 @@ def temp_env(tmp_path: Path):
     (fake_comfy / "user" / "default" / "workflows").mkdir(parents=True, exist_ok=True)
 
     adapter = ComfyAdapter(
-        base_url="http://127.0.0.1:8188",
+        base_url="http://127.0.0.1:58188",
         comfy_path=fake_comfy,
         manga_dir=manga_dir,
         db_path=db_file,
@@ -71,10 +71,60 @@ def test_workflow_discovery_builtins(temp_env):
     assert "builtin_manga_bw" in wf_ids
     assert "builtin_manga_color" in wf_ids
     assert "builtin_wan_video_preview" in wf_ids
+    assert "builtin_anima_turbo_gguf" in wf_ids
+    assert "builtin_anima_ref_adapter" in wf_ids
+    assert "builtin_z_anime_lowvram" in wf_ids
 
     bw_wf = next(w for w in workflows if w.id == "builtin_manga_bw")
     assert bw_wf.category == "manga_bw"
     assert bw_wf.is_builtin is True
+
+    anima_ref = next(w for w in workflows if w.id == "builtin_anima_ref_adapter")
+    assert anima_ref.category == "character_consistency"
+    assert "AnimaRefAdapterApply" in anima_ref.required_models
+
+
+def test_anime_architecture_profiles_and_budget(temp_env):
+    adapter: ComfyAdapter = temp_env["adapter"]
+    profiles = adapter.get_anime_architecture_profiles()
+    assert "anima_turbo_gguf_q4" in profiles
+    assert "anima_ref_adapter_kv" in profiles
+    assert "z_anime_6b_q4" in profiles
+    assert "qwen_anime_20b_fp16" in profiles
+
+    # Anima-Turbo Q4 on 6GB VRAM must evaluate as OPTIMAL
+    eval_turbo = adapter.evaluate_hardware_budget("anima_turbo_gguf_q4", vram_mb=6144.0)
+    assert eval_turbo["status"] == "OPTIMAL"
+    assert eval_turbo["feasibility_6gb_vram"] == "EXCELLENT"
+    assert eval_turbo["vram_headroom_mb"] > 2000.0
+
+    # Z-Anime 6B must evaluate as CONSTRAINED
+    eval_z = adapter.evaluate_hardware_budget("z_anime_6b_q4", vram_mb=6144.0)
+    assert eval_z["status"] == "CONSTRAINED"
+    assert eval_z["feasibility_6gb_vram"] == "BORDERLINE"
+
+    # Qwen-Anime 20B must evaluate as EXCEEDS_HARDWARE
+    eval_qwen = adapter.evaluate_hardware_budget("qwen_anime_20b_fp16", vram_mb=6144.0)
+    assert eval_qwen["status"] == "EXCEEDS_HARDWARE"
+    assert eval_qwen["feasibility_6gb_vram"] == "INCOMPATIBLE"
+
+
+def test_anima_ref_adapter_prompt_graph_builder(temp_env):
+    adapter: ComfyAdapter = temp_env["adapter"]
+    req = PanelArtRequest(
+        panel_id="panel_ref_test",
+        prompt="Minh walking through school hallway wearing dark blazer",
+        seed=101010,
+        character_refs=[{"image_path": "data/manga/projects/test/characters/minh.png"}],
+    )
+    graph = adapter.workflow_discovery.build_prompt_graph(
+        req, model_name="anima-turbo-q4_k_m.gguf", workflow_id="builtin_anima_ref_adapter"
+    )
+    assert "8" in graph
+    assert graph["8"]["class_type"] == "AnimaRefAdapterApply"
+    assert graph["8"]["inputs"]["rope_offset_x"] == 1000
+    assert graph["8"]["inputs"]["cache_kv"] is True
+    assert graph["11"]["class_type"] == "VAEDecodeTiled"
 
 
 def test_model_registry_without_checkpoints(temp_env):

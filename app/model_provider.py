@@ -12,6 +12,9 @@ import httpx
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 
+from app.security_guard import SecurityGuard
+from app.fast_calc import classify_prompt_speed
+
 DEFAULT_OLLAMA_URL = os.getenv("OLLAMA_HOST", "http://127.0.0.1:11434").rstrip("/")
 DEFAULT_LOCAL_MODEL = os.getenv("AI_OFFICE_MODEL", "qwen3.5:4b")
 
@@ -189,6 +192,27 @@ class ModelProviderManager:
             converted.append({"role": role, "content": parts})
         return converted
 
+    def _sanitize_messages(self, messages: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        sanitized: list[dict[str, Any]] = []
+        for msg in messages:
+            content = msg.get("content", "")
+            if isinstance(content, str):
+                cleaned = SecurityGuard.sanitize_input_text(content).cleaned_text
+                sanitized.append({**msg, "content": cleaned})
+            elif isinstance(content, list):
+                # multi-part content
+                clean_parts = []
+                for p in content:
+                    if isinstance(p, dict) and p.get("type") == "text":
+                        text_val = p.get("text", "")
+                        clean_parts.append({**p, "text": SecurityGuard.sanitize_input_text(text_val).cleaned_text})
+                    else:
+                        clean_parts.append(p)
+                sanitized.append({**msg, "content": clean_parts})
+            else:
+                sanitized.append(msg)
+        return sanitized
+
     async def chat(
         self,
         messages: list[dict[str, Any]],
@@ -197,14 +221,34 @@ class ModelProviderManager:
         num_predict: int = 800,
         num_ctx: int | None = None,
         temperature: float = 0.25,
+        think: bool | None = None,
     ) -> str:
+        clean_messages = self._sanitize_messages(messages)
+
+        # Check for instant math or fast-path greetings
+        last_user_text = ""
+        for m in reversed(clean_messages):
+            if m.get("role") == "user":
+                content = m.get("content", "")
+                if isinstance(content, str):
+                    last_user_text = content
+                break
+
+        if last_user_text:
+            decision = classify_prompt_speed(last_user_text)
+            if decision.is_math and decision.math_result:
+                return decision.math_result
+            if decision.is_simple_query and think is None:
+                think = False
+                num_predict = min(num_predict, decision.recommended_num_predict)
+
         cfg = self.get_settings(include_secret=True)
         use_cloud = bool(cfg["cloud_enabled"] and cfg["provider"] == "cloud" and cfg["cloud_api_key"] and cfg["cloud_base_url"] and cfg["cloud_model"])
         if use_cloud:
             endpoint = cfg["cloud_base_url"].rstrip("/") + "/chat/completions"
             payload: dict[str, Any] = {
                 "model": cfg["cloud_model"],
-                "messages": self._to_openai_messages(messages),
+                "messages": self._to_openai_messages(clean_messages),
                 "max_tokens": max(128, min(int(num_predict), 2048)),
                 "temperature": temperature,
             }
@@ -224,12 +268,14 @@ class ModelProviderManager:
                 return str(choices[0].get("message", {}).get("content", "") or "").strip()
 
         ctx_size = int(num_ctx if num_ctx is not None else cfg["local_num_ctx"])
+        model_name = str(cfg["local_model"]).lower()
+        enable_think = think if think is not None else bool("r1" in model_name or "claude" in model_name)
         payload = {
             "model": cfg["local_model"],
-            "messages": messages,
+            "messages": clean_messages,
             "stream": False,
             "keep_alive": "24h",
-            "think": False,
+            "think": enable_think,
             "options": {
                 "num_ctx": max(2048, min(ctx_size, 16384)),
                 "num_predict": max(128, min(int(num_predict), 2048)),
@@ -268,15 +314,36 @@ class ModelProviderManager:
         num_predict: int = 1000,
         num_ctx: int | None = None,
         temperature: float = 0.25,
+        think: bool | None = None,
     ) -> AsyncGenerator[str, None]:
         """Stream response tokens in real-time from local Ollama or OpenAI-compatible cloud."""
+        clean_messages = self._sanitize_messages(messages)
+
+        # Check for instant math or fast-path greetings
+        last_user_text = ""
+        for m in reversed(clean_messages):
+            if m.get("role") == "user":
+                content = m.get("content", "")
+                if isinstance(content, str):
+                    last_user_text = content
+                break
+
+        if last_user_text:
+            decision = classify_prompt_speed(last_user_text)
+            if decision.is_math and decision.math_result:
+                yield decision.math_result
+                return
+            if decision.is_simple_query and think is None:
+                think = False
+                num_predict = min(num_predict, decision.recommended_num_predict)
+
         cfg = self.get_settings(include_secret=True)
         use_cloud = bool(cfg["cloud_enabled"] and cfg["provider"] == "cloud" and cfg["cloud_api_key"] and cfg["cloud_base_url"] and cfg["cloud_model"])
         if use_cloud:
             endpoint = cfg["cloud_base_url"].rstrip("/") + "/chat/completions"
             payload: dict[str, Any] = {
                 "model": cfg["cloud_model"],
-                "messages": self._to_openai_messages(messages),
+                "messages": self._to_openai_messages(clean_messages),
                 "max_tokens": max(128, min(int(num_predict), 2048)),
                 "temperature": temperature,
                 "stream": True,
@@ -310,12 +377,14 @@ class ModelProviderManager:
             return
 
         ctx_size = int(num_ctx if num_ctx is not None else cfg["local_num_ctx"])
+        model_name = str(cfg["local_model"]).lower()
+        enable_think = think if think is not None else bool("r1" in model_name or "claude" in model_name)
         payload = {
             "model": cfg["local_model"],
-            "messages": messages,
+            "messages": clean_messages,
             "stream": True,
             "keep_alive": "24h",
-            "think": False,
+            "think": enable_think,
             "options": {
                 "num_ctx": max(2048, min(ctx_size, 16384)),
                 "num_predict": max(128, min(int(num_predict), 2048)),

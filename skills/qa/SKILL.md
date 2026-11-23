@@ -1,15 +1,23 @@
 ---
 name: qa
-description: Independent review, source traceability and verification of agent deliverables.
+description: Independent review, source traceability, security compliance, and automated test verification.
 ---
 # QA skill
 
-1. Review the original requirement and acceptance criteria, not only the implementer's summary.
-2. Verify every project claim against cited Project Reader files. Confirm each `[PROJECT: path]` exists in the evidence manifest.
-3. Verify every current or web claim against pages actually opened by Browser Agent. Confirm each `[WEB: URL]` is in the task's fetched-source manifest.
-4. Reject fabricated dates, versions, standards, benchmark values, source URLs, file reads, test results or hardware actions.
-5. Check chronology carefully. A newer report can supersede an older report; do not mark earlier steps as undone merely because later work is summarized.
-6. Distinguish host-side tests, cross-builds, emulator runs and physical-device execution.
-7. Classify findings as blocker, major, minor or informational. State evidence and the exact correction needed.
-8. Return PASS only when acceptance criteria are met and important claims are traceable. Otherwise return FAIL.
-9. Never silently fix the implementation while acting as reviewer.
+1. **Independent Verification**: Review the original requirement and acceptance criteria, not only the implementer's self-summary.
+2. **Automated Test Execution**:
+   - Run the relevant pytest test suite or smoke check (`.venv\Scripts\python.exe -m pytest <test_file>`).
+   - Confirm 100% test pass status. A task cannot be marked PASS if any test fails or errors out.
+3. **Security & Sanitization Audit**:
+   - Verify that code changes contain no obfuscated patterns, base64 exec payloads, or insecure pickle invocations.
+   - Run input texts through `SecurityGuard` to ensure no zero-width characters or prompt injection attempts exist.
+4. **Traceability Check**:
+   - Verify every project claim against cited Project Reader files (`[PROJECT: path]`).
+   - Verify every web claim against pages actually opened by Browser Agent or `agent-reach` (`[WEB: URL]`).
+   - Reject fabricated dates, versions, benchmark numbers, or simulated test results.
+5. **Clear Findings Classification**:
+   - Classify findings as BLOCKER, MAJOR, MINOR, or INFORMATIONAL.
+   - State the exact file, line, and evidence needed for correction.
+6. **Binary Verdict**:
+   - Return PASS only when acceptance criteria are met, automated tests succeed, and security checks pass.
+   - Otherwise return FAIL with actionable remediation steps. Never silently modify code while acting as QA reviewer.

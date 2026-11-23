@@ -227,3 +227,22 @@ def register_routes(app: FastAPI) -> None:
             return result
         except KeyError as exc:
             raise HTTPException(404, str(exc))
+
+    @app.get("/api/research/codebase-graph")
+    async def research_codebase_graph(symbol: str = "") -> dict[str, Any]:
+        from app.codebase_graph import CodebaseGraph, DEFAULT_GRAPH_PATH
+        graph = CodebaseGraph()
+        if not DEFAULT_GRAPH_PATH.exists():
+            graph.scan_directory()
+            graph.save_graph()
+        else:
+            graph.load_graph()
+
+        if not symbol:
+            return {
+                "modules_count": len(graph.modules),
+                "classes_count": len(graph.classes),
+                "functions_count": len(graph.functions),
+                "sample_modules": list(graph.modules.keys())[:10],
+            }
+        return graph.query_symbol(symbol)

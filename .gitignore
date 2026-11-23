@@ -1,21 +1,36 @@
+# Python runtime & environments
 .venv/
-.pytest_cache/
+venv/
+ENV/
+env/
 __pycache__/
 *.py[cod]
-data/*.db
-data/*.db-shm
-data/*.db-wal
-data/*.log
-data/screenshots/
-data/browser-profile/
-data/browser-research-profile/
-data/backups/
-data/workspace-backups/
-data/workspace-edit-proposals/
-data/project_registry.json
-data/vtuber_models/
-data/game_playbooks/
-data/manga/
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+
+# Testing & Cache
+.pytest_cache/
+.pytest_cache_tmp/
+.coverage
+htmlcov/
+
+# Local Runtime Data (App Storage)
+data/*
+!data/.gitkeep
+
+# Scratch & Temporary Folders
 scratch/
+*.tmp
+*.bak
+*.swp
 *.log
+
+# OS & Editor
 .DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/

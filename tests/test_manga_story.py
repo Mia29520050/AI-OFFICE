@@ -246,7 +246,14 @@ def test_fallback_generator():
 
 @pytest.mark.anyio
 async def test_story_engine_offline_execution():
-    engine = MangaStoryEngine(model_manager=None)
+    class OfflineModelManager:
+        async def runtime_ready(self):
+            return False, "Offline test mode"
+
+        def active_route(self):
+            return {"mode": "local", "model": "none"}
+
+    engine = MangaStoryEngine(model_manager=OfflineModelManager())
     data = create_sample_story_data()
     req = StoryGenerationRequest(
         series_title=data["series"]["title"],

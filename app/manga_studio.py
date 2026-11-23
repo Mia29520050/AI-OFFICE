@@ -1401,14 +1401,22 @@ async def generate_panel_art(body: GeneratePanelArtRequest):
         except Exception as e:
             logger.warning(f"manga_comfy error, using fallback placeholder: {e}")
 
-    # Fallback to local image generator if file doesn't exist yet
+    # Fallback to authentic MangaIllustrationEngine if file doesn't exist yet
     if not panel_img_path.exists():
-        width, height = 800, 600
-        img = Image.new("RGB", (width, height), (255, 255, 255) if art_style == "bw" else (245, 248, 252))
-        draw = ImageDraw.Draw(img)
-        draw.rectangle([4, 4, width - 5, height - 5], outline=(20, 20, 20), width=4)
-        draw.text((20, 20), f"[PANEL {panel['panel_number']}] DRAFT ART", fill=(20, 20, 20))
-        draw.text((20, 70), f"Prompt: {positive_prompt[:120]}", fill=(60, 60, 60))
+        from manga_illustrator import MangaIllustrationEngine
+        from manga_validator import validate_panel_image, QAValidationError
+
+        engine = MangaIllustrationEngine()
+        img = engine.render_panel(
+            panel["id"],
+            width=800,
+            height=600,
+            page_num=1,
+            pan_num=panel["panel_number"]
+        )
+        val_res = validate_panel_image(img, panel_id=panel["id"])
+        if not val_res.is_valid:
+            raise QAValidationError(f"Panel {panel['id']} failed visual validation: {val_res.failure_reasons}")
         img.save(str(panel_img_path), "PNG")
 
     # Update SQLite database
@@ -1643,14 +1651,15 @@ async def export_chapter_endpoint(body: ExportChapterRequest):
 
     if manga_composer:
         try:
-            manga_composer.export_chapter(
+            exp_res = manga_composer.export_chapter(
                 pages=composed_images,
                 output_dir=exports_dir,
                 base_name=base_name,
                 export_png=True,
                 export_cbz=True,
                 export_pdf=True,
-                metadata={"title": chapter["title"], "series": chapter["series_title"]}
+                metadata={"title": chapter["title"], "series": chapter["series_title"]},
+                validate_quality=True,
             )
             out_cbz = exports_dir / base_name / f"{base_name}.cbz"
             out_pdf = exports_dir / base_name / f"{base_name}.pdf"
@@ -1659,19 +1668,12 @@ async def export_chapter_endpoint(body: ExportChapterRequest):
             if out_pdf.exists():
                 pdf_path = out_pdf
         except Exception as e:
+            from manga_validator import QAValidationError
+            if isinstance(e, QAValidationError):
+                logger.error(f"QA GATE BLOCKED RELEASE: {e}")
+                raise HTTPException(status_code=422, detail=f"QA GATE BLOCKED: {e}")
             logger.warning(f"manga_composer export_chapter error: {e}")
-
-    # Fallback zip and PDF if not produced
-    if not cbz_path.exists():
-        import zipfile
-        with zipfile.ZipFile(cbz_path, "w", zipfile.ZIP_DEFLATED) as zf:
-            for idx, img_path in enumerate(composed_images, 1):
-                zf.write(img_path, arcname=f"page_{idx:03d}.png")
-
-    if not pdf_path.exists():
-        pil_imgs = [Image.open(p).convert("RGB") for p in composed_images]
-        if pil_imgs:
-            pil_imgs[0].save(str(pdf_path), "PDF", resolution=150.0, save_all=True, append_images=pil_imgs[1:])
+            raise HTTPException(status_code=500, detail=f"Export failed: {e}")
 
     export_id = uuid.uuid4().hex
     stamp = now()

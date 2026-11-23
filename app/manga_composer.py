@@ -327,9 +327,14 @@ def _calculate_tail_triangle(
     # Intersect ray with bubble bounding box
     rx = bw / 2.0
     ry = bh / 2.0
+    if dist < max(rx, ry) * 0.75:
+        return []  # Tail tip is inside or too close to bubble body
+
     scale_x = abs(rx / dx) if abs(dx) > 1e-4 else 1e5
     scale_y = abs(ry / dy) if abs(dy) > 1e-4 else 1e5
     scale = min(scale_x, scale_y) * 0.92  # slightly inset into bubble body
+    if scale >= 0.98:
+        return []
 
     ax = cx + dx * scale
     ay = cy + dy * scale
@@ -530,6 +535,10 @@ def render_speech_bubble_overlay(
         # Standard dilated border technique
         filter_size = border_w * 2 + 1
         border_mask = mask.filter(ImageFilter.MaxFilter(filter_size))
+        # Clear edges to avoid boundary bleeding / black artifacts
+        b_draw = ImageDraw.Draw(border_mask)
+        b_draw.rectangle([0, 0, cw - 1, ch - 1], outline=0, width=border_w + 1)
+
         border_img = Image.new("RGBA", (cw, ch), (*border_color[:3], 255))
         fill_img = Image.new("RGBA", (cw, ch), (*bg_color[:3], 255))
         overlay.paste(border_img, (0, 0), border_mask)
@@ -1330,6 +1339,7 @@ def export_chapter(
     export_pdf: bool = True,
     metadata: ComicMetadata | dict[str, Any] | None = None,
     dpi: int = 150,
+    validate_quality: bool = False,
 ) -> dict[str, Any]:
     """Batch export an entire manga chapter to PNG pages, CBZ, and multi-page PDF."""
     out_d = Path(output_dir).resolve() / base_name
@@ -1346,9 +1356,16 @@ def export_chapter(
         else:
             rendered_pages.append(Image.open(item))
 
+    # Strict QA Gate: Validate visual content before release
+    qa_report = None
+    if validate_quality:
+        from manga_validator import validate_chapter_release
+        qa_report = validate_chapter_release(rendered_pages, raise_on_failure=True)
+
     results: dict[str, Any] = {
         "output_dir": str(out_d),
         "page_count": len(rendered_pages),
+        "qa_report": qa_report,
         "files": {},
     }
 
