@@ -6070,6 +6070,8 @@ window.addEventListener('DOMContentLoaded', () => { setTimeout(() => $('chatinpu
 /* AI Office functional workbench views */
 (()=>{
  const byId=id=>document.getElementById(id);
+ const getJson=async(url,opts={})=>{const r=await fetch(url,opts);if(!r.ok)throw new Error('HTTP '+r.status);return await r.json();};
+ window.getJson=getJson;
  const page=byId('dynamic-page');
  const home=document.querySelector('.center-scroll');
  let activeView='home', workspacePath='', selectedTaskId='';
@@ -6840,13 +6842,24 @@ async function renderModels(){setPage('models','Mô hình');page.innerHTML=heade
   let mangaActivePageId = null;
   let mangaSeriesCache = [];
   let mangaLastContinuityReport = null;
+  let mangaCurrentHost = null;
 
-  async function renderManga() {
-    setPage('manga', 'Manga Studio');
-    const host = byId('page-manga');
+  async function renderManga(customTarget) {
+    if (customTarget !== undefined) mangaCurrentHost = customTarget;
+    if (!mangaCurrentHost) setPage('manga', 'Manga Studio');
+    const host = mangaCurrentHost || byId('page-manga');
     if (!host) return;
 
-    host.innerHTML =
+    const isEmbedded = !!mangaCurrentHost && mangaCurrentHost.id !== 'page-manga';
+    const headerHtml = isEmbedded ?
+      '<div class="manga-header" style="margin-bottom:12px">' +
+        '<div class="page-actions" style="margin-top:0">' +
+          '<select id="manga-series-select" class="field" style="min-width:240px"><option value="">-- Chọn Series Manga --</option></select>' +
+          '<button type="button" class="primary-btn" id="manga-btn-seed">★ Nạp Demo Lớp Học Ánh Trăng</button>' +
+          '<button type="button" class="secondary-btn" id="manga-btn-new-series">✦ Tạo Series Mới</button>' +
+        '</div>' +
+      '</div>'
+      :
       '<div class="manga-header">' +
         '<div><div class="page-head" style="margin-bottom:4px"><div><h1>Manga Studio</h1><p>Quy trình Manga chuyên nghiệp: Story Studio (Ollama) → ComfyUI Adapter (ResourceScheduler) → Manga Composer (Bóng thoại Unicode & Xuất CBZ/PDF)</p></div></div></div>' +
         '<div class="page-actions">' +
@@ -6854,7 +6867,10 @@ async function renderModels(){setPage('models','Mô hình');page.innerHTML=heade
           '<button type="button" class="primary-btn" id="manga-btn-seed">★ Nạp Demo Lớp Học Ánh Trăng</button>' +
           '<button type="button" class="secondary-btn" id="manga-btn-new-series">✦ Tạo Series Mới</button>' +
         '</div>' +
-      '</div>' +
+      '</div>';
+
+    host.innerHTML =
+      headerHtml +
       '<nav class="manga-subnav">' +
         '<button type="button" class="manga-nav-tab ' + (mangaActiveTab === 'hub' ? 'active' : '') + '" data-manga-tab="hub">📚 Series Hub</button>' +
         '<button type="button" class="manga-nav-tab ' + (mangaActiveTab === 'story' ? 'active' : '') + '" data-manga-tab="story">🖋 Story Studio</button>' +
@@ -6901,16 +6917,32 @@ async function renderModels(){setPage('models','Mô hình');page.innerHTML=heade
       if (select) {
         select.innerHTML = '<option value="">-- Chọn Series --</option>' +
           mangaSeriesCache.map(s => '<option value="' + esc(s.id) + '" ' + (s.id === mangaActiveSeriesId ? 'selected' : '') + '>' + esc(s.title) + ' (' + (s.art_style === 'bw' ? 'B&W' : 'Màu') + ')</option>').join('');
-        select.addEventListener('change', () => {
+        select.addEventListener('change', async () => {
           mangaActiveSeriesId = select.value || null;
           mangaActiveChapterId = null;
           mangaActivePageId = null;
-          renderActiveMangaTab();
+          if (mangaActiveSeriesId) {
+            try {
+              const sDetail = await getJson('/api/manga/series/' + encodeURIComponent(mangaActiveSeriesId));
+              if (sDetail && sDetail.chapters && sDetail.chapters.length) {
+                mangaActiveChapterId = sDetail.chapters[0].id;
+              }
+            } catch {}
+          }
+          await renderActiveMangaTab();
         });
       }
       if (!mangaActiveSeriesId && mangaSeriesCache.length > 0) {
         mangaActiveSeriesId = mangaSeriesCache[0].id;
         if (select) select.value = mangaActiveSeriesId;
+      }
+      if (mangaActiveSeriesId && !mangaActiveChapterId) {
+        try {
+          const sDetail = await getJson('/api/manga/series/' + encodeURIComponent(mangaActiveSeriesId));
+          if (sDetail && sDetail.chapters && sDetail.chapters.length) {
+            mangaActiveChapterId = sDetail.chapters[0].id;
+          }
+        } catch {}
       }
     } catch (e) {
       console.error(e);
@@ -7273,20 +7305,38 @@ async function renderModels(){setPage('models','Mô hình');page.innerHTML=heade
   }
 
   async function renderMangaStoryboard(pane) {
+    if (!mangaActiveChapterId && mangaActiveSeriesId) {
+      try {
+        const sDetail = await getJson('/api/manga/series/' + encodeURIComponent(mangaActiveSeriesId));
+        if (sDetail && sDetail.chapters && sDetail.chapters.length) {
+          mangaActiveChapterId = sDetail.chapters[0].id;
+        }
+      } catch {}
+    }
     if (!mangaActiveChapterId) {
       pane.innerHTML = empty('Hãy chọn hoặc tạo một Chương trong Series Hub / Story Studio trước khi vào Storyboard.');
       return;
     }
 
     let comfyStatus = { is_online: false, mode: 'mock' };
-    try { comfyStatus = await getJson('/api/manga/comfy/status'); } catch {}
-
     let pages = [];
     try {
-      pages = await getJson('/api/manga/chapters/' + encodeURIComponent(mangaActiveChapterId) + '/pages');
+      [pages, comfyStatus] = await Promise.all([
+        getJson('/api/manga/chapters/' + encodeURIComponent(mangaActiveChapterId) + '/pages'),
+        Promise.race([
+          getJson('/api/manga/comfy/status'),
+          new Promise(res => setTimeout(() => res({ is_online: false, mode: 'mock' }), 300))
+        ])
+      ]);
     } catch (e) {
-      pane.innerHTML = errorBox(e);
-      return;
+      if (!pages || !pages.length) {
+        try {
+          pages = await getJson('/api/manga/chapters/' + encodeURIComponent(mangaActiveChapterId) + '/pages');
+        } catch (err) {
+          pane.innerHTML = errorBox(err);
+          return;
+        }
+      }
     }
 
     if (!pages.length) {
@@ -7418,6 +7468,14 @@ async function renderModels(){setPage('models','Mô hình');page.innerHTML=heade
   }
 
   async function renderMangaComposer(pane) {
+    if (!mangaActiveChapterId && mangaActiveSeriesId) {
+      try {
+        const sDetail = await getJson('/api/manga/series/' + encodeURIComponent(mangaActiveSeriesId));
+        if (sDetail && sDetail.chapters && sDetail.chapters.length) {
+          mangaActiveChapterId = sDetail.chapters[0].id;
+        }
+      } catch {}
+    }
     if (!mangaActiveChapterId) {
       pane.innerHTML = empty('Hãy chọn Chương trước khi mở Manga Composer.');
       return;
@@ -7594,7 +7652,14 @@ async function renderModels(){setPage('models','Mô hình');page.innerHTML=heade
     });
   }
 
- 
+  window.renderManga = renderManga;
+  window.renderActiveMangaTab = renderActiveMangaTab;
+  window.renderMangaHub = renderMangaHub;
+  window.renderMangaStory = renderMangaStory;
+  window.renderMangaStoryboard = renderMangaStoryboard;
+  window.renderMangaComposer = renderMangaComposer;
+  window.renderMangaExport = renderMangaExport;
+
   function showHome() {
     if (typeof setPage === 'function') setPage('home', 'Trò chuyện');
     const h = document.querySelector('.center-scroll');
@@ -7900,23 +7965,10 @@ async function navigate(view) {
         </div>
       `;
     } else {
-      tabContainer.innerHTML = `
-        <div class="view-card" style="padding:24px">
-          <h3>Manga Storyboard & Bố Cục Trang</h3>
-          <p style="color:var(--text-muted);font-size:12.5px;margin-bottom:16px">Bố trí các panel tranh, sắp đặt khung thoại tiếng Việt Unicode và bộ lọc Screentone.</p>
-          <div style="display:flex;gap:10px;margin-bottom:20px">
-            <button type="button" class="primary-btn" id="btn-create-manga-page">＋ Tạo Trang Manga Mới</button>
-            <button type="button" class="secondary-btn" id="btn-switch-to-motion">🎬 Chuyển Thành Video Motion Comic</button>
-          </div>
-          <div class="empty-state">Chọn một series để bắt đầu bố cục trang tranh hoặc bấm "Chuyển Thành Video Motion Comic" để tạo video ngay.</div>
-        </div>
-      `;
-      byId('btn-switch-to-motion')?.addEventListener('click', () => {
-        unifiedStudioActiveTab = 'motion';
-        renderUnifiedStudio();
-      });
+      renderManga(tabContainer);
     }
   }
+  window.renderUnifiedStudio = renderUnifiedStudio;
 
   function renderMotionComicInside(container) {
     container.innerHTML = `
