@@ -226,6 +226,7 @@ def main() -> None:
         height=900,
         min_size=(800, 560),
         maximized=True,
+        text_select=True,
     )
     threading.Thread(target=apply_window_icon, daemon=True).start()
     try:
