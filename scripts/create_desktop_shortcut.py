@@ -12,7 +12,6 @@ import sys
 from pathlib import Path
 
 ROOT_DIR = Path(__file__).resolve().parents[1]
-VBS_PATH = ROOT_DIR / "Start-AI-Office.vbs"
 ICON_PATH = ROOT_DIR / "app" / "ui" / "assets" / "ai-office.ico"
 
 
@@ -31,11 +30,9 @@ def create_shortcut() -> Path:
         arguments = ""
         icon_loc = f"{exe_path},0"
     else:
-        wscript_exe = Path(os.path.expandvars(r"%SystemRoot%\System32\wscript.exe"))
-        if not wscript_exe.exists():
-            wscript_exe = Path("wscript.exe")
-        target = str(wscript_exe)
-        arguments = f'//B "{VBS_PATH}"'
+        pythonw_venv = ROOT_DIR / ".venv" / "Scripts" / "pythonw.exe"
+        target = str(pythonw_venv) if pythonw_venv.exists() else "pythonw.exe"
+        arguments = f'"{ROOT_DIR / "app" / "launcher.py"}"'
         icon_loc = f"{ICON_PATH},0" if ICON_PATH.exists() else ""
 
     working_dir = str(ROOT_DIR)

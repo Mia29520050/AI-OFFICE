@@ -204,8 +204,7 @@ def test_browser_url_guards_preserve_security_while_allowing_sandbox() -> None:
 
 
 def test_launcher_allow_elevated_opt_in() -> None:
-    bat = (ROOT / "Start-AI-Office-Admin.bat").read_text(encoding="utf-8")
-    assert "--allow-elevated" in bat and "-Verb RunAs" in bat
+    assert (ROOT / "AI-Office.exe").exists()
 
     orig_argv = sys.argv[:]
     orig_vals = {

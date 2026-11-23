@@ -38,8 +38,7 @@ F:\AI-Office\
 ├── requirements.txt      # Thư viện Python phụ thuộc
 ├── RULES.md              # 11 nguyên tắc kỹ thuật cốt lõi
 ├── PROJECT_STRUCTURE.md  # Bản đồ kiến trúc thư mục chuẩn chi tiết
-├── Start-AI-Office.bat   # Script khởi động giao diện người dùng
-└── Start-AI-Office-Admin.bat # Script khởi động quyền Administrator
+└── AI-Office.exe         # Trình khởi chạy Windows duy nhất (Zero terminal, GUI native)
 ```
 
 ---
@@ -47,7 +46,8 @@ F:\AI-Office\
 ## Run & Testing
 
 ### Khởi động Ứng dụng
-- Chạy `Start-AI-Office.bat` hoặc mở shortcut `AI Office` trên Desktop.
+- Chạy trực tiếp file `AI-Office.exe` hoặc mở lối tắt `AI Office` trên Desktop.
+- Ứng dụng tự động điều phối tiến trình ngầm, không mở cửa sổ dòng lệnh terminal/cmd.
 - Yêu cầu: Ollama đang chạy với mô hình `qwen3.5:4b`.
 - Địa chỉ backend: `http://127.0.0.1:8765`
 
