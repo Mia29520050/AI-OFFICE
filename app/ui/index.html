@@ -1429,13 +1429,14 @@ body[data-theme="light"] .selection-copy-popover {
   color: #f4f4f5;
 }
 .msg.assistant {
-  align-self: flex-start;
-  max-width: min(88%, 860px);
-  background: #141418;
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-bottom-left-radius: 4px;
-  color: #f4f4f5;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  align-self: stretch;
+  max-width: 100%;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  padding: 6px 0 !important;
+  color: var(--text);
 }
 .msg.system {
   align-self: center;
@@ -2817,18 +2818,21 @@ textarea.field {
   padding-right: 4px;
 }
 .mc-panel-card {
-  display: grid;
-  grid-template-columns: 110px 1fr 32px;
-  gap: 12px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-sm);
-  padding: 10px;
-  align-items: start;
-  transition: border-color 0.15s;
+  display: flex !important;
+  gap: 12px !important;
+  background: rgba(255, 255, 255, 0.03) !important;
+  border: 1px solid var(--line) !important;
+  border-radius: var(--radius-sm) !important;
+  padding: 10px 12px !important;
+  align-items: stretch !important;
+  transition: border-color 0.15s !important;
+}
+body[data-theme="light"] .mc-panel-card {
+  background: #ffffff !important;
+  border-color: rgba(0, 0, 0, 0.08) !important;
 }
 .mc-panel-card:hover {
-  border-color: rgba(99, 102, 241, 0.5);
+  border-color: rgba(99, 102, 241, 0.5) !important;
 }
 .mc-panel-thumb {
   width: 110px;
@@ -4548,17 +4552,32 @@ main.center {
   box-shadow: 0 1px 3px rgba(0,0,0,0.04) !important;
 }
 
+#chatlog .msg.assistant,
 .msg.assistant {
   align-items: flex-start !important;
+  align-self: stretch !important;
   background: transparent !important;
+  background-color: transparent !important;
   border: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  padding: 6px 0 !important;
+  margin: 4px 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
 }
 
+#chatlog .msg.assistant .msg-content,
 .msg.assistant .msg-content {
   background: transparent !important;
+  background-color: transparent !important;
   color: var(--text) !important;
   border: none !important;
-  padding: 4px 0 !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  width: 100% !important;
   max-width: 100% !important;
   font-size: 15px !important;
   line-height: 1.65 !important;
@@ -4974,26 +4993,48 @@ body[data-theme="light"] .omni-attach-btn {
   border-color: var(--accent) !important;
   color: var(--accent) !important;
 }
+.agent-select-wrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
 .agent-select-wrapper select#agent-select {
   appearance: none !important;
   -webkit-appearance: none !important;
-  background: rgba(255, 255, 255, 0.08) !important;
+  background-color: rgba(255, 255, 255, 0.08) !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.7)' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 10px center !important;
+  background-size: 11px 11px !important;
   border: 1px solid rgba(255, 255, 255, 0.14) !important;
   color: var(--text) !important;
   border-radius: 20px !important;
-  padding: 4px 12px !important;
-  font-size: 12px !important;
+  padding: 5px 28px 5px 12px !important;
+  font-size: 12.5px !important;
   font-weight: 500 !important;
   cursor: pointer !important;
   outline: none !important;
   transition: all 0.15s ease !important;
+  line-height: 1.4 !important;
 }
 body[data-theme="light"] .agent-select-wrapper select#agent-select {
-  background: rgba(0, 0, 0, 0.04) !important;
+  background-color: rgba(0, 0, 0, 0.04) !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='rgba(0,0,0,0.6)' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") !important;
   border: 1px solid rgba(0, 0, 0, 0.12) !important;
 }
 .agent-select-wrapper select#agent-select:hover {
   border-color: var(--accent) !important;
+  background-color: rgba(99, 102, 241, 0.12) !important;
+}
+.agent-select-wrapper select#agent-select option {
+  background: #1e1e24 !important;
+  color: #f4f4f5 !important;
+  padding: 8px 12px !important;
+  font-size: 13px !important;
+}
+body[data-theme="light"] .agent-select-wrapper select#agent-select option {
+  background: #ffffff !important;
+  color: #18181b !important;
 }
 .turbo-chip {
   background: rgba(99, 102, 241, 0.14) !important;
@@ -5081,10 +5122,10 @@ body[data-theme="light"] .turbo-chip {
   to { opacity: 1; transform: scale(1); }
 }
 .settings-modal-card {
-  width: 780px !important;
-  max-width: 95vw !important;
-  height: 560px !important;
-  max-height: 88vh !important;
+  width: 860px !important;
+  max-width: 96vw !important;
+  height: 580px !important;
+  max-height: 90vh !important;
   background: #18181b !important;
   border: 1px solid rgba(255, 255, 255, 0.14) !important;
   border-radius: 16px !important;
@@ -5200,6 +5241,19 @@ body[data-theme="light"] .settings-modal-nav-btn.active {
   flex: 1 !important;
   padding: 20px 24px !important;
   overflow-y: auto !important;
+  overflow-x: hidden !important;
+}
+.settings-modal-body .workspace-field {
+  min-width: 0 !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+.settings-modal-body .workspace-field input,
+.settings-modal-body .workspace-field select,
+.settings-modal-body .field {
+  min-width: 0 !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
 }
 
 </style></head>
@@ -5383,12 +5437,12 @@ body[data-theme="light"] .settings-modal-nav-btn.active {
       </button>
       <div class="agent-select-wrapper">
         <select id="agent-select" aria-label="Chọn tác nhân AI" title="Chọn tác nhân AI">
-          <option value="CEO">Điều phối chính (CEO) ⌄</option>
-          <option value="Vision">Nhận diện ảnh (Vision) ⌄</option>
-          <option value="Developer">Lập trình viên ⌄</option>
-          <option value="Workspace">Không gian làm việc ⌄</option>
-          <option value="Writer">Biên soạn nội dung ⌄</option>
-          <option value="QA">Kiểm thử chất lượng ⌄</option>
+          <option value="CEO">Điều phối chính (CEO)</option>
+          <option value="Vision">Nhận diện ảnh (Vision)</option>
+          <option value="Developer">Lập trình viên</option>
+          <option value="Workspace">Không gian làm việc</option>
+          <option value="Writer">Biên soạn nội dung</option>
+          <option value="QA">Kiểm thử chất lượng</option>
         </select>
       </div>
       <button type="button" class="tool-pill turbo-chip" id="btn-quick-calc" title="Máy tính số học 12+ chữ số trong 1ms">
@@ -7626,29 +7680,33 @@ async function navigate(view) {
       return;
     }
     list.innerHTML = mcPanelsState.map((p, idx) => `
-      <div class="mc-panel-card" data-panel-idx="${idx}" style="display:flex;gap:12px;align-items:center;background:rgba(255,255,255,0.03);border:1px solid var(--line);border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:8px">
-        <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
+      <div class="mc-panel-card" data-panel-idx="${idx}" style="display:flex;gap:12px;align-items:stretch;background:rgba(255,255,255,0.03);border:1px solid var(--line);border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:8px">
+        <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;flex-shrink:0">
           <span style="font-size:11px;font-weight:700;color:var(--text-muted)">#${idx + 1}</span>
-          <img src="${p.thumb || ''}" alt="Panel ${idx + 1}" style="width:64px;height:48px;object-fit:cover;border-radius:4px;border:1px solid rgba(255,255,255,0.1);background:#000">
+          <img src="${p.thumb || ''}" alt="Panel ${idx + 1}" style="width:64px;height:52px;object-fit:cover;border-radius:4px;border:1px solid rgba(255,255,255,0.1);background:#000">
         </div>
-        <div style="flex:1;display:grid;grid-template-columns:110px 1fr 140px 110px 32px;gap:8px;align-items:center">
-          <input type="text" class="field" style="font-size:12px;padding:4px 8px" placeholder="Nhân vật" value="${esc(p.speaker || '')}" onchange="mcPanelsState[${idx}].speaker=this.value">
-          <input type="text" class="field" style="font-size:12px;padding:4px 8px" placeholder="Lời thoại..." value="${esc(p.text || '')}" onchange="mcPanelsState[${idx}].text=this.value">
-          <select class="field" style="font-size:11.5px;padding:4px 6px" onchange="mcPanelsState[${idx}].motion=this.value">
-            <option value="zoom_in" ${p.motion === 'zoom_in' ? 'selected' : ''}>Zoom In (Kịch tính)</option>
-            <option value="zoom_out" ${p.motion === 'zoom_out' ? 'selected' : ''}>Zoom Out (Toàn cảnh)</option>
-            <option value="pan_rtl" ${p.motion === 'pan_rtl' ? 'selected' : ''}>Pan Manga (Phải-Trái)</option>
-            <option value="pan_ltr" ${p.motion === 'pan_ltr' ? 'selected' : ''}>Pan Điện ảnh (Trái-Phải)</option>
-            <option value="action_shake" ${p.motion === 'action_shake' ? 'selected' : ''}>Rung lắc chấn động</option>
-            <option value="static" ${p.motion === 'static' ? 'selected' : ''}>Tĩnh (Static)</option>
-          </select>
-          <select class="field" style="font-size:11.5px;padding:4px 6px" onchange="mcPanelsState[${idx}].sfx=this.value">
-            <option value="none" ${(!p.sfx || p.sfx === 'none') ? 'selected' : ''}>Không SFX</option>
-            <option value="boom" ${p.sfx === 'boom' ? 'selected' : ''}>💥 Boom (Va chạm)</option>
-            <option value="swoosh" ${p.sfx === 'swoosh' ? 'selected' : ''}>⚡ Swoosh (Kiếm/Gió)</option>
-            <option value="thump" ${p.sfx === 'thump' ? 'selected' : ''}>💓 Thump (Hồi hộp)</option>
-          </select>
-          <button type="button" class="mini-pill close" style="height:28px;width:28px;padding:0;display:flex;align-items:center;justify-content:center" title="Xóa phân cảnh" onclick="mcPanelsState.splice(${idx},1);renderTimelineList()">✕</button>
+        <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:8px;justify-content:center">
+          <div style="display:flex;gap:8px;align-items:center">
+            <input type="text" class="field" style="width:110px;flex-shrink:0;font-size:12px;padding:5px 8px" placeholder="Nhân vật" value="${esc(p.speaker || '')}" onchange="mcPanelsState[${idx}].speaker=this.value">
+            <input type="text" class="field" style="flex:1;min-width:0;font-size:12px;padding:5px 8px" placeholder="Lời thoại..." value="${esc(p.text || '')}" onchange="mcPanelsState[${idx}].text=this.value">
+            <button type="button" class="mini-pill close" style="height:28px;width:28px;flex-shrink:0;padding:0;display:flex;align-items:center;justify-content:center;cursor:pointer" title="Xóa phân cảnh" onclick="mcPanelsState.splice(${idx},1);renderTimelineList()">✕</button>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <select class="field" style="flex:1;min-width:0;font-size:11.5px;padding:5px 8px" onchange="mcPanelsState[${idx}].motion=this.value">
+              <option value="zoom_in" ${p.motion === 'zoom_in' ? 'selected' : ''}>🎬 Zoom In (Kịch tính)</option>
+              <option value="zoom_out" ${p.motion === 'zoom_out' ? 'selected' : ''}>🎬 Zoom Out (Toàn cảnh)</option>
+              <option value="pan_rtl" ${p.motion === 'pan_rtl' ? 'selected' : ''}>🎬 Pan Manga (Phải-Trái)</option>
+              <option value="pan_ltr" ${p.motion === 'pan_ltr' ? 'selected' : ''}>🎬 Pan Điện ảnh (Trái-Phải)</option>
+              <option value="action_shake" ${p.motion === 'action_shake' ? 'selected' : ''}>🎬 Rung lắc chấn động</option>
+              <option value="static" ${p.motion === 'static' ? 'selected' : ''}>🎬 Tĩnh (Static)</option>
+            </select>
+            <select class="field" style="flex:1;min-width:0;font-size:11.5px;padding:5px 8px" onchange="mcPanelsState[${idx}].sfx=this.value">
+              <option value="none" ${(!p.sfx || p.sfx === 'none') ? 'selected' : ''}>🔇 Không SFX</option>
+              <option value="boom" ${p.sfx === 'boom' ? 'selected' : ''}>💥 Boom (Va chạm)</option>
+              <option value="swoosh" ${p.sfx === 'swoosh' ? 'selected' : ''}>⚡ Swoosh (Kiếm/Gió)</option>
+              <option value="thump" ${p.sfx === 'thump' ? 'selected' : ''}>💓 Thump (Hồi hộp)</option>
+            </select>
+          </div>
         </div>
       </div>
     `).join('');
@@ -8321,16 +8379,16 @@ function updateWelcomeHeroVisibility() {
         <div class="settings-section">
           <h3>Cấu hình nguồn suy luận</h3>
           <p class="subtle">Mặc định chạy 100% cục bộ bằng Ollama. Có thể bật Cloud API nếu muốn tăng tốc nhận diện ảnh hoặc suy luận chuyên sâu.</p>
-          <form id="modal-model-settings-form" style="display:grid;gap:12px;margin-top:14px">
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <form id="modal-model-settings-form" style="display:grid;gap:14px;margin-top:14px">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
               <label class="workspace-field"><span>NGUỒN SUY LUẬN</span><select id="modal-cfg-provider" class="field"><option value="local">Chạy cục bộ trên máy (Ollama - Mặc định)</option><option value="cloud">Chạy trên đám mây (Cloud API - Tùy chọn)</option></select></label>
               <label class="workspace-field"><span>MÔ HÌNH AI TRÊN MÁY</span><input id="modal-cfg-local-model" class="field" value="${esc(mcfg.local_model)}"></label>
             </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
               <label class="workspace-field"><span>BỘ NHỚ NGỮ CẢNH</span><select id="modal-cfg-local-ctx" class="field"><option value="2048">2.048 từ (Tiêu chuẩn)</option><option value="4096">4.096 từ (Mở rộng)</option><option value="8192">8.192 từ (Tối đa)</option></select></label>
-              <label class="workspace-field"><span>ĐỊA CHỈ MÁY CHỦ CLOUD</span><input id="modal-cfg-cloud-url" class="field" value="${esc(mcfg.cloud_base_url)}" placeholder="https://api.openai.com/v1"></label>
               <label class="workspace-field"><span>TÊN MÔ HÌNH CLOUD</span><input id="modal-cfg-cloud-model" class="field" value="${esc(mcfg.cloud_model)}" placeholder="gpt-4o-mini"></label>
             </div>
+            <label class="workspace-field"><span>ĐỊA CHỈ MÁY CHỦ CLOUD (ENDPOINT)</span><input id="modal-cfg-cloud-url" class="field" value="${esc(mcfg.cloud_base_url)}" placeholder="https://api.openai.com/v1"></label>
             <label class="workspace-field"><span>KHÓA BÍ MẬT CLOUD API ${mcfg.cloud_api_key_set ? '(Đã lưu: '+esc(mcfg.cloud_api_key_preview)+')' : '(Chưa nhập)'}</span><input id="modal-cfg-cloud-key" class="field" type="password" autocomplete="off" placeholder="Để trống nếu giữ nguyên khóa bí mật đã lưu"></label>
             <div class="page-actions" style="justify-content:flex-start;gap:8px">
               <button type="submit" class="primary-btn">Lưu cấu hình</button>
