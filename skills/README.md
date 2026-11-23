@@ -17,3 +17,4 @@ Thư mục `skills/` chứa các tệp định nghĩa kỹ năng (`SKILL.md`) ch
 | `research/` | Research Agent | `SKILL.md` | Tìm kiếm tài liệu cục bộ, tổng hợp tri thức và trích xuất thông tin. |
 | `workspace/` | Workspace Editor Agent | `SKILL.md` | Đọc tệp UTF-8, tạo đề xuất chỉnh sửa unified diff và thực hiện cập nhật an toàn. |
 | `writing/` | Technical Writer Agent | `SKILL.md` | Viết tài liệu kỹ thuật, báo cáo, hướng dẫn và kịch bản nội dung. |
+| `motion/` | UI Motion & Animation Specialist | `SKILL.md` | Định luật hoạt hình Disney, đường cong gia tốc (easing), động lực lò xo và chuyển động 60fps mượt mà. |
