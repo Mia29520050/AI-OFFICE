@@ -21,7 +21,7 @@ import time
 import uuid
 from collections.abc import AsyncGenerator
 from urllib.parse import urlsplit
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -89,22 +89,104 @@ def now() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
+VIETNAM_HOLIDAYS_AND_DAYS: dict[tuple[int, int], str] = {
+    (1, 1): "Tết Dương lịch (Nghỉ lễ toàn quốc)",
+    (9, 1): "Ngày Học sinh - Sinh viên Việt Nam",
+    (3, 2): "Ngày thành lập Đảng Cộng sản Việt Nam (1930)",
+    (14, 2): "Ngày Lễ tình nhân (Valentine)",
+    (27, 2): "Ngày Thầy thuốc Việt Nam",
+    (8, 3): "Ngày Quốc tế Phụ nữ",
+    (26, 3): "Ngày thành lập Đoàn TNCS Hồ Chí Minh (1931)",
+    (21, 4): "Ngày Sách và Văn hóa đọc Việt Nam",
+    (30, 4): "Ngày Giải phóng miền Nam, Thống nhất đất nước (Nghỉ lễ toàn quốc)",
+    (1, 5): "Ngày Quốc tế Lao động (Nghỉ lễ toàn quốc)",
+    (7, 5): "Ngày Chiến thắng Điện Biên Phủ (1954)",
+    (15, 5): "Ngày thành lập Đội TNTP Hồ Chí Minh (1941)",
+    (19, 5): "Ngày sinh Chủ tịch Hồ Chí Minh (1890)",
+    (1, 6): "Ngày Quốc tế Thiếu nhi",
+    (21, 6): "Ngày Báo chí Cách mạng Việt Nam",
+    (28, 6): "Ngày Gia đình Việt Nam",
+    (27, 7): "Ngày Thương binh - Liệt sĩ",
+    (28, 7): "Ngày thành lập Công đoàn Việt Nam",
+    (19, 8): "Ngày Cách mạng Tháng Tám (1945) & Ngày truyền thống Công an Nhân dân",
+    (2, 9): "Ngày Quốc khánh Nước CHXHCN Việt Nam (1945 - Nghỉ lễ toàn quốc)",
+    (10, 10): "Ngày Giải phóng Thủ đô (1954)",
+    (13, 10): "Ngày Doanh nhân Việt Nam",
+    (14, 10): "Ngày thành lập Hội Nông dân Việt Nam",
+    (15, 10): "Ngày truyền thống Hội Liên hiệp Thanh niên Việt Nam",
+    (20, 10): "Ngày Phụ nữ Việt Nam (1930)",
+    (31, 10): "Lễ hội Halloween",
+    (9, 11): "Ngày Pháp luật Việt Nam",
+    (18, 11): "Ngày thành lập Mặt trận Tổ quốc Việt Nam",
+    (20, 11): "Ngày Nhà giáo Việt Nam (20/11)",
+    (23, 11): "Ngày thành lập Hội Chữ thập đỏ Việt Nam (1946) & Ngày Nam Kỳ Khởi Nghĩa (1940)",
+    (24, 11): "Ngày Di sản Văn hóa Việt Nam (theo Quyết định số 36/2005/QĐ-TTg của Thủ tướng Chính phủ nhằm tôn vinh và bảo vệ di sản văn hóa dân tộc)",
+    (1, 12): "Ngày Thế giới phòng chống AIDS",
+    (6, 12): "Ngày Hội Cựu chiến binh Việt Nam",
+    (22, 12): "Ngày thành lập Quân đội Nhân dân Việt Nam (1944) & Ngày hội Quốc phòng toàn dân",
+    (24, 12): "Đêm Lễ Giáng sinh (Christmas Eve)",
+    (25, 12): "Lễ Giáng sinh (Noel / Christmas)",
+}
+
+
 def answer_time_question(message: str) -> str | None:
-    """Answer simple local date/time questions from the host clock, not model guesses."""
+    """Answer local date/time/holiday questions from the host clock and calendar, not model guesses."""
     q = " ".join(message.lower().strip().split())
     time_terms = ("mấy giờ", "may gio", "giờ hiện tại", "gio hien tai", "bây giờ", "bay gio",
                   "thời gian hiện tại", "thoi gian hien tai", "what time is it", "current time")
-    date_terms = ("hôm nay ngày", "hom nay ngay", "ngày hôm nay", "ngay hom nay",
-                  "hôm nay thứ", "hom nay thu", "today's date", "what date is it")
-    if not any(term in q for term in time_terms + date_terms):
+    today_date_terms = ("hôm nay ngày", "hom nay ngay", "ngày hôm nay", "ngay hom nay",
+                        "hôm nay thứ", "hom nay thu", "today's date", "what date is it", "hôm nay là ngày")
+    tomorrow_terms = ("mai là ngày", "mai la ngay", "ngày mai là", "ngay mai la",
+                      "mai là thứ", "mai la thu", "ngày mai thứ", "mai ngày mấy", "mai ngay may",
+                      "ngày mai ngày mấy", "tomorrow's date", "what date is tomorrow")
+    holiday_terms = ("lễ gì", "le gi", "ngày lễ", "ngay le", "kỷ niệm gì", "ky niem gi",
+                     "có lễ gì", "co le gi", "lễ nào", "le nao")
+
+    is_time = any(term in q for term in time_terms)
+    is_today = any(term in q for term in today_date_terms)
+    is_tomorrow = any(term in q for term in tomorrow_terms) or ("mai" in q and any(term in q for term in holiday_terms))
+    is_holiday = any(term in q for term in holiday_terms)
+
+    # Direct date lookup e.g. "24/11 là ngày gì", "ngày 24 tháng 11 có sự kiện gì"
+    import re
+    date_m = re.search(r'(?:ngày\s+)?(\d{1,2})\s*(?:[\/\-]|tháng)\s*(\d{1,2})', q)
+    if date_m and any(term in q for term in ("ngày gì", "lễ gì", "kỷ niệm gì", "sự kiện gì", "ý nghĩa", "có lễ gì")):
+        d_val, m_val = int(date_m.group(1)), int(date_m.group(2))
+        h_info = VIETNAM_HOLIDAYS_AND_DAYS.get((d_val, m_val))
+        if h_info:
+            return f"Ngày **{d_val:02d}/{m_val:02d}** là **{h_info}**."
+        return f"Ngày **{d_val:02d}/{m_val:02d}** không trùng với ngày lễ lớn chính thức nào trong danh mục ngày lễ Việt Nam."
+
+    if not (is_time or is_today or is_tomorrow or is_holiday):
         return None
+
     local = datetime.now().astimezone()
-    weekday = ["thứ Hai", "thứ Ba", "thứ Tư", "thứ Năm", "thứ Sáu", "thứ Bảy", "Chủ nhật"][local.weekday()]
+    weekday_names = ["thứ Hai", "thứ Ba", "thứ Tư", "thứ Năm", "thứ Sáu", "thứ Bảy", "Chủ nhật"]
+
+    # Target calculation
+    if is_tomorrow:
+        target = local + timedelta(days=1)
+        weekday = weekday_names[target.weekday()]
+        date_text = f"{weekday}, ngày {target.day:02d}/{target.month:02d}/{target.year}"
+        holiday = VIETNAM_HOLIDAYS_AND_DAYS.get((target.day, target.month))
+        if holiday:
+            return f"Ngày mai là **{date_text}**.\n\nTại Việt Nam, ngày này là **{holiday}**."
+        return f"Ngày mai là **{date_text}**. Ngày mai không trùng với ngày lễ lớn chính thức nào tại Việt Nam."
+
+    weekday = weekday_names[local.weekday()]
     date_text = f"{weekday}, ngày {local.day:02d}/{local.month:02d}/{local.year}"
     zone = local.tzname() or local.strftime("UTC%z")
     offset = local.strftime("UTC%z")
-    if any(term in q for term in time_terms):
+    today_holiday = VIETNAM_HOLIDAYS_AND_DAYS.get((local.day, local.month))
+
+    if is_time:
         return f"Hiện tại là **{local:%H:%M:%S}**, {date_text} (giờ địa phương {zone}, {offset})."
+
+    if is_holiday:
+        if today_holiday:
+            return f"Hôm nay ({date_text}) là **{today_holiday}**."
+        return f"Hôm nay ({date_text}) không trùng với ngày lễ lớn chính thức nào tại Việt Nam."
+
     return f"Hôm nay là **{date_text}** (giờ địa phương {zone}, {offset})."
 
 
@@ -716,16 +798,21 @@ def _build_chat_context(req: ChatRequest) -> tuple[str, list[dict[str, Any]], st
     skill_name = "orchestration" if req.agent == "CEO" else ROLE_SKILLS.get(agent_key, "analysis")
     local_now = datetime.now().astimezone()
     clock_context = local_now.strftime("%A, %d/%m/%Y %H:%M:%S %Z (UTC%z)")
+    tomorrow_dt = local_now + timedelta(days=1)
+    today_holiday_info = VIETNAM_HOLIDAYS_AND_DAYS.get((local_now.day, local_now.month), "Không trùng ngày lễ/kỷ niệm lớn")
+    tomorrow_holiday_info = VIETNAM_HOLIDAYS_AND_DAYS.get((tomorrow_dt.day, tomorrow_dt.month), "Không trùng ngày lễ/kỷ niệm lớn")
     system_prompt = f"""Bạn là {req.agent}, trợ lý AI tích hợp trong ứng dụng AI Office.
 NGÔN NGỮ VÀ CÁCH TRẢ LỜI
 - Mặc định trả lời bằng tiếng Việt tự nhiên, trực tiếp, đúng trọng tâm.
 - Trả lời câu hỏi đơn giản bằng câu trả lời ngắn. Không mở đầu bằng lời chào dài, không tự giới thiệu năng lực nếu người dùng không hỏi.
 - Không tự bịa dữ kiện. Nếu thiếu dữ liệu thì nói rõ phần nào chưa biết và hỏi đúng một câu cần thiết.
 - Không lặp lại các đoạn từ chối mẫu. Không nói "tôi không có đồng hồ" vì ứng dụng cung cấp thời gian hiện tại bên dưới.
-THỜI GIAN HỆ THỐNG
+THỜI GIAN & LỊCH NGÀY LỄ HỆ THỐNG
 - Thời gian địa phương trên máy đang chạy AI Office tại thời điểm tạo câu trả lời: {clock_context}.
 - Múi giờ máy: {local_now.tzname()} (UTC{local_now.strftime('%z')}).
-- Khi người dùng hỏi bây giờ là mấy giờ, hôm nay ngày mấy hoặc thời gian hiện tại, hãy dùng mốc thời gian này và trả lời thẳng bằng giờ/ngày địa phương. Không đoán, không nói không có đồng hồ. Nếu cần độ chính xác đến giây, ghi rõ đây là thời điểm lấy lúc bắt đầu xử lý yêu cầu.
+- Hôm nay ({local_now.strftime('%d/%m/%Y')}): {today_holiday_info}.
+- Ngày mai ({tomorrow_dt.strftime('%d/%m/%Y')}): {tomorrow_holiday_info}.
+- Khi người dùng hỏi bây giờ là mấy giờ, hôm nay hoặc ngày mai là ngày mấy, hoặc hỏi hôm nay/mai là lễ gì, kỷ niệm gì, hãy dùng thông tin lịch chuẩn xác này để trả lời thẳng, đúng trọng tâm. Không đoán, không từ chối.
 NĂNG LỰC THỰC TẾ CỦA PHIÊN BẢN AI OFFICE NÀY
 1. Chat: dùng model Ollama cục bộ {MODEL}; trả lời, giải thích, lập kế hoạch, viết/chỉnh sửa mã, SQL, tài liệu và nội dung.
 2. Tệp người dùng gửi trong chat: đọc/phân tích văn bản thuộc loại tệp được hỗ trợ và ảnh PNG/JPEG/WebP nếu model vision xử lý được. Chỉ phân tích tệp thực sự được đính kèm hoặc nội dung đã được nạp; không giả vờ nhìn thấy tệp trên ổ đĩa.

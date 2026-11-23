@@ -92,6 +92,9 @@ class WindowsOcrWorker:
         if self._proc is not None and self._proc.poll() is None:
             return self._proc
         flags = getattr(subprocess, "CREATE_NO_WINDOW", 0)
+        si = subprocess.STARTUPINFO()
+        si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+        si.wShowWindow = 0
         self._proc = subprocess.Popen(
             ["powershell", "-NoProfile", "-EncodedCommand", _ENCODED_PS],
             stdin=subprocess.PIPE,
@@ -100,6 +103,7 @@ class WindowsOcrWorker:
             text=True,
             encoding="utf-8",
             creationflags=flags,
+            startupinfo=si,
         )
         return self._proc
 

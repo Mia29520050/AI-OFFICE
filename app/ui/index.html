@@ -500,21 +500,22 @@ body[data-theme="light"] ::-webkit-scrollbar-thumb:hover {
 .conversation-actions {
   display: inline-flex;
   align-items: center;
-  gap: 2px;
+  gap: 3px;
   opacity: 0;
   transition: opacity 0.15s ease;
   flex-shrink: 0;
 }
 .conversation-row:hover .conversation-actions,
-.conversation-row:focus-within .conversation-actions {
+.conversation-row:focus-within .conversation-actions,
+.conversation-row.active .conversation-actions {
   opacity: 1;
 }
 .conversation-row .conversation-action {
   background: transparent;
   border: none;
-  color: var(--text-dim);
-  width: 20px;
-  height: 20px;
+  color: var(--text-muted);
+  width: 22px;
+  height: 22px;
   border-radius: 4px;
   display: inline-flex;
   align-items: center;
@@ -525,12 +526,12 @@ body[data-theme="light"] ::-webkit-scrollbar-thumb:hover {
   transition: all 0.12s ease;
 }
 .conversation-row .conversation-action:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.12);
   color: var(--text);
 }
 .conversation-row .conversation-action svg {
-  width: 13px;
-  height: 13px;
+  width: 14px;
+  height: 14px;
   stroke: currentColor;
   fill: none;
   stroke-width: 2;
@@ -538,8 +539,108 @@ body[data-theme="light"] ::-webkit-scrollbar-thumb:hover {
   stroke-linejoin: round;
   display: block;
 }
-.conversation-row .conversation-action svg[fill="currentColor"] {
-  stroke: none;
+.conversation-row .conversation-action svg[fill="currentColor"],
+.conversation-row .conversation-action svg.dots-icon,
+svg.dots-icon {
+  stroke: none !important;
+  fill: currentColor !important;
+}
+
+/* Antigravity Sidebar Context Popover (Ảnh 5) */
+.conversation-menu-popover {
+  position: fixed !important;
+  z-index: 99999 !important;
+  background: #18181b !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  border-radius: 10px !important;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.6), 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+  padding: 5px !important;
+  width: 215px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 2px !important;
+  animation: fadeInMenu 0.12s ease-out !important;
+  color: #e4e4e7 !important;
+}
+body[data-theme="light"] .conversation-menu-popover {
+  background: #ffffff !important;
+  border: 1px solid rgba(0, 0, 0, 0.12) !important;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.14), 0 2px 6px rgba(0, 0, 0, 0.06) !important;
+  color: #18181b !important;
+}
+@keyframes fadeInMenu {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
+}
+.conversation-menu-option {
+  width: 100% !important;
+  background: transparent !important;
+  border: none !important;
+  border-radius: 6px !important;
+  padding: 8px 10px !important;
+  font-size: 12.5px !important;
+  font-weight: 500 !important;
+  color: inherit !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  cursor: pointer !important;
+  transition: all 0.1s ease !important;
+  text-align: left !important;
+}
+.conversation-menu-option:hover {
+  background: rgba(255, 255, 255, 0.08) !important;
+}
+body[data-theme="light"] .conversation-menu-option:hover {
+  background: rgba(0, 0, 0, 0.06) !important;
+}
+.conversation-menu-option.danger {
+  color: #f87171 !important;
+}
+.conversation-menu-option.danger:hover {
+  background: rgba(239, 68, 68, 0.15) !important;
+  color: #ef4444 !important;
+}
+.conversation-menu-option .opt-left {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+}
+.conversation-menu-option .opt-shortcut {
+  font-size: 11px !important;
+  color: var(--text-muted) !important;
+  opacity: 0.75 !important;
+}
+.conversation-menu-separator {
+  height: 1px !important;
+  background: rgba(255, 255, 255, 0.1) !important;
+  margin: 4px 0 !important;
+}
+body[data-theme="light"] .conversation-menu-separator {
+  background: rgba(0, 0, 0, 0.08) !important;
+}
+.conversation-menu-project {
+  display: flex !important;
+  gap: 6px !important;
+  padding: 4px 6px !important;
+}
+.conversation-menu-project select {
+  flex: 1 !important;
+  font-size: 12px !important;
+  background: rgba(255, 255, 255, 0.06) !important;
+  border: 1px solid var(--line) !important;
+  color: var(--text) !important;
+  border-radius: 6px !important;
+  padding: 4px 8px !important;
+}
+.conversation-menu-project button {
+  font-size: 11px !important;
+  padding: 4px 8px !important;
+  border-radius: 6px !important;
+  background: var(--accent) !important;
+  color: #ffffff !important;
+  border: none !important;
+  cursor: pointer !important;
 }
 .conversation-empty {
   padding: 10px 8px;
@@ -5387,9 +5488,9 @@ function renderConversationList(){
   const pinSvg=item.pinned
    ?'<svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path d="M12 17v5M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z"/></svg>'
    :'<svg viewBox="0 0 24 24" aria-hidden="true"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z"/></svg>';
-  const dotsSvg='<svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>';
+  const dotsSvg='<svg class="dots-icon" viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><circle cx="5" cy="12" r="2.2" fill="currentColor"/><circle cx="12" cy="12" r="2.2" fill="currentColor"/><circle cx="19" cy="12" r="2.2" fill="currentColor"/></svg>';
   action(pinSvg,item.pinned?'Bỏ ghim':'Ghim cuộc trò chuyện',()=>updateConversation(item.id,{pinned:!item.pinned}));
-  action(dotsSvg,'Tùy chọn cuộc trò chuyện',()=>conversationMenu(item));
+  action(dotsSvg,'Tùy chọn cuộc trò chuyện',()=>conversationMenu(item, row),'conversation-action-dots');
   row.append(open,actions);host.append(row);
  }
 }
@@ -5398,25 +5499,77 @@ async function updateConversation(id,patch){
  const d=await r.json();if(!r.ok)throw new Error(d.detail||'Không cập nhật được cuộc trò chuyện.');
  await refreshConversationList();return d;
 }
-async function conversationMenu(item){
+async function conversationMenu(item, rowEl){
  document.querySelectorAll('.conversation-menu-popover').forEach(x=>x.remove());
- const row=document.querySelector('.conversation-row[data-conversation-id="'+CSS.escape(item.id)+'"]');
- const anchor=row?.querySelector('.conversation-actions button:last-child');
+ const row=rowEl||document.querySelector('.conversation-row[data-conversation-id="'+CSS.escape(item.id)+'"]');
+ const anchor=row?.querySelector('.conversation-action-dots')||row?.querySelector('.conversation-actions button:last-child');
  const rect=anchor?.getBoundingClientRect();
  const menu=document.createElement('div');menu.className='conversation-menu-popover';
- menu.style.left=Math.max(8,Math.min((rect?.right||240)-190,window.innerWidth-202))+'px';
- menu.style.top=Math.max(8,Math.min((rect?.bottom||180)+4,window.innerHeight-210))+'px';
+ const menuW=210;
+ const leftPos=rect ? Math.max(8, Math.min(rect.right - menuW + 20, window.innerWidth - menuW - 12)) : 100;
+ const topPos=rect ? Math.max(8, Math.min(rect.bottom + 4, window.innerHeight - 260)) : 100;
+ menu.style.left=leftPos+'px';
+ menu.style.top=topPos+'px';
  const close=()=>menu.remove();
- const option=(label,fn,danger=false)=>{const b=document.createElement('button');b.type='button';b.className='conversation-menu-option'+(danger?' danger':'');b.textContent=label;b.addEventListener('click',()=>{close();fn()});menu.append(b)};
- option('Đổi tên cuộc trò chuyện',async()=>{const title=window.prompt('Tên cuộc trò chuyện mới:',item.title||'');if(title&&title.trim())try{await updateConversation(item.id,{title:title.trim()})}catch(e){alert(e.message)}});
+
+ const makeOption=(iconSvg, label, shortcut, fn, isDanger=false)=>{
+  const b=document.createElement('button');
+  b.type='button';
+  b.className='conversation-menu-option'+(isDanger?' danger':'');
+  b.innerHTML=`<span class="opt-left">${iconSvg}<span>${label}</span></span>`+(shortcut?`<span class="opt-shortcut">${shortcut}</span>`:'');
+  b.addEventListener('click',()=>{close();fn()});
+  menu.append(b);
+  return b;
+ };
+
+ const renameSvg='<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>';
+ makeOption(renameSvg, 'Đổi tên', 'F2', async()=>{
+  const title=window.prompt('Tên cuộc trò chuyện mới:', item.title||'');
+  if(title&&title.trim())try{await updateConversation(item.id,{title:title.trim()})}catch(e){alert(e.message)}
+ });
+
+ const pinSvg='<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z"/></svg>';
+ makeOption(pinSvg, item.pinned?'Bỏ ghim':'Ghim cuộc trò chuyện', 'Alt+Shift+P', async()=>{
+  try{await updateConversation(item.id,{pinned:!item.pinned})}catch(e){alert(e.message)}
+ });
+
+ const copySvg='<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
+ makeOption(copySvg, 'Sao chép nội dung', 'Ctrl+C', async()=>{
+  try{
+   const r=await fetch('/api/conversations/'+encodeURIComponent(item.id)+'/messages');
+   if(r.ok){
+    const msgs=await r.json();
+    const txt=msgs.map(m=>`[${m.role==='user'?'Người dùng':'AI Office'}]:\n${m.content}`).join('\n\n---\n\n');
+    await copyChatText(txt);
+    alert('Đã sao chép nội dung cuộc trò chuyện vào clipboard.');
+   }
+  }catch(e){alert('Không sao chép được: '+e.message)}
+ });
+
+ const sep1=document.createElement('div');sep1.className='conversation-menu-separator';menu.append(sep1);
+
  const projectRow=document.createElement('div');projectRow.className='conversation-menu-project';
  const select=document.createElement('select');select.setAttribute('aria-label','Chọn dự án');
  const none=document.createElement('option');none.value='';none.textContent='Không thuộc dự án';select.append(none);
  for(const project of projectCache){const o=document.createElement('option');o.value=project.id;o.textContent=project.name;select.append(o)}
  select.value=item.project_id||'';
- const assign=document.createElement('button');assign.type='button';assign.textContent='Lưu';assign.addEventListener('click',async()=>{try{await updateConversation(item.id,{project_id:select.value});close()}catch(e){alert(e.message)}});
+ const assign=document.createElement('button');assign.type='button';assign.textContent='Lưu';
+ assign.addEventListener('click',async()=>{try{await updateConversation(item.id,{project_id:select.value});close()}catch(e){alert(e.message)}});
  projectRow.append(select,assign);menu.append(projectRow);
- option('Xóa cuộc trò chuyện',async()=>{if(!confirm('Xóa cuộc trò chuyện “'+(item.title||'Cuộc trò chuyện mới')+'”?'))return;try{const r=await fetch('/api/conversations/'+encodeURIComponent(item.id),{method:'DELETE'});const d=await r.json();if(!r.ok)throw new Error(d.detail||'Không xóa được.');if(currentConversationId===item.id){currentConversationId='';await createNewConversation()}else await refreshConversationList()}catch(e){alert(e.message)}},true);
+
+ const sep2=document.createElement('div');sep2.className='conversation-menu-separator';menu.append(sep2);
+
+ const delSvg='<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>';
+ makeOption(delSvg, 'Xóa cuộc trò chuyện', '', async()=>{
+  if(!confirm('Xóa cuộc trò chuyện “'+(item.title||'Cuộc trò chuyện mới')+'”?'))return;
+  try{
+   const r=await fetch('/api/conversations/'+encodeURIComponent(item.id),{method:'DELETE'});
+   const d=await r.json();
+   if(!r.ok)throw new Error(d.detail||'Không xóa được.');
+   if(currentConversationId===item.id){currentConversationId='';await createNewConversation()}else await refreshConversationList();
+  }catch(e){alert(e.message)}
+ }, true);
+
  document.body.append(menu);
  setTimeout(()=>document.addEventListener('pointerdown',e=>{if(!menu.contains(e.target))close()},{once:true}),0);
 }
@@ -5610,13 +5763,24 @@ $('chatinput').addEventListener('keydown',e=>{
  }
  $('chatform').requestSubmit();
 });
+let chatProgressHideTimer = null;
 function setChatProgress(state,detail=''){
  const box=$('chat-progress'),title=$('chat-progress-title'),details=$('chat-progress-details');
+ if(!box)return;
+ clearTimeout(chatProgressHideTimer);
  box.hidden=false;box.classList.toggle('done',state!=='running');
  title.textContent=state==='running'?'Đang xử lý yêu cầu':state==='done'?'Đã hoàn thành':'Có lỗi khi xử lý';
  details.textContent=detail;
- if(state==='running'){box.open=true;chatStartedAt=Date.now();$('chat-progress-time').textContent='0s';clearInterval(chatElapsedTimer);chatElapsedTimer=setInterval(()=>{$('chat-progress-time').textContent=Math.floor((Date.now()-chatStartedAt)/1000)+'s'},1000)}
- else{clearInterval(chatElapsedTimer);$('chat-progress-time').textContent=Math.floor((Date.now()-chatStartedAt)/1000)+'s';box.open=false}
+ if(state==='running'){
+  box.open=true;chatStartedAt=Date.now();$('chat-progress-time').textContent='0s';clearInterval(chatElapsedTimer);chatElapsedTimer=setInterval(()=>{$('chat-progress-time').textContent=Math.floor((Date.now()-chatStartedAt)/1000)+'s'},1000);
+ }else{
+  clearInterval(chatElapsedTimer);
+  $('chat-progress-time').textContent=Math.floor((Date.now()-chatStartedAt)/1000)+'s';
+  box.open=false;
+  if(state==='done'){
+   chatProgressHideTimer = setTimeout(()=>{ if(box) box.hidden=true; }, 1200);
+  }
+ }
 }
 $('chatform').addEventListener('submit',async e=>{
  e.preventDefault();const typed=$('chatinput').value.trim();if(!typed&&!chatAttachments.length)return;
