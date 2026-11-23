@@ -4878,6 +4878,7 @@ main.center {
   color: var(--text) !important;
   padding: 24px 30px 80px 30px !important;
   overflow-y: auto !important;
+  overflow-x: hidden !important;
   flex: 1 1 auto !important;
   height: 100% !important;
   min-height: 0 !important;
@@ -4887,13 +4888,24 @@ main.center {
 #page-studio {
   width: 100% !important;
   max-width: 100% !important;
+  overflow-x: hidden !important;
+  box-sizing: border-box !important;
 }
 
 .mc-grid {
   display: grid !important;
-  grid-template-columns: repeat(auto-fit, minmax(440px, 1fr)) !important;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr) !important;
   gap: 18px !important;
   align-items: start !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+@media (max-width: 960px) {
+  .mc-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
 }
 
 .mc-card, .view-card {
@@ -4902,6 +4914,19 @@ main.center {
   color: var(--text) !important;
   border-radius: 16px !important;
   box-shadow: var(--card-shadow) !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+}
+
+.mc-card .workspace-field,
+.mc-card .field,
+.mc-card select,
+.mc-card input {
+  min-width: 0 !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
 }
 
 .field, select.field, input.field {
@@ -7687,20 +7712,20 @@ async function navigate(view) {
         </div>
         <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:8px;justify-content:center">
           <div style="display:flex;gap:8px;align-items:center">
-            <input type="text" class="field" style="width:110px;flex-shrink:0;font-size:12px;padding:5px 8px" placeholder="Nhân vật" value="${esc(p.speaker || '')}" onchange="mcPanelsState[${idx}].speaker=this.value">
-            <input type="text" class="field" style="flex:1;min-width:0;font-size:12px;padding:5px 8px" placeholder="Lời thoại..." value="${esc(p.text || '')}" onchange="mcPanelsState[${idx}].text=this.value">
+            <input type="text" class="field" style="width:84px;flex-shrink:0;font-size:12px;padding:5px 8px;box-sizing:border-box" placeholder="Nhân vật" value="${esc(p.speaker || '')}" onchange="mcPanelsState[${idx}].speaker=this.value">
+            <input type="text" class="field" style="flex:1;min-width:0;font-size:12px;padding:5px 8px;box-sizing:border-box" placeholder="Lời thoại..." value="${esc(p.text || '')}" title="${esc(p.text || '')}" onchange="mcPanelsState[${idx}].text=this.value">
             <button type="button" class="mini-pill close" style="height:28px;width:28px;flex-shrink:0;padding:0;display:flex;align-items:center;justify-content:center;cursor:pointer" title="Xóa phân cảnh" onclick="mcPanelsState.splice(${idx},1);renderTimelineList()">✕</button>
           </div>
           <div style="display:flex;gap:8px;align-items:center">
-            <select class="field" style="flex:1;min-width:0;font-size:11.5px;padding:5px 8px" onchange="mcPanelsState[${idx}].motion=this.value">
+            <select class="field" style="flex:1;min-width:0;width:100%;font-size:11.5px;padding:5px 6px;box-sizing:border-box;text-overflow:ellipsis" onchange="mcPanelsState[${idx}].motion=this.value">
               <option value="zoom_in" ${p.motion === 'zoom_in' ? 'selected' : ''}>🎬 Zoom In (Kịch tính)</option>
               <option value="zoom_out" ${p.motion === 'zoom_out' ? 'selected' : ''}>🎬 Zoom Out (Toàn cảnh)</option>
-              <option value="pan_rtl" ${p.motion === 'pan_rtl' ? 'selected' : ''}>🎬 Pan Manga (Phải-Trái)</option>
-              <option value="pan_ltr" ${p.motion === 'pan_ltr' ? 'selected' : ''}>🎬 Pan Điện ảnh (Trái-Phải)</option>
-              <option value="action_shake" ${p.motion === 'action_shake' ? 'selected' : ''}>🎬 Rung lắc chấn động</option>
+              <option value="pan_rtl" ${p.motion === 'pan_rtl' ? 'selected' : ''}>🎬 Pan Phải - Trái</option>
+              <option value="pan_ltr" ${p.motion === 'pan_ltr' ? 'selected' : ''}>🎬 Pan Trái - Phải</option>
+              <option value="action_shake" ${p.motion === 'action_shake' ? 'selected' : ''}>🎬 Rung lắc hành động</option>
               <option value="static" ${p.motion === 'static' ? 'selected' : ''}>🎬 Tĩnh (Static)</option>
             </select>
-            <select class="field" style="flex:1;min-width:0;font-size:11.5px;padding:5px 8px" onchange="mcPanelsState[${idx}].sfx=this.value">
+            <select class="field" style="flex:1;min-width:0;width:100%;font-size:11.5px;padding:5px 6px;box-sizing:border-box;text-overflow:ellipsis" onchange="mcPanelsState[${idx}].sfx=this.value">
               <option value="none" ${(!p.sfx || p.sfx === 'none') ? 'selected' : ''}>🔇 Không SFX</option>
               <option value="boom" ${p.sfx === 'boom' ? 'selected' : ''}>💥 Boom (Va chạm)</option>
               <option value="swoosh" ${p.sfx === 'swoosh' ? 'selected' : ''}>⚡ Swoosh (Kiếm/Gió)</option>
@@ -7915,46 +7940,45 @@ async function navigate(view) {
               <button type="button" class="primary-btn" id="mc-btn-render" style="padding:4px 14px">▶ Xuất Video MP4</button>
             </div>
 
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-              <label class="workspace-field">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+              <label class="workspace-field" style="min-width:0">
                 <span>TỈ LỆ VIDEO</span>
-                <select id="mc-aspect-ratio" class="field">
-                  <option value="16:9">YouTube / TV Widescreen (16:9 - 1080p)</option>
-                  <option value="9:16">TikTok / Shorts / Reels (9:16 Dọc)</option>
-                  <option value="1:1">Instagram Square (1:1)</option>
-                  <option value="4K">Ultra HD 4K (3840x2160)</option>
+                <select id="mc-aspect-ratio" class="field" style="width:100%;min-width:0">
+                  <option value="16:9">YouTube / TV (16:9)</option>
+                  <option value="9:16">TikTok / Shorts (9:16 Dọc)</option>
+                  <option value="1:1">Instagram Vuông (1:1)</option>
+                  <option value="4K">Ultra HD 4K</option>
                 </select>
               </label>
 
-              <label class="workspace-field">
-                <span>GIỌNG LỒNG TIẾNG AI</span>
-                <select id="mc-voice-select" class="field">
-                  <option value="vi-VN-HoaiMyNeural">Hoài My (Nữ Việt Nam - Anime/Diễn cảm)</option>
-                  <option value="vi-VN-NamMinhNeural">Nam Minh (Nam Việt Nam - Trầm ấm/Kể chuyện)</option>
-                  <option value="ja-JP-NanamiNeural">Nanami (Nữ Nhật Bản - Anime)</option>
-                  <option value="ja-JP-KeitaNeural">Keita (Nam Nhật Bản - Shonen)</option>
-                  <option value="en-US-GuyNeural">Guy (English - Cinematic Narrator)</option>
+              <label class="workspace-field" style="min-width:0">
+                <span>XỬ LÝ NỀN (FIT MODE)</span>
+                <select id="mc-fit-mode" class="field" style="width:100%;min-width:0">
+                  <option value="blur_bg">Mờ ảo thông minh (Blur BG)</option>
+                  <option value="contain">Khung viền đen (Contain)</option>
+                  <option value="cover">Cắt vừa khung hình (Cover)</option>
                 </select>
               </label>
             </div>
 
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-              <label class="workspace-field">
-                <span>XỬ LÝ NỀN (FIT MODE)</span>
-                <select id="mc-fit-mode" class="field">
-                  <option value="blur_bg">Mờ ảo thông minh (Blur BG - Chuẩn TikTok/YouTube)</option>
-                  <option value="contain">Khung viền đen nguyên bản (Contain)</option>
-                  <option value="cover">Cắt lấp đầy khung hình (Cover)</option>
-                </select>
-              </label>
+            <label class="workspace-field" style="width:100%;min-width:0;margin-bottom:12px">
+              <span>GIỌNG LỒNG TIẾNG AI</span>
+              <select id="mc-voice-select" class="field" style="width:100%;min-width:0">
+                <option value="vi-VN-HoaiMyNeural">Hoài My (Nữ Việt Nam - Anime/Diễn cảm)</option>
+                <option value="vi-VN-NamMinhNeural">Nam Minh (Nam Việt Nam - Trầm ấm/Kể chuyện)</option>
+                <option value="ja-JP-NanamiNeural">Nanami (Nữ Nhật Bản - Anime)</option>
+                <option value="ja-JP-KeitaNeural">Keita (Nam Nhật Bản - Shonen)</option>
+                <option value="en-US-GuyNeural">Guy (English - Cinematic Narrator)</option>
+              </select>
+            </label>
 
-              <div style="display:flex;flex-direction:column;justify-content:center;gap:4px;min-width:0;overflow:hidden">
-                <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text);cursor:pointer;flex-wrap:wrap">
-                  <input type="checkbox" id="mc-anime4k-check" checked>
-                  <strong>Khử mờ Anime4K (0 MB VRAM)</strong>
-                </label>
-                <small class="subtle" style="font-size:11px;white-space:normal;word-break:break-word">Làm sắc nét đường nét mực manga mà không tốn VRAM.</small>
-              </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;background:rgba(255,255,255,0.03);border:1px solid var(--line);border-radius:var(--radius-sm);padding:8px 12px;box-sizing:border-box;margin-bottom:14px">
+              <label style="display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--text);cursor:pointer;min-width:0">
+                <input type="checkbox" id="mc-anime4k-check" checked style="accent-color:var(--accent);width:16px;height:16px;cursor:pointer">
+                <strong>Khử mờ Anime4K</strong>
+                <span class="chip" style="font-size:10.5px;padding:1px 6px">0 MB VRAM</span>
+              </label>
+              <small class="subtle" style="font-size:11.5px;color:var(--text-muted);text-align:right">Làm nét đường vẽ manga</small>
             </div>
 
             <div class="mc-video-wrapper" id="mc-video-wrapper">
