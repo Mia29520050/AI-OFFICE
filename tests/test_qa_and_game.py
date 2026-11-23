@@ -209,8 +209,6 @@ def test_launcher_allow_elevated_opt_in() -> None:
 
     orig_argv = sys.argv[:]
     orig_vals = {
-        "is_elevated": launcher.is_elevated,
-        "relaunch": launcher.relaunch_without_elevation,
         "set_id": launcher.set_app_user_model_id,
         "init_db": launcher.init_db,
         "ollama": launcher.ensure_local_ollama,
@@ -230,8 +228,6 @@ def test_launcher_allow_elevated_opt_in() -> None:
             calls.append("webview_start")
 
     try:
-        launcher.is_elevated = lambda: True
-        launcher.relaunch_without_elevation = lambda: calls.append("relaunch") or True
         launcher.set_app_user_model_id = lambda: calls.append("set_id") or True
         launcher.init_db = lambda: calls.append("init_db")
         launcher.ensure_local_ollama = lambda: None
@@ -240,17 +236,15 @@ def test_launcher_allow_elevated_opt_in() -> None:
 
         sys.argv = ["app/launcher.py"]
         launcher.main()
-        assert calls == ["relaunch"], f"Expected default elevation drop, got {calls}"
+        # Direct execution without flashing cmd loops
+        assert "create_window" in calls and "webview_start" in calls
 
         calls.clear()
         sys.argv = ["app/launcher.py", "--allow-elevated"]
         launcher.main()
-        assert "relaunch" not in calls
         assert "create_window" in calls and "webview_start" in calls
     finally:
         sys.argv = orig_argv
-        launcher.is_elevated = orig_vals["is_elevated"]
-        launcher.relaunch_without_elevation = orig_vals["relaunch"]
         launcher.set_app_user_model_id = orig_vals["set_id"]
         launcher.init_db = orig_vals["init_db"]
         launcher.ensure_local_ollama = orig_vals["ollama"]

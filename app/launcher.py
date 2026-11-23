@@ -21,7 +21,6 @@ import uvicorn
 import webview
 from main import app, init_db
 LOG = ROOT / "data" / "launcher.log"
-RELAUNCH_GUARD = ROOT / "data" / ".relaunch_guard"
 APP_USER_MODEL_ID = "OpenAI.AIOffice.Desktop"
 
 
@@ -61,24 +60,6 @@ def focus_existing_instance() -> bool:
     except Exception:
         pass
     return False
-
-
-def relaunch_without_elevation() -> bool:
-    """Ask Explorer to launch silently via VBS without flashing a cmd console.
-
-    WebView2 IME input (including UniKey/EVKey) can fail when the host window
-    runs elevated while the input method runs at medium integrity.
-    """
-    try:
-        vbs = ROOT / "Start-AI-Office.vbs"
-        target = str(vbs) if vbs.exists() else str(ROOT / "Start-AI-Office.bat")
-        subprocess.Popen(
-            ["explorer.exe", target],
-            close_fds=True,
-        )
-        return True
-    except Exception:
-        return False
 
 
 def server_is_running() -> bool:
@@ -223,29 +204,6 @@ def main() -> None:
     # 1. Single Instance Check: if already running, focus existing window and exit cleanly
     if focus_existing_instance():
         return
-
-    allow_elevated = "--allow-elevated" in sys.argv[1:]
-    # Keep WebView2 at the same integrity level as UniKey/EVKey unless explicitly opted into Admin for elevated games.
-    if is_elevated() and not allow_elevated:
-        already_attempted = False
-        try:
-            if RELAUNCH_GUARD.exists():
-                age = time.time() - RELAUNCH_GUARD.stat().st_mtime
-                if age < 30:
-                    already_attempted = True
-        except Exception:
-            pass
-
-        if not already_attempted:
-            try:
-                RELAUNCH_GUARD.parent.mkdir(parents=True, exist_ok=True)
-                RELAUNCH_GUARD.write_text(str(time.time()), encoding="utf-8")
-            except Exception:
-                pass
-            if relaunch_without_elevation():
-                return
-        # If de-elevation was already attempted once or relaunch failed, do not loop endlessly.
-        # Proceed with execution; the UI handles elevated mode and shows the admin-ime-warning.
 
     # Must be set before creating the native WebView window so Windows uses
     # the AI Office identity instead of grouping it under pythonw.exe.

@@ -4685,8 +4685,24 @@ main.center {
 #page-studio, #dynamic-page {
   background: var(--bg) !important;
   color: var(--text) !important;
-  padding: 24px 30px !important;
+  padding: 24px 30px 80px 30px !important;
   overflow-y: auto !important;
+  flex: 1 1 auto !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  box-sizing: border-box !important;
+}
+
+#page-studio {
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+.mc-grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(440px, 1fr)) !important;
+  gap: 18px !important;
+  align-items: start !important;
 }
 
 .mc-card, .view-card {
@@ -4706,6 +4722,312 @@ main.center {
 
 .field:focus, select.field:focus, input.field:focus {
   border-color: var(--accent) !important;
+}
+
+/* =========================================================================
+   ANTIGRAVITY COMPOSER STYLING (Ảnh 8)
+   ========================================================================= */
+.composer-main.claude-composer.smart-omnibar,
+.composer-main.claude-composer {
+  background: #1e1e24 !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  border-radius: 16px !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45), 0 2px 8px rgba(0, 0, 0, 0.25) !important;
+  padding: 14px 18px 12px 18px !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+body[data-theme="light"] .composer-main.claude-composer.smart-omnibar,
+body[data-theme="light"] .composer-main.claude-composer {
+  background: #ffffff !important;
+  border: 1px solid rgba(0, 0, 0, 0.15) !important;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.08), 0 2px 6px rgba(0, 0, 0, 0.04) !important;
+}
+.composer-main.claude-composer:focus-within {
+  border-color: rgba(99, 102, 241, 0.6) !important;
+  box-shadow: 0 8px 36px rgba(99, 102, 241, 0.22), 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+}
+body[data-theme="light"] .composer-main.claude-composer:focus-within {
+  border-color: var(--accent) !important;
+  box-shadow: 0 8px 32px rgba(79, 70, 229, 0.15), 0 2px 6px rgba(0, 0, 0, 0.06) !important;
+}
+
+/* Antigravity Send Button (Round with white arrow) */
+.antigravity-send-btn, button.send#sendbtn {
+  width: 34px !important;
+  height: 34px !important;
+  min-width: 34px !important;
+  border-radius: 50% !important;
+  background: #6366f1 !important;
+  color: #ffffff !important;
+  border: none !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.45) !important;
+  transition: transform 0.15s ease, background 0.15s ease, box-shadow 0.15s ease !important;
+}
+.antigravity-send-btn:hover, button.send#sendbtn:hover {
+  background: #4f46e5 !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.6) !important;
+}
+.antigravity-send-btn:active, button.send#sendbtn:active {
+  transform: translateY(0) !important;
+}
+.antigravity-send-btn svg, button.send#sendbtn svg {
+  stroke: #ffffff !important;
+}
+
+/* Integrated Toolbar & Pills */
+.omni-attach-btn {
+  width: 28px !important;
+  height: 28px !important;
+  border-radius: 50% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  color: var(--text) !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+}
+body[data-theme="light"] .omni-attach-btn {
+  background: rgba(0, 0, 0, 0.05) !important;
+  border: 1px solid rgba(0, 0, 0, 0.12) !important;
+}
+.omni-attach-btn:hover {
+  background: rgba(99, 102, 241, 0.2) !important;
+  border-color: var(--accent) !important;
+  color: var(--accent) !important;
+}
+.agent-select-wrapper select#agent-select {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  color: var(--text) !important;
+  border-radius: 20px !important;
+  padding: 4px 12px !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  cursor: pointer !important;
+  outline: none !important;
+  transition: all 0.15s ease !important;
+}
+body[data-theme="light"] .agent-select-wrapper select#agent-select {
+  background: rgba(0, 0, 0, 0.04) !important;
+  border: 1px solid rgba(0, 0, 0, 0.12) !important;
+}
+.agent-select-wrapper select#agent-select:hover {
+  border-color: var(--accent) !important;
+}
+.turbo-chip {
+  background: rgba(99, 102, 241, 0.14) !important;
+  border-color: rgba(99, 102, 241, 0.35) !important;
+  color: #818cf8 !important;
+  font-weight: 600 !important;
+}
+body[data-theme="light"] .turbo-chip {
+  background: rgba(79, 70, 229, 0.08) !important;
+  border-color: rgba(79, 70, 229, 0.25) !important;
+  color: #4f46e5 !important;
+}
+
+/* Global Topbar Styling */
+.chat-topbar {
+  height: 48px !important;
+  padding: 0 16px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  border-bottom: 1px solid var(--line) !important;
+  background: var(--bg) !important;
+  color: var(--text) !important;
+  flex-shrink: 0 !important;
+  z-index: 20 !important;
+}
+.topbar-left {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+}
+.sidebar-toggle-btn {
+  background: transparent !important;
+  border: none !important;
+  color: var(--text-muted) !important;
+  cursor: pointer !important;
+  padding: 6px !important;
+  border-radius: 6px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  transition: all 0.12s ease !important;
+}
+.sidebar-toggle-btn:hover {
+  background: var(--bg-card-hover) !important;
+  color: var(--text) !important;
+}
+.topbar-right {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+.topbar-pill-btn.active {
+  background: var(--accent-light) !important;
+  border: 1px solid var(--accent) !important;
+  color: var(--accent) !important;
+  font-weight: 600 !important;
+}
+
+/* =========================================================================
+   ANTIGRAVITY SETTINGS MODAL (Ảnh 7)
+   ========================================================================= */
+.settings-modal-overlay {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  z-index: 99999 !important;
+  background: rgba(0, 0, 0, 0.72) !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 20px !important;
+  box-sizing: border-box !important;
+  animation: fadeInModal 0.15s ease-out !important;
+}
+.settings-modal-overlay[hidden] {
+  display: none !important;
+}
+@keyframes fadeInModal {
+  from { opacity: 0; transform: scale(0.98); }
+  to { opacity: 1; transform: scale(1); }
+}
+.settings-modal-card {
+  width: 780px !important;
+  max-width: 95vw !important;
+  height: 560px !important;
+  max-height: 88vh !important;
+  background: #18181b !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  border-radius: 16px !important;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6) !important;
+  display: flex !important;
+  overflow: hidden !important;
+  color: #f4f4f5 !important;
+}
+body[data-theme="light"] .settings-modal-card {
+  background: #ffffff !important;
+  border: 1px solid rgba(0, 0, 0, 0.12) !important;
+  color: #0f172a !important;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.18) !important;
+}
+.settings-modal-sidebar {
+  width: 220px !important;
+  flex-shrink: 0 !important;
+  background: #121215 !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
+  padding: 20px 12px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 16px !important;
+}
+body[data-theme="light"] .settings-modal-sidebar {
+  background: #f8fafc !important;
+  border-right: 1px solid rgba(0, 0, 0, 0.08) !important;
+}
+.settings-modal-brand {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  padding: 0 8px 12px 8px !important;
+  border-bottom: 1px solid var(--line) !important;
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  color: var(--text) !important;
+}
+.settings-modal-nav {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 4px !important;
+}
+.settings-modal-nav-btn {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  width: 100% !important;
+  padding: 9px 12px !important;
+  border-radius: 8px !important;
+  background: transparent !important;
+  border: 0 !important;
+  color: var(--text-muted) !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  text-align: left !important;
+  cursor: pointer !important;
+  transition: all 0.12s ease !important;
+}
+.settings-modal-nav-btn:hover {
+  background: rgba(255, 255, 255, 0.06) !important;
+  color: var(--text) !important;
+}
+body[data-theme="light"] .settings-modal-nav-btn:hover {
+  background: rgba(0, 0, 0, 0.05) !important;
+}
+.settings-modal-nav-btn.active {
+  background: rgba(99, 102, 241, 0.16) !important;
+  color: #818cf8 !important;
+  font-weight: 600 !important;
+}
+body[data-theme="light"] .settings-modal-nav-btn.active {
+  background: rgba(79, 70, 229, 0.1) !important;
+  color: #4f46e5 !important;
+}
+.settings-modal-content {
+  flex: 1 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  min-width: 0 !important;
+  background: transparent !important;
+}
+.settings-modal-header {
+  padding: 18px 24px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  border-bottom: 1px solid var(--line) !important;
+}
+.settings-modal-header h2 {
+  margin: 0 !important;
+  font-size: 16px !important;
+  font-weight: 600 !important;
+  color: var(--text) !important;
+}
+.settings-modal-close {
+  background: transparent !important;
+  border: none !important;
+  color: var(--text-muted) !important;
+  cursor: pointer !important;
+  padding: 6px !important;
+  border-radius: 6px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  transition: all 0.12s ease !important;
+}
+.settings-modal-close:hover {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: var(--text) !important;
+}
+.settings-modal-body {
+  flex: 1 !important;
+  padding: 20px 24px !important;
+  overflow-y: auto !important;
 }
 
 </style></head>
@@ -4778,35 +5100,41 @@ main.center {
     </button>
   </div>
 </aside>
-<main class="center"><div class="tabs" id="app-tabs"><button type="button" class="tab active" id="tab-chat" data-tab="home"><img src="/assets/ai-office-icon.png"> Trò chuyện</button><button type="button" class="tab" id="tab-workbench" style="display:none" data-tab="workbench"><img src="/assets/ai-office-icon.png"> <span id="tab-workbench-label">Workbench</span><span class="tab-close-icon" id="tab-workbench-close" title="Đóng và quay về Trò chuyện"><svg viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></svg></span></button><button class="tab-plus" id="new-chat-tab" type="button" title="Cuộc trò chuyện mới">+</button></div>
-<div class="center-scroll">
+<main class="center"><div class="tabs" id="app-tabs" style="display:none !important"><button type="button" class="tab active" id="tab-chat" data-tab="home"><img src="/assets/ai-office-icon.png"> Trò chuyện</button><button type="button" class="tab" id="tab-workbench" style="display:none" data-tab="workbench"><img src="/assets/ai-office-icon.png"> <span id="tab-workbench-label">Workbench</span><span class="tab-close-icon" id="tab-workbench-close" title="Đóng và quay về Trò chuyện"><svg viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></svg></span></button><button class="tab-plus" id="new-chat-tab" type="button" title="Cuộc trò chuyện mới">+</button></div>
 
-
-
-
+<!-- Global Topbar: Always visible on every page (Chat, Studio, Workspace) -->
 <div class="chat-topbar" id="chat-topbar">
   <div class="topbar-left">
-    <button class="sidebar-toggle-btn" type="button" title="Mở/Đóng thanh bên" data-layout-toggle="explorer">
+    <button class="sidebar-toggle-btn" type="button" title="Mở/Đóng thanh bên (☰)" aria-label="Mở/Đóng thanh bên" data-layout-toggle="explorer">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
     </button>
     <div class="topbar-model-badge">
+      <img src="/assets/ai-office-icon.png" style="width:18px;height:18px;object-fit:contain" alt="">
       <strong>AI Office</strong>
       <span class="subtle-dot">·</span>
-      <span class="subtle-agent">Claude Minimal · Cục bộ</span>
+      <span class="subtle-agent" id="topbar-agent-label">Claude Minimal · Cục bộ</span>
     </div>
   </div>
   <div class="topbar-right">
+    <button type="button" class="topbar-pill-btn active" id="topbar-open-home" title="Trò chuyện AI" data-view="home">
+      <span>💬</span> <span>Trò chuyện</span>
+    </button>
+    <button type="button" class="topbar-pill-btn" id="topbar-open-studio" title="Mở Studio Sáng Tạo Đa Năng" data-view="studio">
+      <span>🎬</span> <span>Studio Sáng tạo</span>
+    </button>
+    <button type="button" class="topbar-pill-btn" id="topbar-open-workspace" title="Mở Không gian Workspace" data-view="workspace">
+      <span>💻</span> <span>Workspace</span>
+    </button>
     <button type="button" class="tool-pill" id="btn-theme-toggle" title="Chuyển đổi Giao diện Sáng / Tối">
       <span id="theme-toggle-icon">🌙</span> <span id="theme-toggle-text">Tối</span>
     </button>
-    <button type="button" class="topbar-pill-btn" id="topbar-open-studio" title="Mở Studio Sáng Tạo Đa Năng">
-      <span>🎬</span> <span>Studio Sáng tạo</span>
-    </button>
-    <button type="button" class="tool-pill" id="topbar-open-workspace" title="Mở Không gian Workspace">
-      <span>💻</span> <span>Workspace</span>
+    <button type="button" class="tool-pill" id="topbar-open-settings" title="Cài đặt hệ thống" data-view="settings">
+      <span>⚙️</span>
     </button>
   </div>
 </div>
+
+<div class="center-scroll">
 <section class="chat" id="chat-surface"><div id="chat-drop-overlay" class="chat-drop-overlay" hidden><div><strong>Thả tệp vào đây</strong><span>Ảnh, tài liệu văn bản hoặc thư mục dự án</span></div></div>
 <div class="welcome-hero" id="welcome-hero">
   <div class="hero-brand">
@@ -4879,40 +5207,38 @@ main.center {
   <div class="smart-intent-badge" id="smart-intent-badge" hidden></div>
   
   <div class="omni-input-wrapper">
-    <button type="button" class="omni-attach-btn" id="btn-quick-attach-img" title="Đính kèm ảnh, tài liệu hoặc dán ảnh (Ctrl+V)">
-      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
-    </button>
     <textarea id="chatinput" lang="vi-VN" spellcheck="true" autocomplete="on" autocapitalize="off" inputmode="text" enterkeyhint="send" placeholder="Nhắn tin cho AI Office, dán ảnh (Ctrl+V) hoặc nhập phép tính..." rows="2"></textarea>
-    <button class="send" id="sendbtn" type="submit" title="Gửi tin nhắn" aria-label="Gửi tin nhắn">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5"/><path d="m6 11 6-6 6 6"/></svg>
-    </button>
   </div>
   
   <div class="claude-composer-toolbar smart-toolbar">
     <div class="claude-toolbar-left smart-toolbar-left" style="display:flex;align-items:center;gap:8px">
-      <div class="omni-mode-pill" id="omni-mode-indicator">
-        <span class="omni-sparkle">✨</span>
-        <span class="omni-mode-label">AI Đa Năng Cục Bộ (Tự động nhận diện)</span>
+      <button type="button" class="omni-attach-btn" id="btn-quick-attach-img" title="Đính kèm ảnh, tài liệu hoặc dán ảnh (Ctrl+V)">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </button>
+      <div class="agent-select-wrapper">
+        <select id="agent-select" aria-label="Chọn tác nhân AI" title="Chọn tác nhân AI">
+          <option value="CEO">CEO Agent ⌄</option>
+          <option value="Vision">Thị giác (Vision) ⌄</option>
+          <option value="Developer">Lập trình viên ⌄</option>
+          <option value="Workspace">Workspace ⌄</option>
+          <option value="Writer">Biên soạn ⌄</option>
+          <option value="QA">Kiểm thử ⌄</option>
+        </select>
       </div>
+      <button type="button" class="tool-pill turbo-chip" id="btn-quick-calc" title="Máy tính số học 12+ chữ số trong 1ms">
+        <span>⚡</span> <span>Siêu tốc 1ms</span>
+      </button>
       <button type="button" class="tool-pill" id="btn-quick-studio" title="Mở Studio sáng tạo hoạt họa & Manga">
         <span>🎬</span> <span>Studio Sáng tạo</span>
-      </button>
-      <button type="button" class="tool-pill" id="btn-quick-calc" title="Máy tính số học 12+ chữ số trong 1ms">
-        <span>⚡</span> <span>Tính 1ms</span>
       </button>
       <button type="button" class="tool-pill" id="btn-quick-graph" title="Bản đồ quan hệ Codebase Graph">
         <span>🌐</span> <span>Graphify</span>
       </button>
     </div>
     <div class="claude-toolbar-right">
-      <select id="agent-select" aria-label="Chọn tác nhân AI" title="Chọn tác nhân AI" style="font-size:11.5px;height:26px;border-radius:14px;background:rgba(255,255,255,0.06);color:var(--text);border:1px solid var(--line)">
-        <option value="CEO">CEO Agent (Đa năng)</option>
-        <option value="Vision">Thị giác (Vision)</option>
-        <option value="Developer">Lập trình viên</option>
-        <option value="Workspace">Workspace</option>
-        <option value="Writer">Biên soạn</option>
-        <option value="QA">Kiểm thử</option>
-      </select>
+      <button class="send antigravity-send-btn" id="sendbtn" type="submit" title="Gửi tin nhắn" aria-label="Gửi tin nhắn">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
+      </button>
     </div>
   </div>
 </div>
@@ -5144,7 +5470,7 @@ document.querySelectorAll('.agent').forEach(e=>e.addEventListener('click',()=>{d
 $('agent-select').addEventListener('change',e=>{currentAgent=e.target.value;document.querySelectorAll('.agent[data-agent]').forEach(x=>x.classList.toggle('selected',x.dataset.agent===currentAgent));updateChatAgentHeader(currentAgent)});
 document.querySelectorAll('.quick button').forEach(e=>e.addEventListener('click',()=>{if(e.dataset.view)return;$('chatinput').value=e.dataset.prompt+' ';$('chatinput').focus()}));
 document.querySelectorAll('[data-suggest]').forEach(e=>e.addEventListener('click',()=>{$('chatinput').value=e.dataset.suggest+' ';$('chatinput').focus()}));
-$('chat-scroll-btn').addEventListener('click',()=>$('chatlog').scrollTo({top:$('chatlog').scrollHeight,behavior:'smooth'}));
+$('chat-scroll-btn')?.addEventListener('click',()=>$('chatlog').scrollTo({top:$('chatlog').scrollHeight,behavior:'smooth'}));
 async function refresh(){try{const s=await fetch('/api/status').then(r=>r.json());const isCloud=s.model_route?.mode==='cloud';const activeName=s.model_route?.model||s.model.model;const ready=isCloud||s.model.model_ready;$('ollama-status').textContent=isCloud?('Cloud · '+activeName):(s.model.model_ready?'Ollama · '+activeName:'Ollama · model chưa sẵn sàng');$('ollama-dot').style.background=ready?'var(--green)':'var(--amber)';$('vision-dot').style.background=s.capabilities.screen_capture?'var(--green)':'var(--amber)';$('computer-dot').style.background=s.capabilities.desktop_control?'var(--green)':'var(--amber)';$('browser-dot').style.background=s.capabilities.browser_automation?'var(--green)':'var(--amber)';$('workspace-dot').style.background=s.capabilities.workspace_edit_proposals?'var(--green)':'var(--amber)';$('model-info').textContent='Model: '+activeName;const adm=document.getElementById('admin-ime-warning');if(adm)adm.hidden=!s.elevated}catch{$('ollama-status').textContent='Backend offline';$('ollama-dot').style.background='var(--amber)'}
 try{const ts=await fetch('/api/tasks').then(r=>r.json());const c={running:0,waiting:0,done:0,paused:0};$('task-list').innerHTML='';for(const t of ts){const s=(t.status||'').toLowerCase();if(['completed','done'].includes(s))c.done++;else if(['running','planning','executing'].includes(s))c.running++;else if(['paused','cancelled'].includes(s))c.paused++;else c.waiting++;const d=document.createElement('div');d.className='task';d.dataset.taskId=t.id;d.style.cursor='pointer';const b=document.createElement('strong');b.textContent=t.title;const sm=document.createElement('small');sm.textContent=t.status+' · '+t.id;d.append(b,sm);$('task-list').append(d)}if(!ts.length)$('task-list').innerHTML='<div class="subtle">Chưa có nhiệm vụ.</div>';$('running-count').textContent=c.running;$('waiting-count').textContent=c.waiting;$('done-count').textContent=c.done;$('paused-count').textContent=c.paused;$('task-status').textContent=ts.length+' nhiệm vụ'}catch{}}
 var chatAttachments=[]; let chatComposing=false,chatElapsedTimer=null,chatStartedAt=0;
@@ -5254,10 +5580,10 @@ $('action-inpaint-btn')?.addEventListener('click',async()=>{
   }
  }catch(e){addMsg('assistant','Không thể kết nối Koharu API.')}
 });
-$('attach-files').addEventListener('click',()=>$('chat-files').click());
-$('attach-folder').addEventListener('click',()=>$('chat-folder').click());
-$('chat-files').addEventListener('change',e=>{addChatFiles([...e.target.files]);e.target.value=''});
-$('chat-folder').addEventListener('change',e=>{addChatFiles([...e.target.files]);e.target.value=''});
+$('attach-files')?.addEventListener('click',()=>$('chat-files').click());
+$('attach-folder')?.addEventListener('click',()=>$('chat-folder').click());
+$('chat-files')?.addEventListener('change',e=>{addChatFiles([...e.target.files]);e.target.value=''});
+$('chat-folder')?.addEventListener('change',e=>{addChatFiles([...e.target.files]);e.target.value=''});
 
 $('chatinput').addEventListener('paste',async e=>{
  const items=[...(e.clipboardData?.items||[])];const images=[];
@@ -5441,6 +5767,11 @@ window.addEventListener('DOMContentLoaded', () => { setTimeout(() => $('chatinpu
     if(prev==='game'&&view!=='game'){stopGamePolling();if(window.AIOfficeLive2D)window.AIOfficeLive2D.dispose();}
     if(view==='game'&&window.AIOfficeLive2D&&window.AIOfficeLive2D.resize){setTimeout(()=>{try{window.AIOfficeLive2D.resize();}catch{}},60);}
     document.querySelectorAll('.act[data-view]').forEach(x=>x.classList.toggle('active',x.dataset.view===view||(view==='studio'&&(x.dataset.view==='studio'||x.dataset.view==='manga'))));
+    document.querySelectorAll('#chat-topbar .topbar-pill-btn[data-view]').forEach(x=>x.classList.toggle('active',x.dataset.view===view||(view==='studio'&&(x.dataset.view==='studio'||x.dataset.view==='manga'))||(view==='home'&&x.dataset.view==='home')));
+    const topAgentLabel=byId('topbar-agent-label');
+    if(topAgentLabel){
+      topAgentLabel.textContent=view==='studio'?'Studio Sáng Tạo Đa Năng':view==='workspace'?'Workspace Lập Trình':view==='game'?'Game & VTuber Đồng Hành':'Claude Minimal · Cục bộ';
+    }
     const tabChat=byId('tab-chat');
     const tabWb=byId('tab-workbench');
     const tabWbLabel=byId('tab-workbench-label');
@@ -6112,6 +6443,7 @@ window.addEventListener('DOMContentLoaded', () => { setTimeout(() => $('chatinpu
  }
 
    async function renderSettings(){
+    if(typeof window.openSettingsModal==='function'){window.openSettingsModal('general');return;}
     setPage('settings','Cài đặt');
     const explorerOn=!layoutBody.classList.contains('hide-explorer'),sidebarOn=!layoutBody.classList.contains('hide-sidebar');
     let mcfg={provider:'local',local_model:'qwen3.5:4b',local_num_ctx:2048,cloud_enabled:false,cloud_base_url:'https://api.openai.com/v1',cloud_model:'gpt-4o-mini',cloud_api_key_set:false,cloud_api_key_preview:''};
@@ -6952,7 +7284,7 @@ async function navigate(view) {
     document.querySelectorAll('.sidebar-nav-item').forEach(x => {
       x.classList.toggle('active', x.dataset.view === view || (view === 'home' && x.dataset.view === 'home') || ((view === 'studio' || view === 'manga' || view === 'motion-comic') && x.dataset.view === 'studio'));
     });
-    if (view === 'home') return showHome();if(view==='workspace')return renderWorkspace('');if(view==='tasks')return renderTasks();if(view==='agents')return renderAgents();if(view==='skills')return renderSkills();if(view==='tools')return renderTools();if(view==='game')return renderGameVTuber();if(view==='models')return renderModels();if(view==='settings')return renderSettings();if(view==='studio'||view==='manga'||view==='motion-comic')return renderUnifiedStudio(view==='manga'?'manga':'motion');}
+    if (view === 'home') return showHome();if(view==='workspace')return renderWorkspace('');if(view==='tasks')return renderTasks();if(view==='agents')return renderAgents();if(view==='skills')return renderSkills();if(view==='tools')return renderTools();if(view==='game')return renderGameVTuber();if(view==='models')return renderModels();if(view==='settings')return (typeof window.openSettingsModal==='function'?window.openSettingsModal('general'):renderSettings());if(view==='studio'||view==='manga'||view==='motion-comic')return renderUnifiedStudio(view==='manga'?'manga':'motion');}
  window.navigate=navigate;
  document.addEventListener('aioffice:open-workspace-editor',e=>{
    const goal=String((e.detail&&e.detail.goal)||'');
@@ -7305,12 +7637,12 @@ async function navigate(view) {
                 </select>
               </label>
 
-              <div style="display:flex;flex-direction:column;justify-content:center;gap:4px">
-                <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text):cursor:pointer">
+              <div style="display:flex;flex-direction:column;justify-content:center;gap:4px;min-width:0;overflow:hidden">
+                <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text);cursor:pointer;flex-wrap:wrap">
                   <input type="checkbox" id="mc-anime4k-check" checked>
                   <strong>Khử mờ Anime4K (0 MB VRAM)</strong>
                 </label>
-                <small class="subtle" style="font-size:11px">Làm sắc nét đường nét mực manga mà không tốn VRAM.</small>
+                <small class="subtle" style="font-size:11px;white-space:normal;word-break:break-word">Làm sắc nét đường nét mực manga mà không tốn VRAM.</small>
               </div>
             </div>
 
@@ -7631,8 +7963,240 @@ function updateWelcomeHeroVisibility() {
   // Hook event listeners
   byId('btn-theme-toggle')?.addEventListener('click', () => window.toggleTheme());
   byId('btn-theme-toggle-sidebar')?.addEventListener('click', () => window.toggleTheme());
+  byId('topbar-open-home')?.addEventListener('click', () => showHome());
   byId('topbar-open-studio')?.addEventListener('click', () => navigate('studio'));
   byId('topbar-open-workspace')?.addEventListener('click', () => navigate('workspace'));
+  byId('topbar-open-settings')?.addEventListener('click', () => openSettingsModal('general'));
+
+  // =========================================================================
+  // Antigravity Settings Modal Logic (Ảnh 7)
+  // =========================================================================
+  let currentSettingsModalTab = 'general';
+
+  async function openSettingsModal(initialTab = 'general') {
+    const modal = byId('settings-modal');
+    if (!modal) return;
+    modal.hidden = false;
+    await switchSettingsModalTab(initialTab);
+  }
+
+  function closeSettingsModal() {
+    const modal = byId('settings-modal');
+    if (modal) modal.hidden = true;
+  }
+
+  window.openSettingsModal = openSettingsModal;
+  window.closeSettingsModal = closeSettingsModal;
+
+  async function switchSettingsModalTab(tab) {
+    currentSettingsModalTab = tab;
+    document.querySelectorAll('.settings-modal-nav-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.cfgTab === tab);
+    });
+    const heading = byId('settings-tab-heading');
+    const body = byId('settings-modal-body');
+    if (!body) return;
+
+    if (tab === 'general') {
+      if (heading) heading.textContent = 'Cài đặt chung (General)';
+      body.innerHTML = `
+        <div class="settings-section">
+          <h3>Ngôn ngữ & Mặc định</h3>
+          <p class="subtle">Thiết lập ngôn ngữ hệ thống và hành vi làm việc.</p>
+          <div class="setting-row" style="margin-top:14px">
+            <span><strong>Ngôn ngữ giao diện</strong><small>Tiếng Việt (mặc định) & Anh ngữ</small></span>
+            <span class="chip" style="font-weight:600">Tiếng Việt</span>
+          </div>
+          <div class="setting-row">
+            <span><strong>Tự động lưu lịch sử hội thoại</strong><small>Tin nhắn được lưu cục bộ vào SQLite data/office.db</small></span>
+            <span class="chip" style="background:var(--green-bg);color:var(--green);border:1px solid var(--green-border);font-weight:600">ĐANG BẬT</span>
+          </div>
+        </div>
+        <div class="settings-section" style="margin-top:20px">
+          <h3>Phím tắt hệ thống</h3>
+          <div class="settings-note">
+            • <strong>Enter</strong>: Gửi tin nhắn tức thì<br>
+            • <strong>Shift + Enter</strong>: Xuống dòng mới trong khung soạn thảo<br>
+            • <strong>Ctrl + V</strong>: Dán ảnh chụp màn hình trực tiếp để AI nhận diện / dựng phim<br>
+            • <strong>F12</strong>: Dừng khẩn cấp phiên AI chơi game tự động
+          </div>
+        </div>
+      `;
+    } else if (tab === 'appearance') {
+      if (heading) heading.textContent = 'Giao diện hiển thị (Appearance)';
+      const curTheme = document.body.dataset.theme === 'light' ? 'light' : 'dark';
+      body.innerHTML = `
+        <div class="settings-section">
+          <h3>Chế độ Giao diện (Theme)</h3>
+          <p class="subtle">Chọn tông màu và độ tương phản chuẩn Antigravity IDE. Thiết lập được lưu vĩnh viễn trên máy.</p>
+          <div class="settings-grid" style="margin-top:16px;display:grid;grid-template-columns:1fr 1fr;gap:14px">
+            <button type="button" class="theme-choice" id="modal-theme-choice-dark" data-theme-choice="dark" style="padding:14px;border-radius:12px;border:2px solid ${curTheme==='dark'?'var(--accent)':'var(--line)'};background:var(--pane);cursor:pointer;display:flex;align-items:center;gap:12px;text-align:left;color:var(--text)">
+              <span class="theme-swatch dark" style="width:36px;height:36px;border-radius:8px;background:#09090b;border:1px solid rgba(255,255,255,0.2);display:inline-block;box-shadow:inset 0 0 0 3px #18181b"></span>
+              <span><strong style="display:block;font-size:13.5px">Tối — Antigravity Dark</strong><small style="font-size:11.5px;color:var(--text-muted)">Nền #18181b, tương phản cao, dịu mắt</small></span>
+            </button>
+            <button type="button" class="theme-choice" id="modal-theme-choice-light" data-theme-choice="light" style="padding:14px;border-radius:12px;border:2px solid ${curTheme==='light'?'var(--accent)':'var(--line)'};background:var(--pane);cursor:pointer;display:flex;align-items:center;gap:12px;text-align:left;color:var(--text)">
+              <span class="theme-swatch light" style="width:36px;height:36px;border-radius:8px;background:#ffffff;border:1px solid rgba(0,0,0,0.15);display:inline-block;box-shadow:inset 0 0 0 3px #f1f5f9"></span>
+              <span><strong style="display:block;font-size:13.5px">Sáng — Crisp Light</strong><small style="font-size:11.5px;color:var(--text-muted)">Nền #ffffff, văn bản rõ nét, sắc sảo</small></span>
+            </button>
+          </div>
+        </div>
+        <div class="settings-section" style="margin-top:20px">
+          <h3>Kiểu chữ & Bố cục</h3>
+          <p class="subtle">Hệ thống phông chữ tối ưu cho lập trình và sáng tạo.</p>
+          <div class="settings-note">
+            <strong>Font hệ thống:</strong> Antigravity Modern Sans (SF Pro, Segoe UI, Inter, Roboto). Đảm bảo 100% văn bản rõ nét, không bị chìm chữ hay mờ nhạt ở cả hai giao diện.
+          </div>
+        </div>
+      `;
+      byId('modal-theme-choice-dark')?.addEventListener('click', () => {
+        window.setTheme('dark');
+        switchSettingsModalTab('appearance');
+      });
+      byId('modal-theme-choice-light')?.addEventListener('click', () => {
+        window.setTheme('light');
+        switchSettingsModalTab('appearance');
+      });
+    } else if (tab === 'models') {
+      if (heading) heading.textContent = 'Mô hình AI & Tốc độ (Models)';
+      let mcfg = {provider:'local',local_model:'qwen3.5:4b',local_num_ctx:2048,cloud_enabled:false,cloud_base_url:'https://api.openai.com/v1',cloud_model:'gpt-4o-mini',cloud_api_key_set:false,cloud_api_key_preview:''};
+      try { mcfg = await getJson('/api/settings/model'); } catch {}
+      body.innerHTML = `
+        <div class="settings-section">
+          <h3>Cấu hình Tuyến Suy Luận</h3>
+          <p class="subtle">Mặc định chạy 100% cục bộ bằng Ollama. Có thể bật Cloud API nếu muốn tăng tốc độ nhìn ảnh / suy luận phức tạp.</p>
+          <form id="modal-model-settings-form" style="display:grid;gap:12px;margin-top:14px">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+              <label class="workspace-field"><span>NGUỒN SUY LUẬN</span><select id="modal-cfg-provider" class="field"><option value="local">Local · Ollama (mặc định)</option><option value="cloud">Cloud Vision / LLM (tùy chọn)</option></select></label>
+              <label class="workspace-field"><span>MODEL OLLAMA LOCAL</span><input id="modal-cfg-local-model" class="field" value="${esc(mcfg.local_model)}"></label>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+              <label class="workspace-field"><span>NGỮ CẢNH LOCAL</span><select id="modal-cfg-local-ctx" class="field"><option value="2048">2048 tokens</option><option value="4096">4096 tokens</option><option value="8192">8192 tokens</option></select></label>
+              <label class="workspace-field"><span>CLOUD BASE URL</span><input id="modal-cfg-cloud-url" class="field" value="${esc(mcfg.cloud_base_url)}" placeholder="https://api.openai.com/v1"></label>
+              <label class="workspace-field"><span>CLOUD MODEL</span><input id="modal-cfg-cloud-model" class="field" value="${esc(mcfg.cloud_model)}" placeholder="gpt-4o-mini"></label>
+            </div>
+            <label class="workspace-field"><span>CLOUD API KEY ${mcfg.cloud_api_key_set ? '(đã lưu: '+esc(mcfg.cloud_api_key_preview)+')' : '(chưa nhập)'}</span><input id="modal-cfg-cloud-key" class="field" type="password" autocomplete="off" placeholder="Để trống nếu giữ nguyên key đã lưu"></label>
+            <div class="page-actions" style="justify-content:flex-start;gap:8px">
+              <button type="submit" class="primary-btn">Lưu cấu hình Model</button>
+              <button type="button" class="secondary-btn" id="modal-cfg-model-test">Kiểm tra kết nối</button>
+              <button type="button" class="secondary-btn" id="modal-cfg-clear-key">Xóa API Key</button>
+              <span id="modal-cfg-model-msg" class="subtle" style="font-size:12px;margin-left:8px"></span>
+            </div>
+          </form>
+        </div>
+      `;
+      byId('modal-cfg-provider').value = mcfg.provider || 'local';
+      byId('modal-cfg-local-ctx').value = String(mcfg.local_num_ctx || 2048);
+      byId('modal-model-settings-form')?.addEventListener('submit', async e => {
+        e.preventDefault();
+        const msg = byId('modal-cfg-model-msg'); msg.textContent = 'Đang lưu...';
+        const prov = byId('modal-cfg-provider').value;
+        const payload = {
+          provider: prov,
+          local_model: byId('modal-cfg-local-model').value.trim(),
+          local_num_ctx: Number(byId('modal-cfg-local-ctx').value),
+          cloud_enabled: prov === 'cloud',
+          cloud_base_url: byId('modal-cfg-cloud-url').value.trim(),
+          cloud_model: byId('modal-cfg-cloud-model').value.trim(),
+          cloud_api_key: byId('modal-cfg-cloud-key').value.trim() || null
+        };
+        try {
+          const r = await fetch('/api/settings/model', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)});
+          const d = await r.json();
+          if (!r.ok) throw new Error(d.detail || 'Không lưu được.');
+          msg.textContent = '✓ Đã lưu (' + d.provider + ')';
+          byId('modal-cfg-cloud-key').value = '';
+        } catch (err) {
+          msg.textContent = 'Lỗi: ' + (err.message || err);
+        }
+      });
+      byId('modal-cfg-model-test')?.addEventListener('click', async () => {
+        const msg = byId('modal-cfg-model-msg'); msg.textContent = 'Đang kiểm tra kết nối...';
+        try {
+          const r = await fetch('/api/settings/model/test', {method:'POST'});
+          const d = await r.json();
+          if (!r.ok) throw new Error(d.detail || 'Thất bại');
+          msg.textContent = '✓ ' + d.mode + ' · ' + d.model + ': ' + d.reply;
+        } catch (err) {
+          msg.textContent = 'Lỗi: ' + (err.message || err);
+        }
+      });
+      byId('modal-cfg-clear-key')?.addEventListener('click', async () => {
+        await fetch('/api/settings/model', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({provider:'local', cloud_enabled:false, clear_cloud_api_key:true})});
+        switchSettingsModalTab('models');
+      });
+    } else if (tab === 'workspace') {
+      if (heading) heading.textContent = 'Workspace & Bố cục (Workspace)';
+      const expOn = !layoutBody.classList.contains('hide-explorer');
+      body.innerHTML = `
+        <div class="settings-section">
+          <h3>Quản lý Bố cục Làm việc</h3>
+          <p class="subtle">Tùy biến hiển thị thanh điều hướng để tối ưu không gian hiển thị.</p>
+          <div class="setting-row" style="margin-top:14px">
+            <span><strong>Thanh bên Tệp & Lịch sử (Explorer)</strong><small>Hiển thị danh sách hội thoại gần đây và tạo chat mới</small></span>
+            <button class="setting-action" id="modal-settings-explorer">${expOn ? 'Đang hiển thị' : 'Đang thu gọn'}</button>
+          </div>
+          <div class="setting-row">
+            <span><strong>Khôi phục Bố cục Mặc định</strong><small>Đưa giao diện về trạng thái chuẩn ban đầu</small></span>
+            <button class="setting-action" id="modal-settings-reset">Khôi phục mặc định</button>
+          </div>
+        </div>
+      `;
+      byId('modal-settings-explorer')?.addEventListener('click', () => {
+        layoutBody.classList.toggle('hide-explorer');
+        saveLayout(); syncLayoutButtons();
+        switchSettingsModalTab('workspace');
+      });
+      byId('modal-settings-reset')?.addEventListener('click', () => {
+        layoutBody.classList.remove('hide-explorer', 'hide-sidebar');
+        saveLayout(); syncLayoutButtons();
+        switchSettingsModalTab('workspace');
+      });
+    } else if (tab === 'data') {
+      if (heading) heading.textContent = 'Lịch sử & Dữ liệu (Data)';
+      body.innerHTML = `
+        <div class="settings-section">
+          <h3>Lưu trữ Hội thoại & Dữ liệu</h3>
+          <p class="subtle">Dữ liệu được lưu trữ an toàn trong cơ sở dữ liệu SQLite data/office.db.</p>
+          <div class="setting-row" style="margin-top:14px">
+            <span><strong>Số cuộc trò chuyện đã lưu</strong><small id="modal-history-count">${conversationCache.length} cuộc trò chuyện</small></span>
+            <button class="setting-action" id="modal-refresh-history">Làm mới</button>
+          </div>
+          <div class="setting-row">
+            <span><strong>Xóa toàn bộ lịch sử chat</strong><small>Chỉ xóa dữ liệu hội thoại; không xóa file hay workspace backups</small></span>
+            <button class="setting-action setting-danger" id="modal-clear-history">Xóa lịch sử</button>
+          </div>
+        </div>
+      `;
+      byId('modal-refresh-history')?.addEventListener('click', async () => {
+        await refreshConversationList();
+        const el = byId('modal-history-count');
+        if (el) el.textContent = conversationCache.length + ' cuộc trò chuyện';
+      });
+      byId('modal-clear-history')?.addEventListener('click', async () => {
+        if (!confirm('Xóa toàn bộ lịch sử trò chuyện? Thao tác này không thể hoàn tác.')) return;
+        const r = await fetch('/api/conversations', {method:'DELETE'});
+        if (r.ok) {
+          await createNewConversation();
+          closeSettingsModal();
+        }
+      });
+    }
+  }
+
+  // Hook settings modal buttons
+  byId('btn-close-settings-modal')?.addEventListener('click', () => closeSettingsModal());
+  byId('settings-modal')?.addEventListener('click', e => {
+    if (e.target === byId('settings-modal')) closeSettingsModal();
+  });
+  document.querySelectorAll('.settings-modal-nav-btn').forEach(b => {
+    b.addEventListener('click', () => switchSettingsModalTab(b.dataset.cfgTab));
+  });
+  document.querySelectorAll('[data-view="settings"]').forEach(b => {
+    b.addEventListener('click', (e) => {
+      e.preventDefault();
+      openSettingsModal('general');
+    });
+  });
 
   // Initial theme sync
   setTimeout(() => {
@@ -7643,5 +8207,45 @@ function updateWelcomeHeroVisibility() {
 
 })();
 </script>
+
+<!-- Antigravity Settings Modal (Ảnh 7) -->
+<div id="settings-modal" class="settings-modal-overlay" hidden>
+  <div class="settings-modal-card">
+    <div class="settings-modal-sidebar">
+      <div class="settings-modal-brand">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83-2.83l-.06.06A1.65 1.65 0 0 0 19.4 9c.25.6.83.99 1.51 1H21a2 2 0 1 1 0 4h-.09c-.68.01-1.26.4-1.51 1z"/></svg>
+        <span>Cài đặt</span>
+      </div>
+      <nav class="settings-modal-nav">
+        <button type="button" class="settings-modal-nav-btn active" data-cfg-tab="general">
+          <span class="nav-icon">⚙️</span> <span>General</span>
+        </button>
+        <button type="button" class="settings-modal-nav-btn" data-cfg-tab="appearance">
+          <span class="nav-icon">🎨</span> <span>Appearance / Giao diện</span>
+        </button>
+        <button type="button" class="settings-modal-nav-btn" data-cfg-tab="models">
+          <span class="nav-icon">🧠</span> <span>Models / AI</span>
+        </button>
+        <button type="button" class="settings-modal-nav-btn" data-cfg-tab="workspace">
+          <span class="nav-icon">💻</span> <span>Workspace / Bố cục</span>
+        </button>
+        <button type="button" class="settings-modal-nav-btn" data-cfg-tab="data">
+          <span class="nav-icon">💬</span> <span>Lịch sử & Dữ liệu</span>
+        </button>
+      </nav>
+    </div>
+    
+    <div class="settings-modal-content">
+      <div class="settings-modal-header">
+        <h2 id="settings-tab-heading">Cài đặt chung (General)</h2>
+        <button type="button" class="settings-modal-close" id="btn-close-settings-modal" title="Đóng cài đặt">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="settings-modal-body" id="settings-modal-body">
+      </div>
+    </div>
+  </div>
+</div>
 </body>
 </html>
