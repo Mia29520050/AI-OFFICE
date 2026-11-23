@@ -12,8 +12,12 @@ import httpx
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 
-from app.security_guard import SecurityGuard
-from app.fast_calc import classify_prompt_speed
+try:
+    from app.security_guard import SecurityGuard
+    from app.fast_calc import classify_prompt_speed
+except ImportError:
+    from security_guard import SecurityGuard
+    from fast_calc import classify_prompt_speed
 
 DEFAULT_OLLAMA_URL = os.getenv("OLLAMA_HOST", "http://127.0.0.1:11434").rstrip("/")
 DEFAULT_LOCAL_MODEL = os.getenv("AI_OFFICE_MODEL", "qwen3.5:4b")

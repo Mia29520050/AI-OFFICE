@@ -11,11 +11,15 @@ import traceback
 import urllib.request
 from pathlib import Path
 
+ROOT = Path(__file__).resolve().parents[1]
+APP_DIR = Path(__file__).resolve().parent
+for _p in (str(ROOT), str(APP_DIR)):
+    if _p not in sys.path:
+        sys.path.insert(0, _p)
+
 import uvicorn
 import webview
 from main import app, init_db
-
-ROOT = Path(__file__).resolve().parents[1]
 LOG = ROOT / "data" / "launcher.log"
 RELAUNCH_GUARD = ROOT / "data" / ".relaunch_guard"
 APP_USER_MODEL_ID = "OpenAI.AIOffice.Desktop"

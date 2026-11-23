@@ -1,5 +1,14 @@
 from __future__ import annotations
 
+import sys
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+APP_DIR = Path(__file__).resolve().parent
+for _p in (str(ROOT), str(APP_DIR)):
+    if _p not in sys.path:
+        sys.path.insert(0, _p)
+
 import asyncio
 import base64
 import json

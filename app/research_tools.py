@@ -230,7 +230,10 @@ def register_routes(app: FastAPI) -> None:
 
     @app.get("/api/research/codebase-graph")
     async def research_codebase_graph(symbol: str = "") -> dict[str, Any]:
-        from app.codebase_graph import CodebaseGraph, DEFAULT_GRAPH_PATH
+        try:
+            from app.codebase_graph import CodebaseGraph, DEFAULT_GRAPH_PATH
+        except ImportError:
+            from codebase_graph import CodebaseGraph, DEFAULT_GRAPH_PATH
         graph = CodebaseGraph()
         if not DEFAULT_GRAPH_PATH.exists():
             graph.scan_directory()
