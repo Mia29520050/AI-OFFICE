@@ -132,22 +132,21 @@ def _cdp_ready() -> bool:
 
 
 def _profile_process_ready() -> bool:
+    """Check if CDP_PORT is listening by AI Office Chrome profile using pure Python psutil (0 console windows)."""
     profile_arg = str(PROFILE)
-    command = (
-        f"$listener=Get-NetTCPConnection -LocalPort {CDP_PORT} -State Listen -ErrorAction SilentlyContinue | Select-Object -First 1; "
-        "if(-not $listener){'NO_LISTENER'; exit}; "
-        "$proc=Get-CimInstance Win32_Process -Filter \"ProcessId = $($listener.OwningProcess)\"; "
-        f"if($proc -and $proc.CommandLine -like '*--remote-debugging-port={CDP_PORT}*' -and $proc.CommandLine -like '*{profile_arg}*'){{'AI_OFFICE_PROFILE'}}else{{'OTHER_PROCESS'}}"
-    )
     try:
-        result = subprocess.run(
-            ["powershell.exe", "-NoProfile", "-Command", command],
-            capture_output=True,
-            text=True,
-            timeout=4,
-            creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
-        )
-        return result.returncode == 0 and result.stdout.strip() == "AI_OFFICE_PROFILE"
+        import psutil
+        for conn in psutil.net_connections(kind="tcp"):
+            if conn.laddr.port == CDP_PORT and conn.status == psutil.CONN_LISTEN:
+                if conn.pid:
+                    try:
+                        proc = psutil.Process(conn.pid)
+                        cmdline = " ".join(proc.cmdline())
+                        if f"--remote-debugging-port={CDP_PORT}" in cmdline and profile_arg in cmdline:
+                            return True
+                    except Exception:
+                        pass
+        return False
     except Exception:
         return False
 

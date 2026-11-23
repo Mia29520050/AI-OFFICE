@@ -110,6 +110,9 @@ def ensure_local_ollama() -> bool:
             | getattr(subprocess, "DETACHED_PROCESS", 0)
             | getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0)
         )
+        si = subprocess.STARTUPINFO()
+        si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+        si.wShowWindow = 0  # SW_HIDE
         global _OLLAMA_PROC
         _OLLAMA_PROC = subprocess.Popen(
             [ollama_exe, "serve"],
@@ -118,6 +121,7 @@ def ensure_local_ollama() -> bool:
             stderr=subprocess.DEVNULL,
             close_fds=True,
             creationflags=flags,
+            startupinfo=si,
         )
         for _ in range(16):
             time.sleep(0.5)

@@ -3986,14 +3986,9 @@ strong, b, .strong {
   transition: grid-template-columns 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
-.body.hide-sidebar, .body.hide-explorer { grid-template-columns: 1fr !important; }
+.body.hide-explorer { grid-template-columns: 1fr !important; }
 
-.body.hide-sidebar .claude-sidebar,
-.body.hide-explorer .claude-sidebar,
-.body.hide-sidebar .explorer,
-.body.hide-explorer .explorer {
-  display: none !important;
-}
+.body.hide-explorer .claude-sidebar, .body.hide-explorer .explorer { display: none !important; }
 
 /* HIDE UNWANTED CLUTTER: Right workspace inspector, footer statusbar, activity rail, tabs, menus */
 nav.activity, .activity {
@@ -5190,7 +5185,7 @@ async function addChatFiles(files){
  }
  renderChatAttachments();
  const imgItem=chatAttachments.find(x=>x.kind==='image');
- const omniPreview=$('smart-omnibar-preview');
+ const omniPreview=$('smart-inline-attachment')||$('smart-omnibar-preview');
  if(omniPreview){
   if(imgItem){
    omniPreview.hidden=false;
@@ -6935,7 +6930,29 @@ async function renderModels(){setPage('models','Mô hình');page.innerHTML=heade
     });
   }
 
- async function navigate(view){stopGamePolling();if(view==='home')return showHome();if(view==='workspace')return renderWorkspace('');if(view==='tasks')return renderTasks();if(view==='agents')return renderAgents();if(view==='skills')return renderSkills();if(view==='tools')return renderTools();if(view==='game')return renderGameVTuber();if(view==='models')return renderModels();if(view==='settings')return renderSettings();if(view==='studio'||view==='manga'||view==='motion-comic')return renderUnifiedStudio(view==='manga'?'manga':'motion');}
+ 
+  function showHome() {
+    if (typeof setPage === 'function') setPage('home', 'Trò chuyện');
+    const h = document.querySelector('.center-scroll');
+    const dynPage = document.getElementById('dynamic-page');
+    const studioPage = document.getElementById('page-studio');
+    if (h) h.hidden = false;
+    if (dynPage) dynPage.hidden = true;
+    if (studioPage) studioPage.hidden = true;
+    document.querySelectorAll('.sidebar-nav-item').forEach(x => {
+      x.classList.toggle('active', x.dataset.view === 'home');
+    });
+    if (typeof updateWelcomeHeroVisibility === 'function') updateWelcomeHeroVisibility();
+    byId('chatinput')?.focus();
+  }
+  window.showHome = showHome;
+
+async function navigate(view) {
+    stopGamePolling();
+    document.querySelectorAll('.sidebar-nav-item').forEach(x => {
+      x.classList.toggle('active', x.dataset.view === view || (view === 'home' && x.dataset.view === 'home') || ((view === 'studio' || view === 'manga' || view === 'motion-comic') && x.dataset.view === 'studio'));
+    });
+    if (view === 'home') return showHome();if(view==='workspace')return renderWorkspace('');if(view==='tasks')return renderTasks();if(view==='agents')return renderAgents();if(view==='skills')return renderSkills();if(view==='tools')return renderTools();if(view==='game')return renderGameVTuber();if(view==='models')return renderModels();if(view==='settings')return renderSettings();if(view==='studio'||view==='manga'||view==='motion-comic')return renderUnifiedStudio(view==='manga'?'manga':'motion');}
  window.navigate=navigate;
  document.addEventListener('aioffice:open-workspace-editor',e=>{
    const goal=String((e.detail&&e.detail.goal)||'');
@@ -6967,12 +6984,12 @@ async function renderModels(){setPage('models','Mô hình');page.innerHTML=heade
  if(layoutVersion!=='3'){
    // Default chat-first layout: keep Explorer visible and keep right overview collapsed unless user opens it.
    layoutBody.classList.remove('hide-explorer');
-   layoutBody.classList.add('hide-sidebar');
+   // right sidebar permanently hidden via CSS
    try{localStorage.setItem('aioffice.layout-version','3')}catch{}
    saveLayout();
  }else{
    if(!storedLayout||storedLayout.explorer!==false)layoutBody.classList.remove('hide-explorer');else layoutBody.classList.add('hide-explorer');
-   layoutBody.classList.add('hide-sidebar');
+   // right sidebar permanently hidden via CSS
  }
  syncLayoutButtons();
  document.querySelectorAll('[data-layout-toggle]').forEach(btn=>btn.addEventListener('click',()=>{
@@ -7478,7 +7495,19 @@ async function renderModels(){setPage('models','Mô hình');page.innerHTML=heade
 
 
   // Auto-hide Welcome Hero when active chat messages are displayed
-  function updateWelcomeHeroVisibility() {
+  
+  window.renderInlineAttachment = function(name, b64) {
+    const card = $('smart-inline-attachment') || $('smart-omnibar-preview');
+    if (card) {
+      card.hidden = false;
+      const img = $('omnibar-preview-img');
+      const lbl = $('omnibar-image-name');
+      if (img) img.src = b64.startsWith('data:') ? b64 : 'data:image/png;base64,' + b64;
+      if (lbl) lbl.textContent = name;
+    }
+  };
+
+function updateWelcomeHeroVisibility() {
     const hero = byId('welcome-hero');
     if (!hero) return;
     const msgs = document.querySelectorAll('#chat-surface .msg');
@@ -7508,7 +7537,19 @@ async function renderModels(){setPage('models','Mô hình');page.innerHTML=heade
   window.navigate = navigate;
 
   // Master Welcome Hero Auto-Visibility
-  function updateWelcomeHeroVisibility() {
+  
+  window.renderInlineAttachment = function(name, b64) {
+    const card = $('smart-inline-attachment') || $('smart-omnibar-preview');
+    if (card) {
+      card.hidden = false;
+      const img = $('omnibar-preview-img');
+      const lbl = $('omnibar-image-name');
+      if (img) img.src = b64.startsWith('data:') ? b64 : 'data:image/png;base64,' + b64;
+      if (lbl) lbl.textContent = name;
+    }
+  };
+
+function updateWelcomeHeroVisibility() {
     const hero = byId('welcome-hero');
     if (!hero) return;
     const chatlog = byId('chatlog');
