@@ -160,7 +160,14 @@ class MotionComicEngine:
             "-"
         ]
         try:
-            res = subprocess.run(cmd, capture_output=True, text=True, timeout=5)
+            creationflags = getattr(subprocess, "CREATE_NO_WINDOW", 0)
+            res = subprocess.run(
+                cmd,
+                capture_output=True,
+                text=True,
+                timeout=5,
+                creationflags=creationflags,
+            )
             self._nvenc_supported = (res.returncode == 0)
         except Exception:
             self._nvenc_supported = False
@@ -333,10 +340,12 @@ class MotionComicEngine:
             str(segment_video),
         ]
 
+        flags = getattr(subprocess, "CREATE_NO_WINDOW", 0)
         proc = await asyncio.create_subprocess_exec(
             *cmd,
             stdout=asyncio.subprocess.DEVNULL,
             stderr=asyncio.subprocess.PIPE,
+            creationflags=flags,
         )
         _, stderr = await proc.communicate()
         if proc.returncode != 0:
@@ -362,6 +371,7 @@ class MotionComicEngine:
                 *cpu_cmd,
                 stdout=asyncio.subprocess.DEVNULL,
                 stderr=asyncio.subprocess.DEVNULL,
+                creationflags=flags,
             )
             await cpu_proc.communicate()
 
@@ -427,10 +437,12 @@ class MotionComicEngine:
                 str(output_path),
             ]
 
+        flags = getattr(subprocess, "CREATE_NO_WINDOW", 0)
         proc = await asyncio.create_subprocess_exec(
             *cmd,
             stdout=asyncio.subprocess.DEVNULL,
             stderr=asyncio.subprocess.DEVNULL,
+            creationflags=flags,
         )
         await proc.communicate()
 
@@ -512,10 +524,12 @@ class MotionComicEngine:
             "-c", "copy",
             str(merged_video),
         ]
+        flags = getattr(subprocess, "CREATE_NO_WINDOW", 0)
         proc = await asyncio.create_subprocess_exec(
             *cmd_concat,
             stdout=asyncio.subprocess.DEVNULL,
             stderr=asyncio.subprocess.DEVNULL,
+            creationflags=flags,
         )
         await proc.communicate()
 
@@ -544,6 +558,7 @@ class MotionComicEngine:
                 *cmd_bgm,
                 stdout=asyncio.subprocess.DEVNULL,
                 stderr=asyncio.subprocess.DEVNULL,
+                creationflags=flags,
             )
             await proc.communicate()
         else:

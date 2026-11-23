@@ -48,15 +48,32 @@ def is_elevated() -> bool:
         return False
 
 
+def focus_existing_instance() -> bool:
+    """If an AI Office window is already open, bring it to focus and avoid duplicate processes."""
+    try:
+        import win32gui
+        import win32con
+        hwnd = win32gui.FindWindow(None, "AI Office")
+        if hwnd:
+            win32gui.ShowWindow(hwnd, win32con.SW_RESTORE)
+            win32gui.SetForegroundWindow(hwnd)
+            return True
+    except Exception:
+        pass
+    return False
+
+
 def relaunch_without_elevation() -> bool:
-    """Ask the existing standard-user Explorer shell to launch the app normally.
+    """Ask Explorer to launch silently via VBS without flashing a cmd console.
 
     WebView2 IME input (including UniKey/EVKey) can fail when the host window
     runs elevated while the input method runs at medium integrity.
     """
     try:
+        vbs = ROOT / "Start-AI-Office.vbs"
+        target = str(vbs) if vbs.exists() else str(ROOT / "Start-AI-Office.bat")
         subprocess.Popen(
-            ["explorer.exe", str(ROOT / "Start-AI-Office.bat")],
+            ["explorer.exe", target],
             close_fds=True,
         )
         return True
@@ -199,6 +216,10 @@ def apply_window_icon() -> None:
 
 
 def main() -> None:
+    # 1. Single Instance Check: if already running, focus existing window and exit cleanly
+    if focus_existing_instance():
+        return
+
     allow_elevated = "--allow-elevated" in sys.argv[1:]
     # Keep WebView2 at the same integrity level as UniKey/EVKey unless explicitly opted into Admin for elevated games.
     if is_elevated() and not allow_elevated:
@@ -206,9 +227,8 @@ def main() -> None:
         try:
             if RELAUNCH_GUARD.exists():
                 age = time.time() - RELAUNCH_GUARD.stat().st_mtime
-                if age < 15:
+                if age < 30:
                     already_attempted = True
-                RELAUNCH_GUARD.unlink(missing_ok=True)
         except Exception:
             pass
 

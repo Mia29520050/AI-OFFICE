@@ -100,7 +100,14 @@ def get_audio_duration_ffmpeg(file_path: str | Path) -> float:
     import subprocess
     exe = imageio_ffmpeg.get_ffmpeg_exe()
     cmd = [exe, "-i", str(file_path)]
-    res = subprocess.run(cmd, stderr=subprocess.PIPE, stdout=subprocess.DEVNULL, text=True)
+    creationflags = getattr(subprocess, "CREATE_NO_WINDOW", 0)
+    res = subprocess.run(
+        cmd,
+        stderr=subprocess.PIPE,
+        stdout=subprocess.DEVNULL,
+        text=True,
+        creationflags=creationflags,
+    )
     
     # Search for Duration: 00:00:03.45
     import re
