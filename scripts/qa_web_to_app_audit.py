@@ -158,6 +158,10 @@ async def run_qa_audit() -> bool:
 
             print(f"[*] Capturing Studio screenshot to {STUDIO_SCREENSHOT_PATH}...")
             await page.screenshot(path=str(STUDIO_SCREENSHOT_PATH), full_page=False)
+            if ARTIFACT_DIR.exists():
+                studio_copy = ARTIFACT_DIR / "ui_qa_studio.png"
+                shutil.copy2(STUDIO_SCREENSHOT_PATH, studio_copy)
+                print(f"[+] Copied studio screenshot to artifact: {studio_copy}")
 
             await browser.close()
 

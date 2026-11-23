@@ -3056,11 +3056,589 @@ textarea.field {
   font-size: 13px;
 }
 
+
+/* =========================================================================
+   Modern AI Office Sleek UI Styles
+   ========================================================================= */
+
+/* Topbar above chat */
+.chat-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 18px;
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  flex-shrink: 0;
+  z-index: 5;
+}
+.topbar-agent-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.topbar-agent-info .chat-agent-mark img {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+}
+.topbar-agent-info .chat-agent-title {
+  display: flex;
+  flex-direction: column;
+}
+.topbar-agent-info .chat-agent-title strong {
+  font-size: 13px;
+  color: #fff;
+  font-weight: 600;
+}
+.topbar-agent-info .chat-agent-title span {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.topbar-pill-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 12px;
+  background: rgba(99, 102, 241, 0.15);
+  border: 1px solid rgba(99, 102, 241, 0.4);
+  border-radius: 20px;
+  color: #c7d2fe;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.topbar-pill-btn:hover {
+  background: rgba(99, 102, 241, 0.3);
+  color: #fff;
+  transform: translateY(-1px);
+}
+.chathead-vtuber-dock {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 10px 3px 4px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  cursor: pointer;
+}
+.chathead-vtuber-avatar {
+  width: 22px;
+  height: 22px;
+  background: linear-gradient(135deg, #ec4899, #8b5cf6);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  color: #fff;
+  font-weight: bold;
+  position: relative;
+}
+.vtuber-name {
+  font-size: 12px;
+  color: #f1f5f9;
+  font-weight: 500;
+}
+.vtuber-badge {
+  font-size: 10.5px;
+  color: #10b981;
+  font-weight: 600;
+}
+
+/* Chat surface scroll area */
+.chat {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 18px 24px 24px 24px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Welcome Hero Grid */
+.welcome-hero {
+  max-width: 860px;
+  width: 100%;
+  margin: auto;
+  padding: 20px 0;
+  animation: fadeIn 0.3s ease;
+}
+.hero-brand {
+  text-align: center;
+  margin-bottom: 24px;
+}
+.hero-logo-wrap {
+  display: inline-flex;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  margin-bottom: 12px;
+  box-shadow: 0 8px 32px rgba(99, 102, 241, 0.15);
+}
+.hero-logo {
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+}
+.hero-brand h1 {
+  font-size: 24px;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: -0.02em;
+  margin-bottom: 8px;
+}
+.hero-brand p {
+  font-size: 13.5px;
+  color: var(--text-muted);
+  max-width: 580px;
+  margin: 0 auto;
+  line-height: 1.5;
+}
+.hero-action-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.hero-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 14px 16px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.hero-card:hover {
+  background: rgba(99, 102, 241, 0.08);
+  border-color: rgba(99, 102, 241, 0.45);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.3);
+}
+.card-icon {
+  font-size: 22px;
+  width: 42px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  border: 1px solid;
+  flex-shrink: 0;
+}
+.card-body {
+  flex: 1;
+  min-width: 0;
+}
+.card-body strong {
+  display: block;
+  font-size: 13px;
+  color: #fff;
+  margin-bottom: 3px;
+  font-weight: 600;
+}
+.card-body p {
+  font-size: 11.5px;
+  color: var(--text-muted);
+  line-height: 1.35;
+  margin: 0;
+}
+.card-arrow {
+  color: var(--text-dim);
+  font-size: 14px;
+  transition: transform 0.2s;
+}
+.hero-card:hover .card-arrow {
+  color: var(--cyan);
+  transform: translateX(3px);
+}
+
+/* Modern Composer Layout */
+.omni-input-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+.omni-attach-btn {
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 50%;
+  color: var(--text-muted);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+}
+.omni-attach-btn:hover {
+  background: rgba(99, 102, 241, 0.2);
+  border-color: rgba(99, 102, 241, 0.5);
+  color: #fff;
+}
+.omni-input-wrapper textarea {
+  flex: 1;
+  min-height: 40px;
+  max-height: 140px;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #fff;
+  font-size: 13.5px;
+  line-height: 1.45;
+  resize: none;
+  padding: 6px 0;
+}
+.omni-mode-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 26px;
+  padding: 0 10px;
+  background: rgba(99, 102, 241, 0.12);
+  border: 1px solid rgba(99, 102, 241, 0.35);
+  border-radius: 13px;
+  color: #a5b4fc;
+  font-size: 11.5px;
+  font-weight: 500;
+}
+.omni-sparkle {
+  font-size: 12px;
+}
+
+/* Inline Attachment Card */
+.smart-inline-attachment {
+  background: rgba(30, 41, 59, 0.6);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  padding: 10px 14px;
+  margin-bottom: 8px;
+  animation: fadeIn 0.2s ease;
+}
+.inline-attach-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.inline-attach-thumb-box {
+  width: 50px;
+  height: 50px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: #0f172a;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.inline-attach-thumb-box img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.inline-attach-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.inline-attach-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.inline-attach-name {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #f8fafc;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.inline-attach-tag {
+  font-size: 10px;
+  padding: 1px 6px;
+  background: rgba(99, 102, 241, 0.2);
+  border: 1px solid rgba(99, 102, 241, 0.4);
+  border-radius: 4px;
+  color: #c7d2fe;
+}
+.inline-attach-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.mini-pill {
+  height: 24px;
+  padding: 0 8px;
+  font-size: 11px;
+  font-weight: 500;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #cbd5e1;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.15s;
+}
+.mini-pill:hover {
+  background: rgba(99, 102, 241, 0.25);
+  border-color: rgba(99, 102, 241, 0.5);
+  color: #fff;
+}
+.mini-pill.close {
+  color: var(--text-muted);
+}
+.mini-pill.close:hover {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: rgba(239, 68, 68, 0.5);
+  color: #fca5a5;
+}
+
+/* Full Width Studio Container */
+#page-studio {
+  width: 100%;
+  max-width: 1360px;
+  margin: 0 auto;
+  padding: 16px 20px 32px 20px;
+  box-sizing: border-box;
+}
+.mc-container {
+  width: 100%;
+}
+.mc-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+@media (max-width: 900px) {
+  .mc-grid {
+    grid-template-columns: 1fr;
+  }
+}
+.mc-card {
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 16px;
+}
+.mc-card-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  padding-bottom: 10px;
+}
+
+
+/* Fix hidden states and eliminate voids */
+.smart-intent-badge[hidden] {
+  display: none !important;
+}
+.smart-inline-attachment[hidden] {
+  display: none !important;
+}
+.composer-attachments[hidden] {
+  display: none !important;
+}
+
+/* Ensure sidebar overview is collapsed by default */
+.body.hide-sidebar .sidebar {
+  display: none !important;
+}
+
+/* Modern full-bleed chat and hero styles */
+#chat-surface {
+  position: relative;
+  width: 100%;
+  max-width: 960px;
+  margin: 0 auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+.welcome-hero {
+  margin: auto 0;
+  padding: 16px 0;
+  width: 100%;
+  transition: opacity 0.2s ease;
+}
+.welcome-hero[hidden], .welcome-hero.is-hidden {
+  display: none !important;
+}
+
+/* Inline attach thumbnail box */
+.inline-attach-thumb-box {
+  width: 52px;
+  height: 52px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: #0f172a;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+}
+.inline-attach-thumb-box img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Unified Studio Full Screen */
+#page-studio {
+  width: 100% !important;
+  max-width: 1400px !important;
+  margin: 0 auto !important;
+  padding: 20px 24px 40px 24px !important;
+  box-sizing: border-box !important;
+}
+.mc-grid {
+  display: grid;
+  grid-template-columns: 1.05fr 1fr;
+  gap: 18px;
+}
+
+
+/* =========================================================================
+   Sleek Compact Hero & Full-Width Studio
+   ========================================================================= */
+.welcome-hero {
+  max-width: 820px !important;
+  width: 100% !important;
+  margin: 16px auto !important;
+  padding: 8px 0 !important;
+  display: block;
+}
+.welcome-hero[hidden], .welcome-hero.is-hidden {
+  display: none !important;
+}
+.hero-brand {
+  text-align: center;
+  margin-bottom: 14px !important;
+}
+.hero-logo-wrap {
+  display: inline-flex;
+  padding: 8px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  margin-bottom: 6px !important;
+  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.2);
+}
+.hero-logo {
+  width: 36px !important;
+  height: 36px !important;
+}
+.hero-brand h1 {
+  font-size: 20px !important;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 4px !important;
+}
+.hero-brand p {
+  font-size: 12.5px !important;
+  color: #94a3b8 !important;
+  max-width: 540px;
+  margin: 0 auto;
+  line-height: 1.4 !important;
+}
+.hero-action-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px !important;
+}
+.hero-card {
+  display: flex;
+  align-items: center;
+  gap: 12px !important;
+  background: rgba(255, 255, 255, 0.03) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 10px !important;
+  padding: 12px 14px !important;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.hero-card:hover {
+  background: rgba(99, 102, 241, 0.12) !important;
+  border-color: rgba(99, 102, 241, 0.45) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+}
+.card-icon {
+  font-size: 20px !important;
+  width: 38px !important;
+  height: 38px !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px !important;
+  border: 1px solid;
+  flex-shrink: 0;
+}
+.card-body strong {
+  display: block;
+  font-size: 12.5px !important;
+  color: #f8fafc !important;
+  margin-bottom: 2px !important;
+  font-weight: 600;
+}
+.card-body p {
+  font-size: 11px !important;
+  color: #94a3b8 !important;
+  line-height: 1.35 !important;
+  margin: 0;
+}
+
+/* Force hide-sidebar rules */
+.body.hide-sidebar .right {
+  display: none !important;
+}
+.body.hide-sidebar main {
+  width: 100% !important;
+  flex: 1 1 0% !important;
+}
+
+/* Chat scroll area full height */
+#chat-surface {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 12px 20px 20px 20px;
+}
+
 </style></head>
 <body><div class="app">
 <header class="menu"><img class="logo-small" src="/assets/ai-office-icon.png" alt="AI Office"><span class="brand">AI Office</span><div class="menu-entry"><button class="menu-trigger" type="button" data-menu-toggle="workspace" aria-expanded="false" aria-controls="menu-workspace">Không gian làm việc</button><div class="menu-popover" id="menu-workspace" role="menu" hidden><button class="menu-item" role="menuitem" data-view="workspace"><span class="menu-symbol">▱</span>Mở Workspace</button><button class="menu-item" role="menuitem" data-view="tasks"><span class="menu-symbol">☑</span>Nhiệm vụ</button><button class="menu-item" role="menuitem" data-view="agents"><span class="menu-symbol">♙</span>Tác nhân AI</button><button class="menu-item" role="menuitem" data-view="skills"><span class="menu-symbol">◇</span>Kỹ năng</button></div></div><div class="menu-entry"><button class="menu-trigger" type="button" data-menu-toggle="view" aria-expanded="false" aria-controls="menu-view">Hiển thị</button><div class="menu-popover" id="menu-view" role="menu" hidden><button class="menu-item" role="menuitem" data-view="home"><span class="menu-symbol">∞</span>Trang chủ</button><button class="menu-item" role="menuitem" data-view="models"><span class="menu-symbol">◉</span>Mô hình</button><button class="menu-item" role="menuitem" data-view="tools"><span class="menu-symbol">⌘</span>Công cụ & điều khiển máy</button><button class="menu-item" role="menuitem" data-view="game"><span class="menu-symbol">◈</span>Chơi Game & AI VTuber</button><button class="menu-item" role="menuitem" data-view="manga"><span class="menu-symbol">📖</span>Manga Studio</button>
 <button class="menu-item" role="menuitem" data-view="motion-comic"><span class="menu-symbol">🎬</span>Motion Comic & Video Studio</button><div class="menu-separator"></div><button class="menu-item" role="menuitem" data-view="settings"><span class="menu-symbol">⚙</span>Cài đặt bố cục</button></div></div><div class="menu-entry"><button class="menu-trigger" type="button" data-menu-toggle="window" aria-expanded="false" aria-controls="menu-window">Cửa sổ</button><div class="menu-popover" id="menu-window" role="menu" hidden><button class="menu-item" role="menuitem" data-window-action="reload"><span class="menu-symbol">↻</span>Tải lại giao diện</button><button class="menu-item" role="menuitem" data-window-action="reset-layout"><span class="menu-symbol">▣</span>Đặt lại bố cục</button><div class="menu-separator"></div><div class="menu-hint">Thu nhỏ · Phóng to · Đóng: thanh tiêu đề Windows</div></div></div><button class="menu-trigger settings-menu-link" type="button" data-view="settings">Cài đặt</button></header>
-<div class="body">
+<div class="body hide-sidebar">
 <nav class="activity" aria-label="Điều hướng chính">
 <button class="act" type="button" title="Explorer" aria-label="Explorer" data-layout-toggle="explorer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h7l2 2h9v11H3z"/><path d="M3 10h18"/></svg></button>
 <button class="act active" type="button" title="Trò chuyện AI & Trợ lý Đa năng" aria-label="Trò chuyện AI" data-view="home"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5V21H3z"/><path d="M9 21v-7h6v7"/></svg></button>
@@ -3078,17 +3656,41 @@ textarea.field {
 </div><div class="explorer-footer">KHÔNG GIAN CỤC BỘ · PHIÊN BẢN MVP 0.5</div></aside>
 <main class="center"><div class="tabs" id="app-tabs"><button type="button" class="tab active" id="tab-chat" data-tab="home"><img src="/assets/ai-office-icon.png"> Trò chuyện</button><button type="button" class="tab" id="tab-workbench" style="display:none" data-tab="workbench"><img src="/assets/ai-office-icon.png"> <span id="tab-workbench-label">Workbench</span><span class="tab-close-icon" id="tab-workbench-close" title="Đóng và quay về Trò chuyện"><svg viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></svg></span></button><button class="tab-plus" id="new-chat-tab" type="button" title="Cuộc trò chuyện mới">+</button></div>
 <div class="center-scroll">
-<div class="quick"><button data-prompt="Hãy nghiên cứu chủ đề sau, phân tích có hệ thống và tổng hợp kết quả."><span class="quick-icon"><span class="ico">⌕</span></span><span class="quick-copy"><strong>Nghiên cứu</strong><small>Tìm hiểu và tổng hợp</small></span><span class="quick-arrow">↗</span></button><button data-prompt="Hãy hỗ trợ phân tích và lập trình cho yêu cầu sau."><span class="quick-icon"><span class="ico">‹/›</span></span><span class="quick-copy"><strong>Lập trình</strong><small>Phân tích và viết code</small></span><span class="quick-arrow">↗</span></button><button type="button" data-view="tools"><span class="quick-icon"><span class="ico">▣</span></span><span class="quick-copy"><strong>Thao tác máy</strong><small>Mở Computer Use</small></span><span class="quick-arrow">↗</span></button><button data-prompt="Hãy phân tích file tôi cung cấp và giải thích nội dung quan trọng."><span class="quick-icon"><span class="ico">▤</span></span><span class="quick-copy"><strong>Phân tích file</strong><small>Đọc và trích xuất thông tin</small></span><span class="quick-arrow">↗</span></button><button data-prompt="Hãy giúp tôi thiết kế hình ảnh theo mô tả sau."><span class="quick-icon"><span class="ico">▧</span></span><span class="quick-copy"><strong>Tạo hình ảnh</strong><small>Thiết kế theo mô tả</small></span><span class="quick-arrow">↗</span></button></div>
 
+
+
+
+<div class="chat-topbar" id="chat-topbar">
+  <div class="topbar-agent-info">
+    <div class="chat-agent-mark"><img src="/assets/ai-office-icon.png" alt="AI Office"></div>
+    <div class="chat-agent-title">
+      <strong>AI Office Studio</strong>
+      <span class="subtle">Trợ lý Cục bộ Đa năng · Qwen3.5 & Vision</span>
+    </div>
+  </div>
+  <div class="topbar-actions">
+    <button type="button" class="topbar-pill-btn" id="topbar-open-studio" title="Mở Studio Sáng Tạo Đa Năng">
+      <span>🎬</span> <span>Studio Sáng tạo</span>
+    </button>
+    <div class="chathead-vtuber-dock" id="chat-vtuber-dock" role="button" tabindex="0" title="AI VTuber Đồng hành">
+      <div class="chathead-vtuber-avatar"><div class="mini-live2d-dot"></div><span>魔</span></div>
+      <span class="vtuber-name">Mina VTuber</span>
+      <span class="vtuber-badge">● Online</span>
+    </div>
+  </div>
+</div>
+<section class="chat" id="chat-surface"><div id="chat-drop-overlay" class="chat-drop-overlay" hidden><div><strong>Thả tệp vào đây</strong><span>Ảnh, tài liệu văn bản hoặc thư mục dự án</span></div></div>
 <div class="welcome-hero" id="welcome-hero">
   <div class="hero-brand">
-    <img src="/assets/ai-office-icon.png" class="hero-logo" alt="AI Office">
+    <div class="hero-logo-wrap">
+      <img src="/assets/ai-office-icon.png" class="hero-logo" alt="AI Office">
+    </div>
     <h1>AI Office Studio</h1>
-    <p>Hệ thống AI Đa Năng Cục Bộ: Sáng tạo Hoạt Họa 4K · Manga · Lập trình · Nhận diện ảnh · Máy tính 1ms</p>
+    <p>Hệ thống AI Đa Năng Cục Bộ: Sáng tạo Hoạt Họa 4K · Dựng Manga · Lập trình · Nhận diện ảnh · Máy tính 1ms</p>
   </div>
   <div class="hero-action-grid">
     <div class="hero-card" id="hero-card-motion">
-      <div class="card-icon">🎬</div>
+      <div class="card-icon" style="background:rgba(99,102,241,0.12);border-color:rgba(99,102,241,0.3)">🎬</div>
       <div class="card-body">
         <strong>Xưởng Motion Comic & Video 4K</strong>
         <p>Xuất video hoạt họa YouTube (16:9) & TikTok (9:16) có chuyển động Ken Burns & lồng tiếng AI.</p>
@@ -3096,23 +3698,23 @@ textarea.field {
       <span class="card-arrow">➔</span>
     </div>
     <div class="hero-card" id="hero-card-manga">
-      <div class="card-icon">📖</div>
+      <div class="card-icon" style="background:rgba(236,72,153,0.12);border-color:rgba(236,72,153,0.3)">📖</div>
       <div class="card-body">
         <strong>Manga Studio & Tẩy chữ Koharu</strong>
-        <p>Dựng truyện tranh, tẩy chữ bóng thoại giữ nguyên nét vẽ bằng AI LaMa.</p>
+        <p>Dựng truyện tranh, tẩy chữ bóng thoại giữ nguyên nét vẽ bằng AI LaMa inpainting.</p>
       </div>
       <span class="card-arrow">➔</span>
     </div>
     <div class="hero-card" id="hero-card-code">
-      <div class="card-icon">💻</div>
+      <div class="card-icon" style="background:rgba(6,182,212,0.12);border-color:rgba(6,182,212,0.3)">💻</div>
       <div class="card-body">
         <strong>Lập trình & Codebase Graph</strong>
-        <p>Trích xuất quan hệ class & hàm toàn bộ dự án với 0 MB VRAM.</p>
+        <p>Trích xuất quan hệ class & hàm toàn bộ dự án với 0 MB VRAM GPU.</p>
       </div>
       <span class="card-arrow">➔</span>
     </div>
     <div class="hero-card" id="hero-card-calc">
-      <div class="card-icon">⚡</div>
+      <div class="card-icon" style="background:rgba(245,158,11,0.12);border-color:rgba(245,158,11,0.3)">⚡</div>
       <div class="card-body">
         <strong>Máy tính số lớn siêu tốc</strong>
         <p>Giải các phép toán 12+ chữ số chính xác 100% trong dưới 1 mili-giây.</p>
@@ -3120,37 +3722,52 @@ textarea.field {
       <span class="card-arrow">➔</span>
     </div>
   </div>
-</div>
-
-<section class="chat" id="chat-surface"><div id="chat-drop-overlay" class="chat-drop-overlay" hidden><div><strong>Thả tệp vào đây</strong><span>Ảnh, tài liệu văn bản hoặc thư mục dự án</span></div></div><div class="chathead"><div class="chat-agent-mark"><img src="/assets/ai-office-icon.png"></div><div class="chat-agent-title"><strong>CEO Agent</strong><span class="subtle">Điều phối viên · Qwen3.5-4B</span></div><div class="chathead-vtuber-dock" id="chat-vtuber-dock" role="button" tabindex="0" title="AI VTuber Assistant · Bấm để mở Game & VTuber Studio"><div class="chathead-vtuber-avatar"><div class="chathead-vtuber-pulse"></div><img src="/assets/ai-office-icon.png" id="chathead-vtuber-img" alt="VTuber"></div><div class="chathead-vtuber-info"><span class="chathead-vtuber-name" id="chathead-vtuber-name">Mina VTuber</span><span class="chathead-vtuber-status" id="chathead-vtuber-mood">✦ Đồng hành</span></div></div><span class="chat-live"><i class="pulse-dot"></i> TRỰC TUYẾN</span><button class="chat-head-action" type="button" title="Cuộn đến tin nhắn mới nhất" id="chat-scroll-btn">↓</button></div><details class="chat-progress" id="chat-progress" hidden open><summary><span class="progress-spinner"></span><strong id="chat-progress-title">Đang xử lý yêu cầu</strong><span class="progress-time" id="chat-progress-time">0s</span></summary><div class="progress-details" id="chat-progress-details">Đã nhận yêu cầu · Đang chờ model local xử lý</div></details><div class="log" id="chatlog" aria-live="polite"><div class="msg assistant"><div class="msg-content">Xin chào Master! Em là CEO Agent của AI Office. Anh muốn giao nhiệm vụ gì hôm nay?</div></div></div>
+</div><details class="chat-progress" id="chat-progress" hidden open><summary><span class="progress-spinner"></span><strong id="chat-progress-title">Đang xử lý yêu cầu</strong><span class="progress-time" id="chat-progress-time">0s</span></summary><div class="progress-details" id="chat-progress-details">Đã nhận yêu cầu · Đang chờ model local xử lý</div></details><div class="log" id="chatlog" aria-live="polite"><div class="msg assistant"><div class="msg-content">Xin chào Master! Em là CEO Agent của AI Office. Anh muốn giao nhiệm vụ gì hôm nay?</div></div></div>
 
 <form class="composer" id="chatform">
 <div class="composer-attachments" id="composer-attachments" hidden></div>
 <div class="composer-main claude-composer smart-omnibar">
-  <!-- Inline Attachment Card: Contained inside composer box with zero overlap -->
+  <!-- Inline Attachment Card: Zero collision, high-res preview -->
   <div class="smart-inline-attachment" id="smart-inline-attachment" hidden>
     <div class="inline-attach-card">
-      <img id="omnibar-preview-img" src="" alt="Attached Media">
+      <div class="inline-attach-thumb-box">
+        <img id="omnibar-preview-img" src="" alt="">
+      </div>
       <div class="inline-attach-info">
-        <div class="inline-attach-name" id="omnibar-image-name">image.png</div>
+        <div class="inline-attach-header">
+          <span class="inline-attach-name" id="omnibar-image-name">manga_panel.png</span>
+          <span class="inline-attach-tag">Ảnh đầu vào</span>
+        </div>
         <div class="inline-attach-actions">
-          <button type="button" class="mini-pill" id="action-vision-btn" title="Phân tích ảnh với AI Thị giác">👁️ Nhận diện ảnh</button>
-          <button type="button" class="mini-pill" id="action-inpaint-btn" title="Tẩy chữ Manga bảo toàn nét vẽ với Koharu">🎨 Tẩy chữ (Koharu)</button>
-          <button type="button" class="mini-pill" id="action-motion-btn" title="Tạo video hoạt họa từ ảnh này">🎬 Dựng Motion Comic</button>
+          <button type="button" class="mini-pill" id="action-vision-btn" title="AI Thị giác nhận diện và phân tích ảnh">👁️ Nhận diện ảnh</button>
+          <button type="button" class="mini-pill" id="action-inpaint-btn" title="Tẩy bóng thoại manga bằng LaMa giữ nguyên nét vẽ">🎨 Tẩy chữ (Koharu)</button>
+          <button type="button" class="mini-pill" id="action-motion-btn" title="Chuyển ảnh thành video hoạt họa 4K hoặc TikTok 9:16">🎬 Dựng Motion Comic</button>
           <button type="button" class="mini-pill close" id="action-remove-img" title="Bỏ ảnh đính kèm">✕</button>
         </div>
       </div>
     </div>
   </div>
+  
   <div class="smart-intent-badge" id="smart-intent-badge" hidden></div>
-  <textarea id="chatinput" lang="vi-VN" spellcheck="true" autocomplete="on" autocapitalize="off" inputmode="text" enterkeyhint="send" placeholder="Nhắn tin cho AI Office, dán ảnh (Ctrl+V) hoặc nhập phép tính..." rows="2"></textarea>
+  
+  <div class="omni-input-wrapper">
+    <button type="button" class="omni-attach-btn" id="btn-quick-attach-img" title="Đính kèm ảnh, tài liệu hoặc dán ảnh (Ctrl+V)">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+    </button>
+    <textarea id="chatinput" lang="vi-VN" spellcheck="true" autocomplete="on" autocapitalize="off" inputmode="text" enterkeyhint="send" placeholder="Nhắn tin cho AI Office, dán ảnh (Ctrl+V) hoặc nhập phép tính..." rows="2"></textarea>
+    <button class="send" id="sendbtn" type="submit" title="Gửi tin nhắn" aria-label="Gửi tin nhắn">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5"/><path d="m6 11 6-6 6 6"/></svg>
+    </button>
+  </div>
+  
   <div class="claude-composer-toolbar smart-toolbar">
-    <div class="claude-toolbar-left smart-toolbar-left" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-      <button type="button" class="tool-pill" id="btn-quick-attach-img" title="Tải ảnh lên hoặc dán ảnh (Ctrl+V)">
-        <span>🖼️</span> <span>Ảnh</span>
-      </button>
+    <div class="claude-toolbar-left smart-toolbar-left" style="display:flex;align-items:center;gap:8px">
+      <div class="omni-mode-pill" id="omni-mode-indicator">
+        <span class="omni-sparkle">✨</span>
+        <span class="omni-mode-label">AI Đa Năng Cục Bộ (Tự động nhận diện)</span>
+      </div>
       <button type="button" class="tool-pill" id="btn-quick-studio" title="Mở Studio sáng tạo hoạt họa & Manga">
-        <span>🎨</span> <span>Studio Sáng tạo</span>
+        <span>🎬</span> <span>Studio Sáng tạo</span>
       </button>
       <button type="button" class="tool-pill" id="btn-quick-calc" title="Máy tính số học 12+ chữ số trong 1ms">
         <span>⚡</span> <span>Tính 1ms</span>
@@ -3158,23 +3775,16 @@ textarea.field {
       <button type="button" class="tool-pill" id="btn-quick-graph" title="Bản đồ quan hệ Codebase Graph">
         <span>🌐</span> <span>Graphify</span>
       </button>
-      <select id="agent-select" aria-label="Chọn tác nhân AI" title="Chọn tác nhân AI" style="font-size:12px;height:28px">
-        <option>CEO</option>
-        <option value="Researcher">Nhà nghiên cứu</option>
+    </div>
+    <div class="claude-toolbar-right">
+      <select id="agent-select" aria-label="Chọn tác nhân AI" title="Chọn tác nhân AI" style="font-size:11.5px;height:26px;border-radius:14px;background:rgba(255,255,255,0.06);color:var(--text);border:1px solid var(--line)">
+        <option value="CEO">CEO Agent (Đa năng)</option>
+        <option value="Vision">Thị giác (Vision)</option>
         <option value="Developer">Lập trình viên</option>
         <option value="Workspace">Workspace</option>
-        <option value="Vision">Thị giác</option>
-        <option value="Computer Use">Điều khiển máy</option>
-        <option value="Browser">Trình duyệt</option>
         <option value="Writer">Biên soạn</option>
         <option value="QA">Kiểm thử</option>
       </select>
-      <span id="admin-ime-warning" class="subtle" hidden style="font-size:11px;color:var(--amber);margin-left:4px" title="Ứng dụng đang chạy quyền Administrator.">🛡 Admin</span>
-    </div>
-    <div class="claude-toolbar-right">
-      <button class="send" id="sendbtn" type="submit" title="Gửi tin nhắn" aria-label="Gửi tin nhắn">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5"/><path d="m6 11 6-6 6 6"/></svg>
-      </button>
     </div>
   </div>
 </div>
@@ -3409,7 +4019,7 @@ document.querySelectorAll('[data-suggest]').forEach(e=>e.addEventListener('click
 $('chat-scroll-btn').addEventListener('click',()=>$('chatlog').scrollTo({top:$('chatlog').scrollHeight,behavior:'smooth'}));
 async function refresh(){try{const s=await fetch('/api/status').then(r=>r.json());const isCloud=s.model_route?.mode==='cloud';const activeName=s.model_route?.model||s.model.model;const ready=isCloud||s.model.model_ready;$('ollama-status').textContent=isCloud?('Cloud · '+activeName):(s.model.model_ready?'Ollama · '+activeName:'Ollama · model chưa sẵn sàng');$('ollama-dot').style.background=ready?'var(--green)':'var(--amber)';$('vision-dot').style.background=s.capabilities.screen_capture?'var(--green)':'var(--amber)';$('computer-dot').style.background=s.capabilities.desktop_control?'var(--green)':'var(--amber)';$('browser-dot').style.background=s.capabilities.browser_automation?'var(--green)':'var(--amber)';$('workspace-dot').style.background=s.capabilities.workspace_edit_proposals?'var(--green)':'var(--amber)';$('model-info').textContent='Model: '+activeName;const adm=document.getElementById('admin-ime-warning');if(adm)adm.hidden=!s.elevated}catch{$('ollama-status').textContent='Backend offline';$('ollama-dot').style.background='var(--amber)'}
 try{const ts=await fetch('/api/tasks').then(r=>r.json());const c={running:0,waiting:0,done:0,paused:0};$('task-list').innerHTML='';for(const t of ts){const s=(t.status||'').toLowerCase();if(['completed','done'].includes(s))c.done++;else if(['running','planning','executing'].includes(s))c.running++;else if(['paused','cancelled'].includes(s))c.paused++;else c.waiting++;const d=document.createElement('div');d.className='task';d.dataset.taskId=t.id;d.style.cursor='pointer';const b=document.createElement('strong');b.textContent=t.title;const sm=document.createElement('small');sm.textContent=t.status+' · '+t.id;d.append(b,sm);$('task-list').append(d)}if(!ts.length)$('task-list').innerHTML='<div class="subtle">Chưa có nhiệm vụ.</div>';$('running-count').textContent=c.running;$('waiting-count').textContent=c.waiting;$('done-count').textContent=c.done;$('paused-count').textContent=c.paused;$('task-status').textContent=ts.length+' nhiệm vụ'}catch{}}
-let chatAttachments=[],chatComposing=false,chatElapsedTimer=null,chatStartedAt=0;
+var chatAttachments=[]; let chatComposing=false,chatElapsedTimer=null,chatStartedAt=0;
 const chatInput=$('chatinput');
 function resizeChatInput(){chatInput.style.height='auto';chatInput.style.height=Math.min(Math.max(chatInput.scrollHeight,38),180)+'px'}
 chatInput.addEventListener('input',resizeChatInput);
@@ -5192,7 +5802,7 @@ async function renderModels(){setPage('models','Mô hình');page.innerHTML=heade
     });
   }
 
- async function navigate(view){stopGamePolling();if(view==='home')return showHome();if(view==='workspace')return renderWorkspace('');if(view==='tasks')return renderTasks();if(view==='agents')return renderAgents();if(view==='skills')return renderSkills();if(view==='tools')return renderTools();if(view==='game')return renderGameVTuber();if(view==='models')return renderModels();if(view==='settings')return renderSettings();if(view==='studio'||view==='manga'||view==='motion-comic')return renderUnifiedStudio(view==='motion-comic'?'motion':'manga');}
+ async function navigate(view){stopGamePolling();if(view==='home')return showHome();if(view==='workspace')return renderWorkspace('');if(view==='tasks')return renderTasks();if(view==='agents')return renderAgents();if(view==='skills')return renderSkills();if(view==='tools')return renderTools();if(view==='game')return renderGameVTuber();if(view==='models')return renderModels();if(view==='settings')return renderSettings();if(view==='studio'||view==='manga'||view==='motion-comic')return renderUnifiedStudio(view==='manga'?'manga':'motion');}
  window.navigate=navigate;
  document.addEventListener('aioffice:open-workspace-editor',e=>{
    const goal=String((e.detail&&e.detail.goal)||'');
@@ -5229,7 +5839,7 @@ async function renderModels(){setPage('models','Mô hình');page.innerHTML=heade
    saveLayout();
  }else{
    if(!storedLayout||storedLayout.explorer!==false)layoutBody.classList.remove('hide-explorer');else layoutBody.classList.add('hide-explorer');
-   if(storedLayout&&storedLayout.sidebar===true)layoutBody.classList.remove('hide-sidebar');else layoutBody.classList.add('hide-sidebar');
+   layoutBody.classList.add('hide-sidebar');
  }
  syncLayoutButtons();
  document.querySelectorAll('[data-layout-toggle]').forEach(btn=>btn.addEventListener('click',()=>{
@@ -5254,7 +5864,7 @@ async function renderModels(){setPage('models','Mô hình');page.innerHTML=heade
   let mcPanelsState = [
     {
       id: "p1",
-      thumb: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMgAAACAAQMAAACq9p52AAAAA1BMVEUAAACnej3aAAAAAXRSTlMAQObYZgAAACNJREFUGBntwQEBAAAAgiD/r25IQAEAAAAAAAAAAAAAAAAAgIcBFu4AAaZ4z6cAAAAASUVORK5CYII=",
+      thumb: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKAAAAB4CAIAAAD6wG44AAAFFklEQVR4nO3dbUxVdQDH8T/ee5kY9AIQM9OQAZNsmqEXQR7kQWw0aGCaUKEuwVhQjmrT0exFDBYFqVxDIhAQJRiMgqKyBAF5uBeMKB4GM01WL8QLPUwLLnBpeNgZM++VGmT++H1enfM/5393xveec+7lxbkWK9w2CcK14G4fAM0tBgbHwOAYGBwDg2NgcAwMjoHBMTA4BgbHwOAYGBwDg2NgcAwMjoHBMTA4BgbHwOAYGBwDg2NgcAwMjoHBMTA4BgbHwOAYGBwDg2NgcAwMjoHBMTA4BgbHwOAYGBwDg5vlwH3tNe+/95a8eiTtUF97jby68+nQix219na28s4l+Zny1k7tF9JC1I6wytKcitPHC7LfXbrEwdR0SeT2sOryvNJCTf7xdx58wOGWl/r7qo2NdY4mtbwoK0eTamNjLQ3eb2OdnpLUpftSwJnlwAaDwclxhUIx+bIWFhYPL19mMBjkrUH+m04UlQX4eso7K5SKjep101/Bx2vD1iC/iKi48KgXW1rb05IPmJou7fxUSFDEs3E7ouPzT5Wnpybd8QgT9kXr2jq2PRenu9DxUszz0mBeVtr3Xb0TExMCzuxfoju7e9c86iaEeGSVS0/vD/K41cKFi6ysisuqAjf7yYMZmbmJ8S9Mnx67JzLj6IdjY2NCiMLiiuGREentctvpsXsi3z6cPTw8IoQ419Bypf9npfIOTx3x9/WsrP5aCFBVfTbAb+q9Erf/jfxTZQLR7Aeub9T5eXsIIfy81XWNWnnc11t9rqHl0uX+h5YtValU0mCT9oIQwtPjcXk3V+eVPT0XpeUbN/6IiT84Pm40Nd3VeWVXT58898CbadI7wwx7O9tr+iEhxMC1QflqL43M66fszFx9oy46KuLwsTwvD/fC4gp5PDjAZ7WbS8hW/yUO9hs3PNbQ1CqNZ2hyX03Yu137zdQBKRXSQszunUH+3g72tv5PRpmarlBM7XwLlUpVUqCZvirmq9kP/OtvvxuNRunzzvXrN6RBhWKBk+PyJ8J33zyzPQI3e8mBW3TtxnGjl4e7tHr5yk9urs4dnT05+R+VlH/aVl9pZvqlH/tXr3Jp/65buuWnpyQlHkwWQoyOjj6zK/62H7L0g0OL7W2vDugdFtvpB2FP3Ln9mlR3Xvv6/n3nm9vkkYX169d0905deHVtHb5e6un7Z2hyExOm7sSnSz9JfHmv9CvdFbVt3Gg0M/1kccVrr8RaWk6eoGEhgdKCKfctshJC1NY3h4UECSFCQwJr65sFujkJXFPXFB4aPP3PtyXAu6ll8nYrhPhzeFg/9Iuzk6O8Vdv27ejoqKWlpRCioupsV3ffmY8Lik8cuTqgH795TzU1verzsy2t7Z+V5ZXkZwYH+h5KzjBzVNlHU4QQmdmF6vVry4uy1O5rNR+cFOgszP+sjvwsNT7p7n9oJnX4nywwDAyOgcExMDgGBsfA4BgYHAOAY2BwDAyOgcExMDgGBsfA4BgYHAOAY2BwDAyOgcExMDgGBsfA4BgYHAOAY2BwDAyOgcExMDgGBsfA4BgYHAOAY2BwDAyOgcExMDgGBsfA4BgYHAOAY2BwDAyOgcExMDgGBsfA4BgYHAOAY2BwDAyOgcExMDgGBsfA4JT/9Pcf6N7CMxgcA8/v302iex3PYHAYGBwDg2NgcAwMjoHBMTA4BgbHwALbXzoGjKB2wZOzAAAAAElFTkSuQmCC",
       speaker: "Luffy",
       text: "Tôi sẽ trở thành Vua Hải Tặc! Không ai có thể cản bước!",
       motion: "zoom_in",
@@ -5262,7 +5872,7 @@ async function renderModels(){setPage('models','Mô hình');page.innerHTML=heade
     },
     {
       id: "p2",
-      thumb: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMgAAACAAQMAAACq9p52AAAAA1BMVEUAAACnej3aAAAAAXRSTlMAQObYZgAAACNJREFUGBntwQEBAAAAgiD/r25IQAEAAAAAAAAAAAAAAAAAgIcBFu4AAaZ4z6cAAAAASUVORK5CYII=",
+      thumb: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKAAAAB4CAIAAAD6wG44AAAFFklEQVR4nO3dbUxVdQDH8T/ee5kY9AIQM9OQAZNsmqEXQR7kQWw0aGCaUKEuwVhQjmrT0exFDBYFqVxDIhAQJRiMgqKyBAF5uBeMKB4GM01WL8QLPUwLLnBpeNgZM++VGmT++H1enfM/5393xveec+7lxbkWK9w2CcK14G4fAM0tBgbHwOAYGBwDg2NgcAwMjoHBMTA4BgbHwOAYGBwDg2NgcAwMjoHBMTA4BgbHwOAYGBwDg2NgcAwMjoHBMTA4BgbHwOAYGBwDg2NgcAwMjoHBMTA4BgbHwOAYGBwDg5vlwH3tNe+/95a8eiTtUF97jby68+nQix219na28s4l+Zny1k7tF9JC1I6wytKcitPHC7LfXbrEwdR0SeT2sOryvNJCTf7xdx58wOGWl/r7qo2NdY4mtbwoK0eTamNjLQ3eb2OdnpLUpftSwJnlwAaDwclxhUIx+bIWFhYPL19mMBjkrUH+m04UlQX4eso7K5SKjep101/Bx2vD1iC/iKi48KgXW1rb05IPmJou7fxUSFDEs3E7ouPzT5Wnpybd8QgT9kXr2jq2PRenu9DxUszz0mBeVtr3Xb0TExMCzuxfoju7e9c86iaEeGSVS0/vD/K41cKFi6ysisuqAjf7yYMZmbmJ8S9Mnx67JzLj6IdjY2NCiMLiiuGREentctvpsXsi3z6cPTw8IoQ419Bypf9npfIOTx3x9/WsrP5aCFBVfTbAb+q9Erf/jfxTZQLR7Aeub9T5eXsIIfy81XWNWnnc11t9rqHl0uX+h5YtValU0mCT9oIQwtPjcXk3V+eVPT0XpeUbN/6IiT84Pm40Nd3VeWVXT58898CbadI7wwx7O9tr+iEhxMC1QflqL43M66fszFx9oy46KuLwsTwvD/fC4gp5PDjAZ7WbS8hW/yUO9hs3PNbQ1CqNZ2hyX03Yu137zdQBKRXSQszunUH+3g72tv5PRpmarlBM7XwLlUpVUqCZvirmq9kP/OtvvxuNRunzzvXrN6RBhWKBk+PyJ8J33zyzPQI3e8mBW3TtxnGjl4e7tHr5yk9urs4dnT05+R+VlH/aVl9pZvqlH/tXr3Jp/65buuWnpyQlHkwWQoyOjj6zK/62H7L0g0OL7W2vDugdFtvpB2FP3Ln9mlR3Xvv6/n3nm9vkkYX169d0905deHVtHb5e6un7Z2hyExOm7sSnSz9JfHmv9CvdFbVt3Gg0M/1kccVrr8RaWk6eoGEhgdKCKfctshJC1NY3h4UECSFCQwJr65sFujkJXFPXFB4aPP3PtyXAu6ll8nYrhPhzeFg/9Iuzk6O8Vdv27ejoqKWlpRCioupsV3ffmY8Lik8cuTqgH795TzU1verzsy2t7Z+V5ZXkZwYH+h5KzjBzVNlHU4QQmdmF6vVry4uy1O5rNR+cFOgszP+sjvwsNT7p7n9oJnX4nywwDAyOgcExMDgGBsfA4BgYHAOAY2BwDAyOgcExMDgGBsfA4BgYHAOAY2BwDAyOgcExMDgGBsfA4BgYHAOAY2BwDAyOgcExMDgGBsfA4BgYHAOAY2BwDAyOgcExMDgGBsfA4BgYHAOAY2BwDAyOgcExMDgGBsfA4BgYHAOAY2BwDAyOgcExMDgGBsfA4JT/9Pcf6N7CMxgcA8/v302iex3PYHAYGBwDg2NgcAwMjoHBMTA4BgbHwALbXzoGjKB2wZOzAAAAAElFTkSuQmCC",
       speaker: "Zoro",
       text: "Tam Kiếm Phái: Tam Thiên Thế Giới! Lên đường thôi!",
       motion: "pan_rtl",
@@ -5588,7 +6198,7 @@ async function renderModels(){setPage('models','Mô hình');page.innerHTML=heade
       mcPanelsState = [
         {
           id: "p1",
-          thumb: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMgAAACAAQMAAACq9p52AAAAA1BMVEUAAACnej3aAAAAAXRSTlMAQObYZgAAACNJREFUGBntwQEBAAAAgiD/r25IQAEAAAAAAAAAAAAAAAAAgIcBFu4AAaZ4z6cAAAAASUVORK5CYII=",
+          thumb: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKAAAAB4CAIAAAD6wG44AAAFFklEQVR4nO3dbUxVdQDH8T/ee5kY9AIQM9OQAZNsmqEXQR7kQWw0aGCaUKEuwVhQjmrT0exFDBYFqVxDIhAQJRiMgqKyBAF5uBeMKB4GM01WL8QLPUwLLnBpeNgZM++VGmT++H1enfM/5393xveec+7lxbkWK9w2CcK14G4fAM0tBgbHwOAYGBwDg2NgcAwMjoHBMTA4BgbHwOAYGBwDg2NgcAwMjoHBMTA4BgbHwOAYGBwDg2NgcAwMjoHBMTA4BgbHwOAYGBwDg2NgcAwMjoHBMTA4BgbHwOAYGBwDg5vlwH3tNe+/95a8eiTtUF97jby68+nQix219na28s4l+Zny1k7tF9JC1I6wytKcitPHC7LfXbrEwdR0SeT2sOryvNJCTf7xdx58wOGWl/r7qo2NdY4mtbwoK0eTamNjLQ3eb2OdnpLUpftSwJnlwAaDwclxhUIx+bIWFhYPL19mMBjkrUH+m04UlQX4eso7K5SKjep101/Bx2vD1iC/iKi48KgXW1rb05IPmJou7fxUSFDEs3E7ouPzT5Wnpybd8QgT9kXr2jq2PRenu9DxUszz0mBeVtr3Xb0TExMCzuxfoju7e9c86iaEeGSVS0/vD/K41cKFi6ysisuqAjf7yYMZmbmJ8S9Mnx67JzLj6IdjY2NCiMLiiuGREentctvpsXsi3z6cPTw8IoQ419Bypf9npfIOTx3x9/WsrP5aCFBVfTbAb+q9Erf/jfxTZQLR7Aeub9T5eXsIIfy81XWNWnnc11t9rqHl0uX+h5YtValU0mCT9oIQwtPjcXk3V+eVPT0XpeUbN/6IiT84Pm40Nd3VeWVXT58898CbadI7wwx7O9tr+iEhxMC1QflqL43M66fszFx9oy46KuLwsTwvD/fC4gp5PDjAZ7WbS8hW/yUO9hs3PNbQ1CqNZ2hyX03Yu137zdQBKRXSQszunUH+3g72tv5PRpmarlBM7XwLlUpVUqCZvirmq9kP/OtvvxuNRunzzvXrN6RBhWKBk+PyJ8J33zyzPQI3e8mBW3TtxnGjl4e7tHr5yk9urs4dnT05+R+VlH/aVl9pZvqlH/tXr3Jp/65buuWnpyQlHkwWQoyOjj6zK/62H7L0g0OL7W2vDugdFtvpB2FP3Ln9mlR3Xvv6/n3nm9vkkYX169d0905deHVtHb5e6un7Z2hyExOm7sSnSz9JfHmv9CvdFbVt3Gg0M/1kccVrr8RaWk6eoGEhgdKCKfctshJC1NY3h4UECSFCQwJr65sFujkJXFPXFB4aPP3PtyXAu6ll8nYrhPhzeFg/9Iuzk6O8Vdv27ejoqKWlpRCioupsV3ffmY8Lik8cuTqgH795TzU1verzsy2t7Z+V5ZXkZwYH+h5KzjBzVNlHU4QQmdmF6vVry4uy1O5rNR+cFOgszP+sjvwsNT7p7n9oJnX4nywwDAyOgcExMDgGBsfA4BgYHAOAY2BwDAyOgcExMDgGBsfA4BgYHAOAY2BwDAyOgcExMDgGBsfA4BgYHAOAY2BwDAyOgcExMDgGBsfA4BgYHAOAY2BwDAyOgcExMDgGBsfA4BgYHAOAY2BwDAyOgcExMDgGBsfA4BgYHAOAY2BwDAyOgcExMDgGBsfA4JT/9Pcf6N7CMxgcA8/v302iex3PYHAYGBwDg2NgcAwMjoHBMTA4BgbHwALbXzoGjKB2wZOzAAAAAElFTkSuQmCC",
           speaker: "Luffy",
           text: "Tôi sẽ trở thành Vua Hải Tặc! Không ai có thể cản bước!",
           motion: "zoom_in",
@@ -5596,7 +6206,7 @@ async function renderModels(){setPage('models','Mô hình');page.innerHTML=heade
         },
         {
           id: "p2",
-          thumb: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMgAAACAAQMAAACq9p52AAAAA1BMVEUAAACnej3aAAAAAXRSTlMAQObYZgAAACNJREFUGBntwQEBAAAAgiD/r25IQAEAAAAAAAAAAAAAAAAAgIcBFu4AAaZ4z6cAAAAASUVORK5CYII=",
+          thumb: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKAAAAB4CAIAAAD6wG44AAAFFklEQVR4nO3dbUxVdQDH8T/ee5kY9AIQM9OQAZNsmqEXQR7kQWw0aGCaUKEuwVhQjmrT0exFDBYFqVxDIhAQJRiMgqKyBAF5uBeMKB4GM01WL8QLPUwLLnBpeNgZM++VGmT++H1enfM/5393xveec+7lxbkWK9w2CcK14G4fAM0tBgbHwOAYGBwDg2NgcAwMjoHBMTA4BgbHwOAYGBwDg2NgcAwMjoHBMTA4BgbHwOAYGBwDg2NgcAwMjoHBMTA4BgbHwOAYGBwDg2NgcAwMjoHBMTA4BgbHwOAYGBwDg5vlwH3tNe+/95a8eiTtUF97jby68+nQix219na28s4l+Zny1k7tF9JC1I6wytKcitPHC7LfXbrEwdR0SeT2sOryvNJCTf7xdx58wOGWl/r7qo2NdY4mtbwoK0eTamNjLQ3eb2OdnpLUpftSwJnlwAaDwclxhUIx+bIWFhYPL19mMBjkrUH+m04UlQX4eso7K5SKjep101/Bx2vD1iC/iKi48KgXW1rb05IPmJou7fxUSFDEs3E7ouPzT5Wnpybd8QgT9kXr2jq2PRenu9DxUszz0mBeVtr3Xb0TExMCzuxfoju7e9c86iaEeGSVS0/vD/K41cKFi6ysisuqAjf7yYMZmbmJ8S9Mnx67JzLj6IdjY2NCiMLiiuGREentctvpsXsi3z6cPTw8IoQ419Bypf9npfIOTx3x9/WsrP5aCFBVfTbAb+q9Erf/jfxTZQLR7Aeub9T5eXsIIfy81XWNWnnc11t9rqHl0uX+h5YtValU0mCT9oIQwtPjcXk3V+eVPT0XpeUbN/6IiT84Pm40Nd3VeWVXT58898CbadI7wwx7O9tr+iEhxMC1QflqL43M66fszFx9oy46KuLwsTwvD/fC4gp5PDjAZ7WbS8hW/yUO9hs3PNbQ1CqNZ2hyX03Yu137zdQBKRXSQszunUH+3g72tv5PRpmarlBM7XwLlUpVUqCZvirmq9kP/OtvvxuNRunzzvXrN6RBhWKBk+PyJ8J33zyzPQI3e8mBW3TtxnGjl4e7tHr5yk9urs4dnT05+R+VlH/aVl9pZvqlH/tXr3Jp/65buuWnpyQlHkwWQoyOjj6zK/62H7L0g0OL7W2vDugdFtvpB2FP3Ln9mlR3Xvv6/n3nm9vkkYX169d0905deHVtHb5e6un7Z2hyExOm7sSnSz9JfHmv9CvdFbVt3Gg0M/1kccVrr8RaWk6eoGEhgdKCKfctshJC1NY3h4UECSFCQwJr65sFujkJXFPXFB4aPP3PtyXAu6ll8nYrhPhzeFg/9Iuzk6O8Vdv27ejoqKWlpRCioupsV3ffmY8Lik8cuTqgH795TzU1verzsy2t7Z+V5ZXkZwYH+h5KzjBzVNlHU4QQmdmF6vVry4uy1O5rNR+cFOgszP+sjvwsNT7p7n9oJnX4nywwDAyOgcExMDgGBsfA4BgYHAOAY2BwDAyOgcExMDgGBsfA4BgYHAOAY2BwDAyOgcExMDgGBsfA4BgYHAOAY2BwDAyOgcExMDgGBsfA4BgYHAOAY2BwDAyOgcExMDgGBsfA4BgYHAOAY2BwDAyOgcExMDgGBsfA4BgYHAOAY2BwDAyOgcExMDgGBsfA4JT/9Pcf6N7CMxgcA8/v302iex3PYHAYGBwDg2NgcAwMjoHBMTA4BgbHwALbXzoGjKB2wZOzAAAAAElFTkSuQmCC",
           speaker: "Zoro",
           text: "Tam Kiếm Phái: Tam Thiên Thế Giới! Lên đường thôi!",
           motion: "pan_rtl",
@@ -5610,7 +6220,7 @@ async function renderModels(){setPage('models','Mô hình');page.innerHTML=heade
       const idx = mcPanelsState.length + 1;
       mcPanelsState.push({
         id: "p" + Date.now().toString(36),
-        thumb: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMgAAACAAQMAAACq9p52AAAAA1BMVEUAAACnej3aAAAAAXRSTlMAQObYZgAAACNJREFUGBntwQEBAAAAgiD/r25IQAEAAAAAAAAAAAAAAAAAgIcBFu4AAaZ4z6cAAAAASUVORK5CYII=",
+        thumb: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKAAAAB4CAIAAAD6wG44AAAFFklEQVR4nO3dbUxVdQDH8T/ee5kY9AIQM9OQAZNsmqEXQR7kQWw0aGCaUKEuwVhQjmrT0exFDBYFqVxDIhAQJRiMgqKyBAF5uBeMKB4GM01WL8QLPUwLLnBpeNgZM++VGmT++H1enfM/5393xveec+7lxbkWK9w2CcK14G4fAM0tBgbHwOAYGBwDg2NgcAwMjoHBMTA4BgbHwOAYGBwDg2NgcAwMjoHBMTA4BgbHwOAYGBwDg2NgcAwMjoHBMTA4BgbHwOAYGBwDg2NgcAwMjoHBMTA4BgbHwOAYGBwDg5vlwH3tNe+/95a8eiTtUF97jby68+nQix219na28s4l+Zny1k7tF9JC1I6wytKcitPHC7LfXbrEwdR0SeT2sOryvNJCTf7xdx58wOGWl/r7qo2NdY4mtbwoK0eTamNjLQ3eb2OdnpLUpftSwJnlwAaDwclxhUIx+bIWFhYPL19mMBjkrUH+m04UlQX4eso7K5SKjep101/Bx2vD1iC/iKi48KgXW1rb05IPmJou7fxUSFDEs3E7ouPzT5Wnpybd8QgT9kXr2jq2PRenu9DxUszz0mBeVtr3Xb0TExMCzuxfoju7e9c86iaEeGSVS0/vD/K41cKFi6ysisuqAjf7yYMZmbmJ8S9Mnx67JzLj6IdjY2NCiMLiiuGREentctvpsXsi3z6cPTw8IoQ419Bypf9npfIOTx3x9/WsrP5aCFBVfTbAb+q9Erf/jfxTZQLR7Aeub9T5eXsIIfy81XWNWnnc11t9rqHl0uX+h5YtValU0mCT9oIQwtPjcXk3V+eVPT0XpeUbN/6IiT84Pm40Nd3VeWVXT58898CbadI7wwx7O9tr+iEhxMC1QflqL43M66fszFx9oy46KuLwsTwvD/fC4gp5PDjAZ7WbS8hW/yUO9hs3PNbQ1CqNZ2hyX03Yu137zdQBKRXSQszunUH+3g72tv5PRpmarlBM7XwLlUpVUqCZvirmq9kP/OtvvxuNRunzzvXrN6RBhWKBk+PyJ8J33zyzPQI3e8mBW3TtxnGjl4e7tHr5yk9urs4dnT05+R+VlH/aVl9pZvqlH/tXr3Jp/65buuWnpyQlHkwWQoyOjj6zK/62H7L0g0OL7W2vDugdFtvpB2FP3Ln9mlR3Xvv6/n3nm9vkkYX169d0905deHVtHb5e6un7Z2hyExOm7sSnSz9JfHmv9CvdFbVt3Gg0M/1kccVrr8RaWk6eoGEhgdKCKfctshJC1NY3h4UECSFCQwJr65sFujkJXFPXFB4aPP3PtyXAu6ll8nYrhPhzeFg/9Iuzk6O8Vdv27ejoqKWlpRCioupsV3ffmY8Lik8cuTqgH795TzU1verzsy2t7Z+V5ZXkZwYH+h5KzjBzVNlHU4QQmdmF6vVry4uy1O5rNR+cFOgszP+sjvwsNT7p7n9oJnX4nywwDAyOgcExMDgGBsfA4BgYHAOAY2BwDAyOgcExMDgGBsfA4BgYHAOAY2BwDAyOgcExMDgGBsfA4BgYHAOAY2BwDAyOgcExMDgGBsfA4BgYHAOAY2BwDAyOgcExMDgGBsfA4BgYHAOAY2BwDAyOgcExMDgGBsfA4BgYHAOAY2BwDAyOgcExMDgGBsfA4JT/9Pcf6N7CMxgcA8/v302iex3PYHAYGBwDg2NgcAwMjoHBMTA4BgbHwALbXzoGjKB2wZOzAAAAAElFTkSuQmCC",
         speaker: "Nhân vật " + idx,
         text: "Lời thoại phân cảnh " + idx,
         motion: "zoom_in",
@@ -5695,7 +6305,11 @@ async function renderModels(){setPage('models','Mô hình');page.innerHTML=heade
       if (imgItem) {
         inlineCard.hidden = false;
         const prevImg = byId('omnibar-preview-img');
-        if (prevImg) prevImg.src = imgItem.preview || '';
+        if (prevImg) {
+          const s = imgItem.preview || (imgItem.data_base64 ? ('data:image/png;base64,' + imgItem.data_base64) : '');
+          prevImg.src = s;
+          prevImg.style.display = s ? 'block' : 'none';
+        }
         const nameDiv = byId('omnibar-image-name');
         if (nameDiv) nameDiv.textContent = imgItem.name || 'Ảnh đính kèm';
       } else {
@@ -5727,6 +6341,81 @@ async function renderModels(){setPage('models','Mô hình');page.innerHTML=heade
       });
     }
   };
+
+
+  // Auto-hide Welcome Hero when active chat messages are displayed
+  function updateWelcomeHeroVisibility() {
+    const hero = byId('welcome-hero');
+    if (!hero) return;
+    const msgs = document.querySelectorAll('#chat-surface .msg');
+    if (msgs.length > 0) {
+      hero.style.display = 'none';
+    } else {
+      hero.style.display = 'block';
+    }
+  }
+
+  // Hook into addMsg to auto-hide hero on new message
+  const _orig_addMsg = addMsg;
+  addMsg = function(role, text, opts) {
+    const res = _orig_addMsg(role, text, opts);
+    updateWelcomeHeroVisibility();
+    return res;
+  };
+
+  byId('topbar-open-studio')?.addEventListener('click', () => navigate('studio'));
+
+
+  // Export core functions to window for QA and external hooks
+  window.addMsg = addMsg;
+  window.getChatAttachments = () => chatAttachments;
+  window.setChatAttachments = (arr) => { chatAttachments = arr; };
+  window.renderChatAttachments = renderChatAttachments;
+  window.navigate = navigate;
+
+  // Master Welcome Hero Auto-Visibility
+  function updateWelcomeHeroVisibility() {
+    const hero = byId('welcome-hero');
+    if (!hero) return;
+    const chatlog = byId('chatlog');
+    if (!chatlog) return;
+    
+    // Check if user has sent any message or multiple assistant responses exist
+    const userMsgs = chatlog.querySelectorAll('.msg.user');
+    const allMsgs = chatlog.querySelectorAll('.msg');
+    
+    if (userMsgs.length > 0 || allMsgs.length > 1) {
+      hero.style.display = 'none';
+      allMsgs.forEach(m => m.style.display = '');
+    } else if (allMsgs.length === 1 && !userMsgs.length) {
+      // Empty state with initial greeting: show hero and suppress greeting bubble
+      hero.style.display = 'block';
+      allMsgs[0].style.display = 'none';
+    } else if (allMsgs.length === 0) {
+      hero.style.display = 'block';
+    } else {
+      hero.style.display = 'none';
+    }
+  }
+  window.updateWelcomeHeroVisibility = updateWelcomeHeroVisibility;
+
+  // Observe chatlog mutations to guarantee real-time hero auto-toggling
+  const chatlogElem = byId('chatlog');
+  if (chatlogElem) {
+    const heroObserver = new MutationObserver(() => updateWelcomeHeroVisibility());
+    heroObserver.observe(chatlogElem, { childList: true, subtree: true });
+  }
+
+  // Force hide right overview sidebar by default
+  const lb = document.querySelector('.body');
+  if (lb) lb.classList.add('hide-sidebar');
+
+  // Initial visibility update on DOM ready
+  document.addEventListener('DOMContentLoaded', () => {
+    updateWelcomeHeroVisibility();
+  });
+  setTimeout(updateWelcomeHeroVisibility, 100);
+  setTimeout(updateWelcomeHeroVisibility, 500);
 
 })();
 </script>
