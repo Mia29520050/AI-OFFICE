@@ -1,5 +1,9 @@
 @echo off
 cd /d "%~dp0"
+if exist "AI-Office.exe" (
+  start "" "%~dp0AI-Office.exe" %*
+  exit /b 0
+)
 if exist "Start-AI-Office.vbs" (
   start "" wscript.exe //B "Start-AI-Office.vbs" %*
   exit /b 0

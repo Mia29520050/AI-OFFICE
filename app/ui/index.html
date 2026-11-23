@@ -5092,11 +5092,8 @@ body[data-theme="light"] .settings-modal-nav-btn.active {
   </div>
 
   <div class="sidebar-footer">
-    <button type="button" class="sidebar-footer-btn" id="btn-theme-toggle-sidebar" title="Chuyển đổi Sáng / Tối">
-      <span id="sidebar-theme-icon">🌙</span> <span id="sidebar-theme-text">Giao diện tối</span>
-    </button>
-    <button type="button" class="sidebar-footer-btn" data-view="settings" title="Cài đặt hệ thống">
-      <span>⚙️</span> <span>Cài đặt</span>
+    <button type="button" class="sidebar-footer-btn" data-view="settings" id="sidebar-open-settings" title="Mở Cài đặt hệ thống">
+      <span>Cài đặt</span>
     </button>
   </div>
 </aside>
@@ -5112,24 +5109,21 @@ body[data-theme="light"] .settings-modal-nav-btn.active {
       <img src="/assets/ai-office-icon.png" style="width:18px;height:18px;object-fit:contain" alt="">
       <strong>AI Office</strong>
       <span class="subtle-dot">·</span>
-      <span class="subtle-agent" id="topbar-agent-label">Claude Minimal · Cục bộ</span>
+      <span class="subtle-agent" id="topbar-agent-label">Tối giản · Cục bộ</span>
     </div>
   </div>
   <div class="topbar-right">
     <button type="button" class="topbar-pill-btn active" id="topbar-open-home" title="Trò chuyện AI" data-view="home">
-      <span>💬</span> <span>Trò chuyện</span>
+      <span>Trò chuyện</span>
     </button>
     <button type="button" class="topbar-pill-btn" id="topbar-open-studio" title="Mở Studio Sáng Tạo Đa Năng" data-view="studio">
-      <span>🎬</span> <span>Studio Sáng tạo</span>
+      <span>Studio Sáng tạo</span>
     </button>
-    <button type="button" class="topbar-pill-btn" id="topbar-open-workspace" title="Mở Không gian Workspace" data-view="workspace">
-      <span>💻</span> <span>Workspace</span>
+    <button type="button" class="topbar-pill-btn" id="topbar-open-workspace" title="Mở Không gian làm việc" data-view="workspace">
+      <span>Không gian làm việc</span>
     </button>
-    <button type="button" class="tool-pill" id="btn-theme-toggle" title="Chuyển đổi Giao diện Sáng / Tối">
-      <span id="theme-toggle-icon">🌙</span> <span id="theme-toggle-text">Tối</span>
-    </button>
-    <button type="button" class="tool-pill" id="topbar-open-settings" title="Cài đặt hệ thống" data-view="settings">
-      <span>⚙️</span>
+    <button type="button" class="topbar-pill-btn" id="topbar-open-settings" title="Cài đặt hệ thống" data-view="settings">
+      <span>Cài đặt</span>
     </button>
   </div>
 </div>
@@ -5217,12 +5211,12 @@ body[data-theme="light"] .settings-modal-nav-btn.active {
       </button>
       <div class="agent-select-wrapper">
         <select id="agent-select" aria-label="Chọn tác nhân AI" title="Chọn tác nhân AI">
-          <option value="CEO">CEO Agent ⌄</option>
-          <option value="Vision">Thị giác (Vision) ⌄</option>
+          <option value="CEO">Điều phối chính (CEO) ⌄</option>
+          <option value="Vision">Nhận diện ảnh (Vision) ⌄</option>
           <option value="Developer">Lập trình viên ⌄</option>
-          <option value="Workspace">Workspace ⌄</option>
-          <option value="Writer">Biên soạn ⌄</option>
-          <option value="QA">Kiểm thử ⌄</option>
+          <option value="Workspace">Không gian làm việc ⌄</option>
+          <option value="Writer">Biên soạn nội dung ⌄</option>
+          <option value="QA">Kiểm thử chất lượng ⌄</option>
         </select>
       </div>
       <button type="button" class="tool-pill turbo-chip" id="btn-quick-calc" title="Máy tính số học 12+ chữ số trong 1ms">
@@ -5232,7 +5226,7 @@ body[data-theme="light"] .settings-modal-nav-btn.active {
         <span>🎬</span> <span>Studio Sáng tạo</span>
       </button>
       <button type="button" class="tool-pill" id="btn-quick-graph" title="Bản đồ quan hệ Codebase Graph">
-        <span>🌐</span> <span>Graphify</span>
+        <span>🌐</span> <span>Sơ đồ mã nguồn</span>
       </button>
     </div>
     <div class="claude-toolbar-right">
@@ -7969,20 +7963,24 @@ function updateWelcomeHeroVisibility() {
   byId('topbar-open-settings')?.addEventListener('click', () => openSettingsModal('general'));
 
   // =========================================================================
-  // Antigravity Settings Modal Logic (Ảnh 7)
+  // Antigravity Settings Modal Logic (Thuần Việt - Không Icon - Siêu Nhạy)
   // =========================================================================
   let currentSettingsModalTab = 'general';
 
-  async function openSettingsModal(initialTab = 'general') {
+  function openSettingsModal(initialTab = 'general') {
     const modal = byId('settings-modal');
     if (!modal) return;
     modal.hidden = false;
-    await switchSettingsModalTab(initialTab);
+    modal.style.display = 'flex';
+    switchSettingsModalTab(initialTab);
   }
 
   function closeSettingsModal() {
     const modal = byId('settings-modal');
-    if (modal) modal.hidden = true;
+    if (modal) {
+      modal.hidden = true;
+      modal.style.display = 'none';
+    }
   }
 
   window.openSettingsModal = openSettingsModal;
@@ -7998,53 +7996,53 @@ function updateWelcomeHeroVisibility() {
     if (!body) return;
 
     if (tab === 'general') {
-      if (heading) heading.textContent = 'Cài đặt chung (General)';
+      if (heading) heading.textContent = 'Cài đặt chung';
       body.innerHTML = `
         <div class="settings-section">
           <h3>Ngôn ngữ & Mặc định</h3>
           <p class="subtle">Thiết lập ngôn ngữ hệ thống và hành vi làm việc.</p>
           <div class="setting-row" style="margin-top:14px">
-            <span><strong>Ngôn ngữ giao diện</strong><small>Tiếng Việt (mặc định) & Anh ngữ</small></span>
+            <span><strong>Ngôn ngữ giao diện</strong><small>Ngôn ngữ chính thức của hệ thống</small></span>
             <span class="chip" style="font-weight:600">Tiếng Việt</span>
           </div>
           <div class="setting-row">
-            <span><strong>Tự động lưu lịch sử hội thoại</strong><small>Tin nhắn được lưu cục bộ vào SQLite data/office.db</small></span>
+            <span><strong>Tự động lưu lịch sử</strong><small>Tin nhắn được lưu cục bộ an toàn trên máy (SQLite)</small></span>
             <span class="chip" style="background:var(--green-bg);color:var(--green);border:1px solid var(--green-border);font-weight:600">ĐANG BẬT</span>
           </div>
         </div>
         <div class="settings-section" style="margin-top:20px">
-          <h3>Phím tắt hệ thống</h3>
+          <h3>Phím tắt thường dùng</h3>
           <div class="settings-note">
-            • <strong>Enter</strong>: Gửi tin nhắn tức thì<br>
+            • <strong>Enter</strong>: Gửi tin nhắn ngay lập tức<br>
             • <strong>Shift + Enter</strong>: Xuống dòng mới trong khung soạn thảo<br>
-            • <strong>Ctrl + V</strong>: Dán ảnh chụp màn hình trực tiếp để AI nhận diện / dựng phim<br>
-            • <strong>F12</strong>: Dừng khẩn cấp phiên AI chơi game tự động
+            • <strong>Ctrl + V</strong>: Dán ảnh chụp màn hình trực tiếp để AI nhận diện hoặc dựng hoạt họa<br>
+            • <strong>Esc</strong>: Đóng cửa sổ cài đặt này
           </div>
         </div>
       `;
     } else if (tab === 'appearance') {
-      if (heading) heading.textContent = 'Giao diện hiển thị (Appearance)';
+      if (heading) heading.textContent = 'Giao diện & Màu sắc';
       const curTheme = document.body.dataset.theme === 'light' ? 'light' : 'dark';
       body.innerHTML = `
         <div class="settings-section">
-          <h3>Chế độ Giao diện (Theme)</h3>
-          <p class="subtle">Chọn tông màu và độ tương phản chuẩn Antigravity IDE. Thiết lập được lưu vĩnh viễn trên máy.</p>
+          <h3>Chế độ hiển thị</h3>
+          <p class="subtle">Lựa chọn tông màu chuẩn Antigravity. Thiết lập được lưu vĩnh viễn trên máy.</p>
           <div class="settings-grid" style="margin-top:16px;display:grid;grid-template-columns:1fr 1fr;gap:14px">
             <button type="button" class="theme-choice" id="modal-theme-choice-dark" data-theme-choice="dark" style="padding:14px;border-radius:12px;border:2px solid ${curTheme==='dark'?'var(--accent)':'var(--line)'};background:var(--pane);cursor:pointer;display:flex;align-items:center;gap:12px;text-align:left;color:var(--text)">
               <span class="theme-swatch dark" style="width:36px;height:36px;border-radius:8px;background:#09090b;border:1px solid rgba(255,255,255,0.2);display:inline-block;box-shadow:inset 0 0 0 3px #18181b"></span>
-              <span><strong style="display:block;font-size:13.5px">Tối — Antigravity Dark</strong><small style="font-size:11.5px;color:var(--text-muted)">Nền #18181b, tương phản cao, dịu mắt</small></span>
+              <span><strong style="display:block;font-size:13.5px">Giao diện Tối (Mặc định)</strong><small style="font-size:11.5px;color:var(--text-muted)">Nền tối #18181b, dịu mắt, độ tương phản cao</small></span>
             </button>
             <button type="button" class="theme-choice" id="modal-theme-choice-light" data-theme-choice="light" style="padding:14px;border-radius:12px;border:2px solid ${curTheme==='light'?'var(--accent)':'var(--line)'};background:var(--pane);cursor:pointer;display:flex;align-items:center;gap:12px;text-align:left;color:var(--text)">
               <span class="theme-swatch light" style="width:36px;height:36px;border-radius:8px;background:#ffffff;border:1px solid rgba(0,0,0,0.15);display:inline-block;box-shadow:inset 0 0 0 3px #f1f5f9"></span>
-              <span><strong style="display:block;font-size:13.5px">Sáng — Crisp Light</strong><small style="font-size:11.5px;color:var(--text-muted)">Nền #ffffff, văn bản rõ nét, sắc sảo</small></span>
+              <span><strong style="display:block;font-size:13.5px">Giao diện Sáng</strong><small style="font-size:11.5px;color:var(--text-muted)">Nền trắng #ffffff, văn bản rõ nét, sắc sảo</small></span>
             </button>
           </div>
         </div>
         <div class="settings-section" style="margin-top:20px">
-          <h3>Kiểu chữ & Bố cục</h3>
-          <p class="subtle">Hệ thống phông chữ tối ưu cho lập trình và sáng tạo.</p>
+          <h3>Phông chữ & Độ rõ nét</h3>
+          <p class="subtle">Hệ thống phông chữ chuẩn hóa tiếng Việt, rõ nét và không bị chìm chữ.</p>
           <div class="settings-note">
-            <strong>Font hệ thống:</strong> Antigravity Modern Sans (SF Pro, Segoe UI, Inter, Roboto). Đảm bảo 100% văn bản rõ nét, không bị chìm chữ hay mờ nhạt ở cả hai giao diện.
+            <strong>Phông chữ hệ thống:</strong> Antigravity Modern Sans (SF Pro, Segoe UI, Roboto). Văn bản luôn hiển thị đậm nét, dễ đọc trên mọi màn hình.
           </div>
         </div>
       `;
@@ -8057,28 +8055,28 @@ function updateWelcomeHeroVisibility() {
         switchSettingsModalTab('appearance');
       });
     } else if (tab === 'models') {
-      if (heading) heading.textContent = 'Mô hình AI & Tốc độ (Models)';
+      if (heading) heading.textContent = 'Mô hình AI & Trí tuệ';
       let mcfg = {provider:'local',local_model:'qwen3.5:4b',local_num_ctx:2048,cloud_enabled:false,cloud_base_url:'https://api.openai.com/v1',cloud_model:'gpt-4o-mini',cloud_api_key_set:false,cloud_api_key_preview:''};
       try { mcfg = await getJson('/api/settings/model'); } catch {}
       body.innerHTML = `
         <div class="settings-section">
-          <h3>Cấu hình Tuyến Suy Luận</h3>
-          <p class="subtle">Mặc định chạy 100% cục bộ bằng Ollama. Có thể bật Cloud API nếu muốn tăng tốc độ nhìn ảnh / suy luận phức tạp.</p>
+          <h3>Cấu hình nguồn suy luận</h3>
+          <p class="subtle">Mặc định chạy 100% cục bộ bằng Ollama. Có thể bật Cloud API nếu muốn tăng tốc nhận diện ảnh hoặc suy luận chuyên sâu.</p>
           <form id="modal-model-settings-form" style="display:grid;gap:12px;margin-top:14px">
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-              <label class="workspace-field"><span>NGUỒN SUY LUẬN</span><select id="modal-cfg-provider" class="field"><option value="local">Local · Ollama (mặc định)</option><option value="cloud">Cloud Vision / LLM (tùy chọn)</option></select></label>
-              <label class="workspace-field"><span>MODEL OLLAMA LOCAL</span><input id="modal-cfg-local-model" class="field" value="${esc(mcfg.local_model)}"></label>
+              <label class="workspace-field"><span>NGUỒN SUY LUẬN</span><select id="modal-cfg-provider" class="field"><option value="local">Chạy cục bộ trên máy (Ollama - Mặc định)</option><option value="cloud">Chạy trên đám mây (Cloud API - Tùy chọn)</option></select></label>
+              <label class="workspace-field"><span>MÔ HÌNH AI TRÊN MÁY</span><input id="modal-cfg-local-model" class="field" value="${esc(mcfg.local_model)}"></label>
             </div>
             <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
-              <label class="workspace-field"><span>NGỮ CẢNH LOCAL</span><select id="modal-cfg-local-ctx" class="field"><option value="2048">2048 tokens</option><option value="4096">4096 tokens</option><option value="8192">8192 tokens</option></select></label>
-              <label class="workspace-field"><span>CLOUD BASE URL</span><input id="modal-cfg-cloud-url" class="field" value="${esc(mcfg.cloud_base_url)}" placeholder="https://api.openai.com/v1"></label>
-              <label class="workspace-field"><span>CLOUD MODEL</span><input id="modal-cfg-cloud-model" class="field" value="${esc(mcfg.cloud_model)}" placeholder="gpt-4o-mini"></label>
+              <label class="workspace-field"><span>BỘ NHỚ NGỮ CẢNH</span><select id="modal-cfg-local-ctx" class="field"><option value="2048">2.048 từ (Tiêu chuẩn)</option><option value="4096">4.096 từ (Mở rộng)</option><option value="8192">8.192 từ (Tối đa)</option></select></label>
+              <label class="workspace-field"><span>ĐỊA CHỈ MÁY CHỦ CLOUD</span><input id="modal-cfg-cloud-url" class="field" value="${esc(mcfg.cloud_base_url)}" placeholder="https://api.openai.com/v1"></label>
+              <label class="workspace-field"><span>TÊN MÔ HÌNH CLOUD</span><input id="modal-cfg-cloud-model" class="field" value="${esc(mcfg.cloud_model)}" placeholder="gpt-4o-mini"></label>
             </div>
-            <label class="workspace-field"><span>CLOUD API KEY ${mcfg.cloud_api_key_set ? '(đã lưu: '+esc(mcfg.cloud_api_key_preview)+')' : '(chưa nhập)'}</span><input id="modal-cfg-cloud-key" class="field" type="password" autocomplete="off" placeholder="Để trống nếu giữ nguyên key đã lưu"></label>
+            <label class="workspace-field"><span>KHÓA BÍ MẬT CLOUD API ${mcfg.cloud_api_key_set ? '(Đã lưu: '+esc(mcfg.cloud_api_key_preview)+')' : '(Chưa nhập)'}</span><input id="modal-cfg-cloud-key" class="field" type="password" autocomplete="off" placeholder="Để trống nếu giữ nguyên khóa bí mật đã lưu"></label>
             <div class="page-actions" style="justify-content:flex-start;gap:8px">
-              <button type="submit" class="primary-btn">Lưu cấu hình Model</button>
+              <button type="submit" class="primary-btn">Lưu cấu hình</button>
               <button type="button" class="secondary-btn" id="modal-cfg-model-test">Kiểm tra kết nối</button>
-              <button type="button" class="secondary-btn" id="modal-cfg-clear-key">Xóa API Key</button>
+              <button type="button" class="secondary-btn" id="modal-cfg-clear-key">Xóa khóa API</button>
               <span id="modal-cfg-model-msg" class="subtle" style="font-size:12px;margin-left:8px"></span>
             </div>
           </form>
@@ -8125,18 +8123,18 @@ function updateWelcomeHeroVisibility() {
         switchSettingsModalTab('models');
       });
     } else if (tab === 'workspace') {
-      if (heading) heading.textContent = 'Workspace & Bố cục (Workspace)';
+      if (heading) heading.textContent = 'Bố cục làm việc';
       const expOn = !layoutBody.classList.contains('hide-explorer');
       body.innerHTML = `
         <div class="settings-section">
-          <h3>Quản lý Bố cục Làm việc</h3>
+          <h3>Quản lý bố cục làm việc</h3>
           <p class="subtle">Tùy biến hiển thị thanh điều hướng để tối ưu không gian hiển thị.</p>
           <div class="setting-row" style="margin-top:14px">
-            <span><strong>Thanh bên Tệp & Lịch sử (Explorer)</strong><small>Hiển thị danh sách hội thoại gần đây và tạo chat mới</small></span>
+            <span><strong>Thanh tệp & Lịch sử trò chuyện</strong><small>Hiển thị danh sách hội thoại gần đây và tạo chat mới</small></span>
             <button class="setting-action" id="modal-settings-explorer">${expOn ? 'Đang hiển thị' : 'Đang thu gọn'}</button>
           </div>
           <div class="setting-row">
-            <span><strong>Khôi phục Bố cục Mặc định</strong><small>Đưa giao diện về trạng thái chuẩn ban đầu</small></span>
+            <span><strong>Khôi phục bố cục ban đầu</strong><small>Đưa toàn bộ giao diện về trạng thái tiêu chuẩn</small></span>
             <button class="setting-action" id="modal-settings-reset">Khôi phục mặc định</button>
           </div>
         </div>
@@ -8152,17 +8150,17 @@ function updateWelcomeHeroVisibility() {
         switchSettingsModalTab('workspace');
       });
     } else if (tab === 'data') {
-      if (heading) heading.textContent = 'Lịch sử & Dữ liệu (Data)';
+      if (heading) heading.textContent = 'Lịch sử & Dữ liệu';
       body.innerHTML = `
         <div class="settings-section">
-          <h3>Lưu trữ Hội thoại & Dữ liệu</h3>
+          <h3>Lưu trữ hội thoại & Dữ liệu</h3>
           <p class="subtle">Dữ liệu được lưu trữ an toàn trong cơ sở dữ liệu SQLite data/office.db.</p>
           <div class="setting-row" style="margin-top:14px">
             <span><strong>Số cuộc trò chuyện đã lưu</strong><small id="modal-history-count">${conversationCache.length} cuộc trò chuyện</small></span>
-            <button class="setting-action" id="modal-refresh-history">Làm mới</button>
+            <button class="setting-action" id="modal-refresh-history">Làm mới danh sách</button>
           </div>
           <div class="setting-row">
-            <span><strong>Xóa toàn bộ lịch sử chat</strong><small>Chỉ xóa dữ liệu hội thoại; không xóa file hay workspace backups</small></span>
+            <span><strong>Xóa toàn bộ lịch sử</strong><small>Chỉ xóa dữ liệu tin nhắn hội thoại; không xóa tệp dự án</small></span>
             <button class="setting-action setting-danger" id="modal-clear-history">Xóa lịch sử</button>
           </div>
         </div>
@@ -8183,19 +8181,44 @@ function updateWelcomeHeroVisibility() {
     }
   }
 
-  // Hook settings modal buttons
-  byId('btn-close-settings-modal')?.addEventListener('click', () => closeSettingsModal());
-  byId('settings-modal')?.addEventListener('click', e => {
-    if (e.target === byId('settings-modal')) closeSettingsModal();
-  });
-  document.querySelectorAll('.settings-modal-nav-btn').forEach(b => {
-    b.addEventListener('click', () => switchSettingsModalTab(b.dataset.cfgTab));
-  });
-  document.querySelectorAll('[data-view="settings"]').forEach(b => {
-    b.addEventListener('click', (e) => {
+  // Global Event Delegation for Settings Modal (Đảm bảo 100% bấm ăn ngay)
+  document.addEventListener('click', (e) => {
+    // 1. Close button X
+    if (e.target.closest('#btn-close-settings-modal') || e.target.closest('.settings-modal-close')) {
+      e.preventDefault();
+      closeSettingsModal();
+      return;
+    }
+    // 2. Click outside (backdrop overlay)
+    if (e.target && e.target.id === 'settings-modal') {
+      closeSettingsModal();
+      return;
+    }
+    // 3. Navigation Tab click
+    const navBtn = e.target.closest('.settings-modal-nav-btn');
+    if (navBtn) {
+      e.preventDefault();
+      const tab = navBtn.dataset.cfgTab;
+      if (tab) switchSettingsModalTab(tab);
+      return;
+    }
+    // 4. Open settings buttons
+    const openBtn = e.target.closest('[data-view="settings"]') || e.target.closest('#topbar-open-settings') || e.target.closest('#sidebar-open-settings');
+    if (openBtn) {
       e.preventDefault();
       openSettingsModal('general');
-    });
+      return;
+    }
+  });
+
+  // ESC key to close modal
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      const modal = byId('settings-modal');
+      if (modal && !modal.hidden && modal.style.display !== 'none') {
+        closeSettingsModal();
+      }
+    }
   });
 
   // Initial theme sync
@@ -8208,38 +8231,27 @@ function updateWelcomeHeroVisibility() {
 })();
 </script>
 
-<!-- Antigravity Settings Modal (Ảnh 7) -->
+<!-- Antigravity Settings Modal (Thuần Việt - Không Icon) -->
 <div id="settings-modal" class="settings-modal-overlay" hidden>
   <div class="settings-modal-card">
     <div class="settings-modal-sidebar">
       <div class="settings-modal-brand">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83-2.83l-.06.06A1.65 1.65 0 0 0 19.4 9c.25.6.83.99 1.51 1H21a2 2 0 1 1 0 4h-.09c-.68.01-1.26.4-1.51 1z"/></svg>
-        <span>Cài đặt</span>
+        <span>Cài đặt hệ thống</span>
       </div>
       <nav class="settings-modal-nav">
-        <button type="button" class="settings-modal-nav-btn active" data-cfg-tab="general">
-          <span class="nav-icon">⚙️</span> <span>General</span>
-        </button>
-        <button type="button" class="settings-modal-nav-btn" data-cfg-tab="appearance">
-          <span class="nav-icon">🎨</span> <span>Appearance / Giao diện</span>
-        </button>
-        <button type="button" class="settings-modal-nav-btn" data-cfg-tab="models">
-          <span class="nav-icon">🧠</span> <span>Models / AI</span>
-        </button>
-        <button type="button" class="settings-modal-nav-btn" data-cfg-tab="workspace">
-          <span class="nav-icon">💻</span> <span>Workspace / Bố cục</span>
-        </button>
-        <button type="button" class="settings-modal-nav-btn" data-cfg-tab="data">
-          <span class="nav-icon">💬</span> <span>Lịch sử & Dữ liệu</span>
-        </button>
+        <button type="button" class="settings-modal-nav-btn active" data-cfg-tab="general">Cài đặt chung</button>
+        <button type="button" class="settings-modal-nav-btn" data-cfg-tab="appearance">Giao diện & Màu sắc</button>
+        <button type="button" class="settings-modal-nav-btn" data-cfg-tab="models">Mô hình AI & Trí tuệ</button>
+        <button type="button" class="settings-modal-nav-btn" data-cfg-tab="workspace">Bố cục làm việc</button>
+        <button type="button" class="settings-modal-nav-btn" data-cfg-tab="data">Lịch sử & Dữ liệu</button>
       </nav>
     </div>
     
     <div class="settings-modal-content">
       <div class="settings-modal-header">
-        <h2 id="settings-tab-heading">Cài đặt chung (General)</h2>
-        <button type="button" class="settings-modal-close" id="btn-close-settings-modal" title="Đóng cài đặt">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        <h2 id="settings-tab-heading">Cài đặt chung</h2>
+        <button type="button" class="settings-modal-close" id="btn-close-settings-modal" title="Đóng cài đặt (Esc)" aria-label="Đóng cài đặt">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
       </div>
       <div class="settings-modal-body" id="settings-modal-body">

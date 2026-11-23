@@ -24,15 +24,21 @@ def create_shortcut() -> Path:
     desktop_dir.mkdir(parents=True, exist_ok=True)
 
     shortcut_path = desktop_dir / "AI Office.lnk"
-    wscript_exe = Path(os.path.expandvars(r"%SystemRoot%\System32\wscript.exe"))
-    if not wscript_exe.exists():
-        wscript_exe = Path("wscript.exe")
+    exe_path = ROOT_DIR / "AI-Office.exe"
 
-    # Shortcut parameters
-    target = str(wscript_exe)
-    arguments = f'//B "{VBS_PATH}"'
+    if exe_path.exists():
+        target = str(exe_path)
+        arguments = ""
+        icon_loc = f"{exe_path},0"
+    else:
+        wscript_exe = Path(os.path.expandvars(r"%SystemRoot%\System32\wscript.exe"))
+        if not wscript_exe.exists():
+            wscript_exe = Path("wscript.exe")
+        target = str(wscript_exe)
+        arguments = f'//B "{VBS_PATH}"'
+        icon_loc = f"{ICON_PATH},0" if ICON_PATH.exists() else ""
+
     working_dir = str(ROOT_DIR)
-    icon_loc = f"{ICON_PATH},0" if ICON_PATH.exists() else ""
     description = "AI Office - Tro ly AI & Studio Sang tao Da Nang"
 
     # Use PowerShell COM interface (standard & universal on Windows)
