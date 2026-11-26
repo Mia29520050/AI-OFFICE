@@ -164,11 +164,44 @@ def classify_prompt_speed(user_prompt: str) -> FastPathDecision:
             recommended_num_predict=128,
         )
 
-    # 3. Short casual prompts (< 10 words without technical keywords)
+    # 3. Long-form / creative writing detection (never throttle stories, chapters, or essays)
+    long_form_keywords = (
+        "chương", "truyện", "cốt truyện", "tiểu thuyết", "kịch bản", "mở rộng",
+        "chi tiết", "viết tiếp", "viết dài", "kể tiếp", "bài viết", "luận văn",
+        "tùy em", "ngắn ngủi", "bao nhiêu từ", "bao nhiêu chữ", "chữ", "từ",
+    )
+    text_lower = text.lower()
+    target_match = re.search(r"(\d[\d\.,]*)\s*(?:chữ|từ|words?)", text_lower)
+    if target_match:
+        try:
+            requested_words = int(target_match.group(1).replace(".", "").replace(",", ""))
+        except ValueError:
+            requested_words = 2000
+        # Vietnamese averages ~2.2-2.5 tokens per syllable/word; allow ample room up to 12288 tokens.
+        est_tokens = max(4096, min(int(requested_words * 2.5), 12288))
+        return FastPathDecision(
+            is_math=False,
+            math_result=None,
+            is_simple_query=False,
+            recommended_think=True,
+            recommended_num_predict=est_tokens,
+        )
+
+    if any(kw in text_lower for kw in long_form_keywords):
+        return FastPathDecision(
+            is_math=False,
+            math_result=None,
+            is_simple_query=False,
+            recommended_think=True,
+            recommended_num_predict=4096,
+        )
+
+    # 4. Short casual prompts (<= 10 words without technical or long-form keywords)
     words = text.split()
     technical_keywords = {
         "code", "viết", "lập trình", "hàm", "class", "def", "bug", "lỗi",
-        "manga", "comfy", "diff", "test", "file", "database", "sql", "git"
+        "manga", "comfy", "diff", "test", "file", "database", "sql", "git",
+        "tạo", "phân tích", "giải thích", "tóm tắt", "soạn", "dịch",
     }
     if len(words) <= 10 and not any(w.lower() in technical_keywords for w in words):
         return FastPathDecision(
@@ -176,7 +209,7 @@ def classify_prompt_speed(user_prompt: str) -> FastPathDecision:
             math_result=None,
             is_simple_query=True,
             recommended_think=False,
-            recommended_num_predict=180,
+            recommended_num_predict=1024,
         )
 
     # Default: complex query requiring standard reasoning
@@ -185,5 +218,5 @@ def classify_prompt_speed(user_prompt: str) -> FastPathDecision:
         math_result=None,
         is_simple_query=False,
         recommended_think=True,
-        recommended_num_predict=800,
+        recommended_num_predict=4096,
     )

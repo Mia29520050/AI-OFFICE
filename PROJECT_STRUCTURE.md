@@ -61,6 +61,16 @@ F:\AI-Office\
 │   ├── office.db                    # SQLite Database chính (tasks, chat, manga data, proposals)
 │   ├── launcher.log                 # Nhật ký khởi động desktop launcher
 │   └── ollama.log                   # Nhật ký phản hồi mô hình Ollama
+├── engine\                          # Toàn bộ AI engines và mô hình cục bộ (được ignore trong git)
+│   ├── ComfyUI\                     # ComfyUI chạy port 8188 với --lowvram
+│   ├── MOSS-Image\                  # Cấu hình MOSS và thư mục ollama-models
+│   └── SETUP-STATUS.txt             # Ghi chú trạng thái thiết lập engine
+├── Export\                          # Toàn bộ tệp thành phẩm xuất bản chính thức (bắt buộc)
+│   ├── 3D\                          # Mô hình 3D, tệp Blender (.blend, .obj, .fbx)
+│   ├── Audio\                       # Tệp âm thanh lồng tiếng TTS, SFX, BGM (.mp3, .wav)
+│   ├── Images\                      # Ảnh minh họa đơn, character artwork, banner
+│   ├── Manga\                       # Trang truyện, panel, tệp đóng gói CBZ, PDF
+│   └── Video\                       # Video hoàn thiện, Motion Comic 16:9 & 9:16 (.mp4)
 ├── docs\                            # Toàn bộ tài liệu kiến trúc, kế hoạch và đặc tả kỹ thuật
 │   ├── anime_intelligence\          # Đặc tả chuẩn Anime Intelligence & Visual QA
 │   │   ├── ANIME_INTELLIGENCE_BENCHMARK_PROMPTS.md

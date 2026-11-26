@@ -59,7 +59,7 @@ class ModelProviderManager:
         defaults: dict[str, Any] = {
             "provider": "local",
             "local_model": DEFAULT_LOCAL_MODEL,
-            "local_num_ctx": 2048,
+            "local_num_ctx": 8192,
             "cloud_enabled": False,
             "cloud_base_url": "https://api.openai.com/v1",
             "cloud_model": "gpt-4o-mini",
@@ -77,7 +77,7 @@ class ModelProviderManager:
                     defaults.update({k: stored[k] for k in defaults if k in stored})
             except json.JSONDecodeError:
                 pass
-        defaults["local_num_ctx"] = max(2048, min(int(defaults.get("local_num_ctx") or 2048), 16384))
+        defaults["local_num_ctx"] = max(2048, min(int(defaults.get("local_num_ctx") or 8192), 16384))
         defaults["cloud_enabled"] = bool(defaults.get("cloud_enabled", False))
         if defaults["provider"] not in {"local", "cloud"}:
             defaults["provider"] = "local"
@@ -217,12 +217,24 @@ class ModelProviderManager:
                 sanitized.append(msg)
         return sanitized
 
+    @staticmethod
+    def _build_local_options(ctx_size: int, num_predict: int, temperature: float, json_mode: bool = False) -> dict[str, Any]:
+        # Long-form creative writing needs repeat_penalty and warmer temperature to avoid 4B verbatim paragraph loops.
+        effective_temp = 0.65 if (not json_mode and num_predict >= 4096 and temperature <= 0.3) else temperature
+        return {
+            "num_ctx": max(2048, min(ctx_size, 16384)),
+            "num_predict": max(128, min(int(num_predict), 16384)),
+            "temperature": effective_temp,
+            "repeat_penalty": 1.15,
+            "repeat_last_n": 256,
+        }
+
     async def chat(
         self,
         messages: list[dict[str, Any]],
         *,
         json_mode: bool = False,
-        num_predict: int = 800,
+        num_predict: int = 4096,
         num_ctx: int | None = None,
         temperature: float = 0.25,
         think: bool | None = None,
@@ -245,6 +257,8 @@ class ModelProviderManager:
             if decision.is_simple_query and think is None:
                 think = False
                 num_predict = min(num_predict, decision.recommended_num_predict)
+            elif decision.recommended_num_predict > num_predict:
+                num_predict = decision.recommended_num_predict
 
         cfg = self.get_settings(include_secret=True)
         use_cloud = bool(cfg["cloud_enabled"] and cfg["provider"] == "cloud" and cfg["cloud_api_key"] and cfg["cloud_base_url"] and cfg["cloud_model"])
@@ -253,7 +267,7 @@ class ModelProviderManager:
             payload: dict[str, Any] = {
                 "model": cfg["cloud_model"],
                 "messages": self._to_openai_messages(clean_messages),
-                "max_tokens": max(128, min(int(num_predict), 2048)),
+                "max_tokens": max(128, min(int(num_predict), 16384)),
                 "temperature": temperature,
             }
             if json_mode:
@@ -262,7 +276,7 @@ class ModelProviderManager:
                 "Authorization": f"Bearer {cfg['cloud_api_key']}",
                 "Content-Type": "application/json",
             }
-            async with httpx.AsyncClient(timeout=httpx.Timeout(120.0, connect=8.0)) as client:
+            async with httpx.AsyncClient(timeout=httpx.Timeout(240.0, connect=8.0)) as client:
                 response = await client.post(endpoint, headers=headers, json=payload)
                 response.raise_for_status()
                 data = response.json()
@@ -272,6 +286,8 @@ class ModelProviderManager:
                 return str(choices[0].get("message", {}).get("content", "") or "").strip()
 
         ctx_size = int(num_ctx if num_ctx is not None else cfg["local_num_ctx"])
+        if num_predict > 4096 and ctx_size < 16384:
+            ctx_size = 16384
         model_name = str(cfg["local_model"]).lower()
         enable_think = think if think is not None else bool("r1" in model_name or "claude" in model_name)
         payload = {
@@ -280,16 +296,12 @@ class ModelProviderManager:
             "stream": False,
             "keep_alive": "24h",
             "think": enable_think,
-            "options": {
-                "num_ctx": max(2048, min(ctx_size, 16384)),
-                "num_predict": max(128, min(int(num_predict), 2048)),
-                "temperature": temperature,
-            },
+            "options": self._build_local_options(ctx_size, num_predict, temperature, json_mode=json_mode),
         }
         if json_mode:
             payload["format"] = "json"
         async with self._semaphore:
-            async with httpx.AsyncClient(timeout=httpx.Timeout(300.0, connect=5.0)) as client:
+            async with httpx.AsyncClient(timeout=httpx.Timeout(600.0, connect=5.0)) as client:
                 response = await client.post(f"{DEFAULT_OLLAMA_URL}/api/chat", json=payload)
                 response.raise_for_status()
                 data = response.json()
@@ -315,7 +327,7 @@ class ModelProviderManager:
         self,
         messages: list[dict[str, Any]],
         *,
-        num_predict: int = 1000,
+        num_predict: int = 4096,
         num_ctx: int | None = None,
         temperature: float = 0.25,
         think: bool | None = None,
@@ -340,6 +352,8 @@ class ModelProviderManager:
             if decision.is_simple_query and think is None:
                 think = False
                 num_predict = min(num_predict, decision.recommended_num_predict)
+            elif decision.recommended_num_predict > num_predict:
+                num_predict = decision.recommended_num_predict
 
         cfg = self.get_settings(include_secret=True)
         use_cloud = bool(cfg["cloud_enabled"] and cfg["provider"] == "cloud" and cfg["cloud_api_key"] and cfg["cloud_base_url"] and cfg["cloud_model"])
@@ -348,7 +362,7 @@ class ModelProviderManager:
             payload: dict[str, Any] = {
                 "model": cfg["cloud_model"],
                 "messages": self._to_openai_messages(clean_messages),
-                "max_tokens": max(128, min(int(num_predict), 2048)),
+                "max_tokens": max(128, min(int(num_predict), 16384)),
                 "temperature": temperature,
                 "stream": True,
             }
@@ -356,7 +370,7 @@ class ModelProviderManager:
                 "Authorization": f"Bearer {cfg['cloud_api_key']}",
                 "Content-Type": "application/json",
             }
-            async with httpx.AsyncClient(timeout=httpx.Timeout(120.0, connect=8.0)) as client:
+            async with httpx.AsyncClient(timeout=httpx.Timeout(240.0, connect=8.0)) as client:
                 async with client.stream("POST", endpoint, headers=headers, json=payload) as response:
                     response.raise_for_status()
                     async for line in response.aiter_lines():
@@ -381,6 +395,8 @@ class ModelProviderManager:
             return
 
         ctx_size = int(num_ctx if num_ctx is not None else cfg["local_num_ctx"])
+        if num_predict > 4096 and ctx_size < 16384:
+            ctx_size = 16384
         model_name = str(cfg["local_model"]).lower()
         enable_think = think if think is not None else bool("r1" in model_name or "claude" in model_name)
         payload = {
@@ -389,14 +405,10 @@ class ModelProviderManager:
             "stream": True,
             "keep_alive": "24h",
             "think": enable_think,
-            "options": {
-                "num_ctx": max(2048, min(ctx_size, 16384)),
-                "num_predict": max(128, min(int(num_predict), 2048)),
-                "temperature": temperature,
-            },
+            "options": self._build_local_options(ctx_size, num_predict, temperature, json_mode=False),
         }
         async with self._semaphore:
-            async with httpx.AsyncClient(timeout=httpx.Timeout(300.0, connect=5.0)) as client:
+            async with httpx.AsyncClient(timeout=httpx.Timeout(600.0, connect=5.0)) as client:
                 async with client.stream("POST", f"{DEFAULT_OLLAMA_URL}/api/chat", json=payload) as response:
                     response.raise_for_status()
                     async for line in response.aiter_lines():

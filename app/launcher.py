@@ -19,6 +19,7 @@ for _p in (str(ROOT), str(APP_DIR)):
 
 import uvicorn
 import webview
+from engines import EngineManager
 from main import app, init_db
 LOG = ROOT / "data" / "launcher.log"
 APP_USER_MODEL_ID = "OpenAI.AIOffice.Desktop"
@@ -161,7 +162,8 @@ def _ollama_startup_and_warmup() -> None:
 
 
 def serve() -> None:
-    uvicorn.run(app, host="127.0.0.1", port=8765, log_level="warning")
+    host = os.getenv("AI_OFFICE_HOST", "0.0.0.0")
+    uvicorn.run(app, host=host, port=8765, log_level="warning")
 
 
 _ICON_HANDLES: list[int] = []
@@ -219,7 +221,10 @@ def main() -> None:
         else:
             raise RuntimeError("AI Office backend did not start on 127.0.0.1:8765")
 
-    webview.create_window(
+    engines = EngineManager()
+    app.state.engines = engines
+
+    win = webview.create_window(
         "AI Office",
         "http://127.0.0.1:8765",
         width=1440,
@@ -228,10 +233,12 @@ def main() -> None:
         maximized=True,
         text_select=True,
     )
+    win.events.closed += engines.shutdown
     threading.Thread(target=apply_window_icon, daemon=True).start()
     try:
         webview.start(gui="edgechromium")
     finally:
+        engines.shutdown()
         shutdown_local_ollama()
 
 

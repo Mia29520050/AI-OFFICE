@@ -358,3 +358,68 @@ async def test_story_engine_with_mock_llm():
     assert len(resp.chapter_plan.scenes) == 1
     assert resp.chapter_plan.scenes[0].panels[0].dialogues[0].speaker == "Shirakawa Luna"
     assert len(mock_mgr.calls) == 1
+
+
+@pytest.mark.asyncio
+async def test_chapter_generation_num_predict_sufficient_for_two_pages():
+    from manga_story import DEFAULT_CHAPTER_NUM_PREDICT, _compute_chapter_num_predict
+
+    assert DEFAULT_CHAPTER_NUM_PREDICT >= 8192
+    assert _compute_chapter_num_predict(3, 3) >= 8192
+
+    captured_kwargs: list[dict] = []
+
+    class CapturingMockManager:
+        async def runtime_ready(self):
+            return True, "Ready"
+
+        def active_route(self):
+            return {"model": "qwen3.5:4b"}
+
+        async def chat(self, messages, **kwargs):
+            captured_kwargs.append(kwargs)
+            scenes = []
+            for s_idx in range(1, 3):
+                panels = []
+                for p_idx in range(1, 4):
+                    panels.append({
+                        "panel_number": p_idx,
+                        "camera_angle": "medium_shot",
+                        "visual_description": f"Cảnh {s_idx} ô {p_idx}",
+                        "characters_in_panel": ["Kurogane Ren"],
+                        "diffusion_prompt_en": f"1boy, scene {s_idx} panel {p_idx}",
+                        "dialogues": [{"speaker": "Kurogane Ren", "text": f"Thoại {s_idx}-{p_idx}", "bubble_type": "speech"}],
+                    })
+                scenes.append({
+                    "scene_number": s_idx,
+                    "title": f"Cảnh {s_idx}",
+                    "location": "Học viện",
+                    "time_of_day": "night",
+                    "summary": f"Tóm tắt cảnh {s_idx}",
+                    "characters_present": ["Kurogane Ren"],
+                    "emotional_beat": "tension",
+                    "panels": panels,
+                })
+            return json.dumps({
+                "chapter_number": 1,
+                "title": "Chương 1: Hai Trang Đầy Đủ",
+                "synopsis": "Đủ 6 ô cho 2 trang manga",
+                "scenes": scenes,
+            }, ensure_ascii=False)
+
+    engine = MangaStoryEngine(model_manager=CapturingMockManager())
+    data = create_sample_story_data()
+    req = StoryGenerationRequest(
+        series_title="Moonlight Classroom",
+        premise="Diễn biến 2 trang 6-8 ô",
+        chapter_number=1,
+        characters=data["characters"],
+        target_scene_count=2,
+        target_panels_per_scene=3,
+    )
+    resp = await engine.generate_chapter(req)
+    assert resp.mode_used == "ollama"
+    assert len(captured_kwargs) == 1
+    assert captured_kwargs[0]["num_predict"] >= 8192
+    total_panels = sum(len(sc.panels) for sc in resp.chapter_plan.scenes)
+    assert total_panels == 6

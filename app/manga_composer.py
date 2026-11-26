@@ -32,45 +32,123 @@ from PIL import (
 )
 from pydantic import BaseModel, Field, model_validator
 
+import re
+
 # ---------------------------------------------------------------------------
 # Constants & Font Paths
 # ---------------------------------------------------------------------------
 
 ROOT_DIR = Path(__file__).resolve().parents[1]
 ASSETS_DIR = Path(__file__).resolve().parent / "ui" / "assets"
-DEFAULT_FONT_PATH = ASSETS_DIR / "Inter-Variable.ttf"
+FONTS_DIR = ASSETS_DIR / "fonts"
+DEFAULT_FONT_PATH = FONTS_DIR / "PatrickHand-Regular.ttf" if (FONTS_DIR / "PatrickHand-Regular.ttf").exists() else (ASSETS_DIR / "Inter-Variable.ttf")
 
-# System font fallbacks if Inter-Variable is missing
+# System font fallbacks with complete Vietnamese diacritic coverage (Comic style prioritized)
 SYSTEM_FALLBACKS = [
-    "C:/Windows/Fonts/arial.ttf",
+    "C:/Windows/Fonts/comicbd.ttf",
+    "C:/Windows/Fonts/comic.ttf",
+    "C:/Windows/Fonts/segoeuib.ttf",
     "C:/Windows/Fonts/segoeui.ttf",
+    "C:/Windows/Fonts/arialbd.ttf",
+    "C:/Windows/Fonts/arial.ttf",
     "C:/Windows/Fonts/tahoma.ttf",
     "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
     "/System/Library/Fonts/Helvetica.ttc",
 ]
 
 
-def resolve_font_path(custom_path: str | None = None) -> str:
-    """Find a valid font file supporting Unicode, prioritizing Inter-Variable.ttf."""
+def sanitize_manga_text(text: str) -> str:
+    """Remove emoji characters, non-printable symbols, outer single quotes, and tofu-causing glyphs."""
+    if not text:
+        return ""
+    # Strip emojis and pictographs that lack glyphs in standard font files
+    emoji_pattern = re.compile(
+        "["
+        "\U0001F000-\U0001FAFF"
+        "\U00002600-\U000027BF"
+        "\U00002300-\U000023FF"
+        "\U00002B50-\U00002B55"
+        "\U0000FE00-\U0000FE0F"
+        "]+",
+        flags=re.UNICODE,
+    )
+    cleaned = emoji_pattern.sub("", text)
+    cleaned = "".join(ch for ch in cleaned if ord(ch) >= 32 or ch == "\n")
+    cleaned = re.sub(r" +", " ", cleaned).strip()
+
+    # Strip matching outer single quotes ('...' or ‘...’) wrapping the entire dialogue line,
+    # while preserving apostrophes inside words (e.g., don't) and inner quoted phrases.
+    while len(cleaned) >= 2 and (
+        (cleaned.startswith("'") and cleaned.endswith("'"))
+        or (cleaned.startswith("‘") and cleaned.endswith("’"))
+    ):
+        inner = cleaned[1:-1].strip()
+        if re.search(r"(?<!\w)['‘’]|['‘’](?!\w)", inner):
+            break
+        cleaned = inner
+
+    return cleaned.strip()
+
+
+def resolve_font_path(custom_path: str | None = None, font_category: str = "dialogue") -> str:
+    """Find a valid font file, prioritizing authentic Manga/Comic fonts with Vietnamese coverage."""
     if custom_path and os.path.exists(custom_path):
         return custom_path
+
+    # Check dedicated Manga Fonts directory first
+    if FONTS_DIR.exists():
+        if font_category in ("sfx", "shout"):
+            preferred_names = ["Bangers-Regular.ttf", "ComicNeue-Bold.ttf", "PatrickHand-Regular.ttf"]
+        elif font_category in ("whisper", "thought"):
+            preferred_names = ["PatrickHand-Regular.ttf", "ComicNeue-Regular.ttf"]
+        else:
+            preferred_names = ["PatrickHand-Regular.ttf", "ComicNeue-Bold.ttf", "ComicNeue-Regular.ttf", "Bangers-Regular.ttf"]
+
+        for name in preferred_names:
+            candidate = FONTS_DIR / name
+            if candidate.exists():
+                return str(candidate)
+
+    # Windows comic feel fallbacks
+    for win_comic in ("C:/Windows/Fonts/comicbd.ttf", "C:/Windows/Fonts/comic.ttf", "C:/Windows/Fonts/segoeuib.ttf", "C:/Windows/Fonts/segoeui.ttf", "C:/Windows/Fonts/arial.ttf"):
+        if os.path.exists(win_comic):
+            return win_comic
+
     if DEFAULT_FONT_PATH.exists():
         return str(DEFAULT_FONT_PATH)
+
     for fallback in SYSTEM_FALLBACKS:
         if os.path.exists(fallback):
             return fallback
     return ""
 
 
-def get_font(size: int = 20, font_path: str | None = None) -> ImageFont.FreeTypeFont | ImageFont.ImageFont:
-    """Load an ImageFont with Vietnamese Unicode support, falling back gracefully."""
-    fpath = resolve_font_path(font_path)
+def get_font(
+    size: int = 20,
+    font_path: str | None = None,
+    font_category: str = "dialogue",
+) -> ImageFont.FreeTypeFont | ImageFont.ImageFont:
+    """Load an ImageFont with Vietnamese Unicode support, prioritizing authentic Manga/Comic fonts."""
+    # Priority: Try loading from manga_fonts module if available
+    try:
+        try:
+            from app.manga_fonts import get_manga_font
+        except ImportError:
+            from manga_fonts import get_manga_font
+        cat_map = {"sfx": "sfx", "shout": "shout", "thought": "whisper", "whisper": "whisper", "caption": "narrative"}
+        mapped_cat = cat_map.get(font_category, "dialogue")
+        return get_manga_font(mapped_cat, size=size)
+    except Exception:
+        pass
+
+    fpath = resolve_font_path(font_path, font_category=font_category)
     if fpath:
         try:
             return ImageFont.truetype(fpath, size=size)
         except Exception:
             pass
     return ImageFont.load_default()
+
 
 
 # ---------------------------------------------------------------------------
@@ -100,6 +178,8 @@ class PanelFilter(str, Enum):
     PASTEL = "pastel"                             # Soft Japanese anime pastel color grading
     VIBRANT = "vibrant"                           # Bold Shonen high-contrast color
     SEPIA = "sepia"                               # Vintage manga paper/retro ink tone
+    DE_AI_ORGANIC = "de_ai_organic"               # Organic paper grain, G-pen ink sharpening, de-plasticizer
+    G_PEN_GRAIN = "g_pen_grain"                   # Hand-drawn G-pen ink lines with physical manga screentone
 
 
 class PanelLayoutType(str, Enum):
@@ -174,6 +254,7 @@ class PanelConfig(BaseModel):
     prompt: str | None = None
     description: str | None = None
     bubbles: list[SpeechBubble] = Field(default_factory=list)
+    auto_layout_bubbles: bool = False
 
 
 class PageConfig(BaseModel):
@@ -190,6 +271,7 @@ class PageConfig(BaseModel):
     reading_direction: str = "rtl"        # "rtl" (Japanese manga) or "ltr"
     panels: list[PanelConfig] = Field(default_factory=list)
     page_bubbles: list[SpeechBubble] = Field(default_factory=list)
+    auto_layout_bubbles: bool = False
 
 
 class ComicMetadata(BaseModel):
@@ -436,28 +518,34 @@ def render_speech_bubble_overlay(
         ty = bubble.tail_y * ch if (bubble.tail_y is not None and 0.0 <= bubble.tail_y <= 1.0) else bubble.tail_y
 
     font_path = bubble.font_path or default_font_path
+    clean_text = sanitize_manga_text(bubble.text)
 
     # Special handler: SFX (Sound Effects)
     if bubble.bubble_type == BubbleType.SFX:
         _render_sfx_text(
             overlay=overlay,
-            text=bubble.text,
+            text=clean_text,
             cx=bx,
             cy=by,
             font_size=bubble.font_size or 46,
             font_path=font_path,
-            text_color=bubble.text_color or "#FFE600",
-            stroke_color=bubble.stroke_color or "#000000",
+            text_color=bubble.text_color,
+            stroke_color=bubble.stroke_color,
             stroke_width=bubble.stroke_width or 6,
             rotation=bubble.rotation,
         )
         return overlay
 
+    # For burst/shout bubbles, inner text area is limited by starburst valley ratio (~0.68)
+    is_shout = (bubble.bubble_type == BubbleType.SHOUT)
+    target_inner_w = int(bw * 0.65) if is_shout else int(bw)
+    target_inner_h = int(bh * 0.65) if is_shout else int(bh)
+
     # Auto-fit text within bubble boundaries
     font, lines, text_w, text_h = fit_text_in_bubble(
-        text=bubble.text,
-        target_w=int(bw),
-        target_h=int(bh),
+        text=clean_text,
+        target_w=target_inner_w,
+        target_h=target_inner_h,
         font_path=font_path,
         preferred_font_size=bubble.font_size,
         padding=bubble.padding,
@@ -465,8 +553,12 @@ def render_speech_bubble_overlay(
 
     # Dynamic auto-sizing of bubble if requested
     if bubble.auto_size and (bubble.width is None or bubble.height is None):
-        bw = max(bw, text_w + bubble.padding * 2 + 20)
-        bh = max(bh, text_h + bubble.padding * 2 + 16)
+        if is_shout:
+            bw = max(bw, int((text_w + bubble.padding * 2 + 30) / 0.65))
+            bh = max(bh, int((text_h + bubble.padding * 2 + 24) / 0.65))
+        else:
+            bw = max(bw, text_w + bubble.padding * 2 + 20)
+            bh = max(bh, text_h + bubble.padding * 2 + 16)
 
     # Top-left corner from center coordinates
     x0 = int(bx - bw / 2.0)
@@ -544,9 +636,12 @@ def render_speech_bubble_overlay(
         overlay.paste(border_img, (0, 0), border_mask)
         overlay.paste(fill_img, (0, 0), mask)
 
-    # For thought bubbles, draw trailing circles toward speaker
+    # For thought bubbles, draw trailing circles toward speaker outside bubble boundary
     if bubble.bubble_type == BubbleType.THOUGHT and tail_tip:
-        _draw_thought_trail(overlay, bx, by, tail_tip[0], tail_tip[1], bg_color, border_color, border_w)
+        _draw_thought_trail(
+            overlay, bx, by, bw, bh, tail_tip[0], tail_tip[1],
+            bg_color, border_color, border_w, panel_rect=panel_rect,
+        )
 
     # Render wrapped text inside bubble
     text_draw = ImageDraw.Draw(overlay)
@@ -573,41 +668,116 @@ def _render_sfx_text(
     text: str,
     cx: float,
     cy: float,
-    font_size: int,
-    font_path: str | None,
-    text_color: str,
-    stroke_color: str,
-    stroke_width: int,
-    rotation: float,
+    font_size: int = 46,
+    font_path: str | None = None,
+    text_color: str | tuple | None = None,
+    stroke_color: str | tuple | None = None,
+    stroke_width: int = 6,
+    rotation: float = 0.0,
+    with_energy_aura: bool = True,
 ) -> None:
-    """Render manga sound effect (SFX) with heavy stroke and rotation."""
-    font = get_font(font_size, font_path)
+    """Render manga sound effect (SFX) with 3D block extrusion, dual stroke outline,
+    dynamic rotation, and blood lightning / energy aura accents.
+    Automatically maps crude English onomatopoeia to authentic Vietnamese Manga SFX.
+    """
+    # 1. Map crude English sounds ("CLANNNG!", "BOOM!") to authentic Vietnamese Manga SFX
+    try:
+        try:
+            from app.manga_sfx_dictionary import sanitize_manga_sfx
+        except ImportError:
+            from manga_sfx_dictionary import sanitize_manga_sfx
+        sfx_meta = sanitize_manga_sfx(text)
+        if not sfx_meta:
+            # If silence or unrecognized non-SFX, do not draw violent blade clash
+            return
+        display_text = sfx_meta.get("vi", text.strip().upper())
+        sfx_fill = sfx_meta.get("fill_color", (230, 30, 40))
+        sfx_shadow = sfx_meta.get("shadow_color", (30, 0, 10))
+        sfx_stroke = sfx_meta.get("stroke_color", (255, 255, 255))
+        aura_type = sfx_meta.get("aura", "sparks")
+    except Exception:
+        display_text = text.strip().upper()
+        sfx_fill = (230, 30, 40)
+        sfx_shadow = (30, 0, 10)
+        sfx_stroke = (255, 255, 255)
+        aura_type = "sparks"
+
+    # Color overrides if explicitly provided and not basic black/yellow defaults
+    if text_color and text_color not in ("#000000", "#FFE600", (0, 0, 0)):
+        if isinstance(text_color, str) and text_color.startswith("#"):
+            try:
+                sfx_fill = ImageColor.getrgb(text_color)
+            except Exception:
+                pass
+        elif isinstance(text_color, (tuple, list)):
+            sfx_fill = tuple(text_color[:3])
+
+    if stroke_color and stroke_color not in ("#000000", (0, 0, 0)):
+        if isinstance(stroke_color, str) and stroke_color.startswith("#"):
+            try:
+                sfx_stroke = ImageColor.getrgb(stroke_color)
+            except Exception:
+                pass
+        elif isinstance(stroke_color, (tuple, list)):
+            sfx_stroke = tuple(stroke_color[:3])
+
+    # Load authentic manga SFX font (Bangers / Comic Neue Bold)
+    font = get_font(font_size, font_path, font_category="sfx")
+    outer_w = max(4, stroke_width + 4)
+
     dummy = Image.new("RGBA", (1, 1))
     d = ImageDraw.Draw(dummy)
-    bbox = d.textbbox((0, 0), text, font=font, stroke_width=stroke_width)
+    bbox = d.textbbox((0, 0), display_text, font=font, stroke_width=outer_w)
     tw = bbox[2] - bbox[0]
     th = bbox[3] - bbox[1]
 
-    pad = stroke_width * 2 + 30
+    pad = outer_w * 2 + 50
     sfx_img = Image.new("RGBA", (tw + pad * 2, th + pad * 2), (0, 0, 0, 0))
     sfx_draw = ImageDraw.Draw(sfx_img)
 
     text_x = pad - bbox[0]
     text_y = pad - bbox[1]
 
+    # 1. 3D Extruded Block Shadow (diagonally down-right extrusion for tactile depth)
+    extrusion_steps = max(4, min(10, font_size // 6))
+    for step in range(extrusion_steps, 0, -2):
+        sfx_draw.text(
+            (text_x + step, text_y + step),
+            display_text,
+            font=font,
+            fill=(*sfx_shadow, 240) if len(sfx_shadow) == 3 else sfx_shadow,
+            stroke_width=stroke_width,
+            stroke_fill=(0, 0, 0, 255),
+        )
+
+    # 2. Dual Stroke: Outer Highlighting Stroke (crisp white or bright contour)
     sfx_draw.text(
         (text_x, text_y),
-        text,
+        display_text,
         font=font,
-        fill=text_color,
-        stroke_width=stroke_width,
-        stroke_fill=stroke_color,
+        fill=(*sfx_stroke, 255) if len(sfx_stroke) == 3 else sfx_stroke,
+        stroke_width=outer_w,
+        stroke_fill=(*sfx_stroke, 255) if len(sfx_stroke) == 3 else sfx_stroke,
     )
 
-    if abs(rotation) > 0.1:
-        sfx_img = sfx_img.rotate(rotation, resample=Image.Resampling.BICUBIC, expand=True)
+    # 3. Dual Stroke: Inner Heavy Black Stroke + Crimson/Amber Body Fill
+    sfx_draw.text(
+        (text_x, text_y),
+        display_text,
+        font=font,
+        fill=(*sfx_fill, 255) if len(sfx_fill) == 3 else sfx_fill,
+        stroke_width=stroke_width,
+        stroke_fill=(0, 0, 0, 255),
+    )
 
-    # Paste centered at (cx, cy)
+    # 4. SFX text rendering: Clean 3D block extrusion, outer halo, and bold core fill.
+    # (Removed clumsy zigzag wire overlay to preserve pristine manga typography)
+
+    # 5. Dynamic Rotation
+    eff_rotation = rotation if abs(rotation) > 0.1 else -12.0
+    sfx_img = sfx_img.rotate(eff_rotation, resample=Image.Resampling.BICUBIC, expand=True)
+
+    # 6. Paste centered at (cx, cy)
     left = int(cx - sfx_img.width / 2.0)
     top = int(cy - sfx_img.height / 2.0)
     overlay.paste(sfx_img, (left, top), sfx_img)
@@ -617,19 +787,96 @@ def _draw_thought_trail(
     overlay: Image.Image,
     bx: float,
     by: float,
+    bw: float,
+    bh: float,
     tx: float,
     ty: float,
     bg_color: tuple,
     border_color: tuple,
     border_w: int,
+    panel_rect: tuple[int, int, int, int] | None = None,
 ) -> None:
-    """Draw 3 decreasing circles trailing towards speaker for thought bubbles."""
+    """Draw 3 decreasing circles trailing towards speaker for thought bubbles,
+    strictly outside bubble body and safely inset from panel/frame borders."""
     draw = ImageDraw.Draw(overlay)
-    fractions = [0.45, 0.72, 0.92]
+    cw, ch = overlay.size
+    if panel_rect is not None:
+        rx, ry, rw, rh = panel_rect
+    else:
+        rx, ry, rw, rh = 0, 0, cw, ch
+
+    side_margin = max(14.0, border_w + 10.0)
+    bottom_margin = max(24.0, border_w + 20.0)
+    safe_x0 = rx + side_margin
+    safe_y0 = ry + side_margin
+    safe_x1 = rx + rw - side_margin
+    safe_y1 = ry + rh - bottom_margin
+
+    if safe_x1 <= safe_x0 or safe_y1 <= safe_y0:
+        return
+
+    def _max_ray_t(ux_v: float, uy_v: float) -> float:
+        ts: list[float] = []
+        if ux_v > 1e-6:
+            ts.append((safe_x1 - bx) / ux_v)
+        elif ux_v < -1e-6:
+            ts.append((safe_x0 - bx) / ux_v)
+        if uy_v > 1e-6:
+            ts.append((safe_y1 - by) / uy_v)
+        elif uy_v < -1e-6:
+            ts.append((safe_y0 - by) / uy_v)
+        pos_ts = [t for t in ts if t > 0]
+        return min(pos_ts) if pos_ts else 0.0
+
+    def _edge_start_d(ux_v: float, uy_v: float) -> float:
+        a = bw / 2.0
+        b = bh / 2.0
+        lobe_pad = min(a, b) * 0.25
+        denom = math.sqrt((b * ux_v) ** 2 + (a * uy_v) ** 2)
+        r_edge = ((a * b) / denom if denom > 0 else a) + lobe_pad
+        return r_edge + 6.0
+
+    dx = tx - bx
+    dy = ty - by
+    dist = math.hypot(dx, dy)
+    if dist < 5.0:
+        return
+    ux = dx / dist
+    uy = dy / dist
+
+    start_d = _edge_start_d(ux, uy)
+    max_t = _max_ray_t(ux, uy)
+
+    # If the target direction runs too close to the bottom or outer panel edge,
+    # gently redirect the trail inward toward the upper-center interior of the panel.
+    if max_t - start_d < 18.0:
+        alt_dx = (rx + rw * 0.5) - bx
+        alt_dy = (ry + rh * 0.45) - by
+        if by > ry + rh * 0.55 and alt_dy > -12.0:
+            alt_dy = -max(24.0, bh * 0.35)
+        alt_dist = math.hypot(alt_dx, alt_dy)
+        if alt_dist >= 5.0:
+            alt_ux = alt_dx / alt_dist
+            alt_uy = alt_dy / alt_dist
+            alt_start = _edge_start_d(alt_ux, alt_uy)
+            alt_max_t = _max_ray_t(alt_ux, alt_uy)
+            if alt_max_t - alt_start > max_t - start_d:
+                ux, uy = alt_ux, alt_uy
+                start_d, max_t = alt_start, alt_max_t
+                dist = min(alt_dist, alt_max_t)
+
+    end_d = min(dist - 6.0, max_t - 6.0)
+    if end_d <= start_d + 8.0:
+        end_d = min(max_t - 4.0, start_d + 24.0)
+    if end_d <= start_d:
+        return
+
+    fractions = [0.15, 0.50, 0.85]
     radii = [10, 7, 4]
     for frac, r in zip(fractions, radii):
-        dot_x = bx + (tx - bx) * frac
-        dot_y = by + (ty - by) * frac
+        cur_d = start_d + (end_d - start_d) * frac
+        dot_x = max(safe_x0 + r, min(safe_x1 - r, bx + ux * cur_d))
+        dot_y = max(safe_y0 + r, min(safe_y1 - r, by + uy * cur_d))
         # Outer border
         draw.ellipse([dot_x - r, dot_y - r, dot_x + r, dot_y + r], fill=border_color)
         # Inner fill
@@ -819,6 +1066,51 @@ def apply_color_sepia(image: Image.Image) -> Image.Image:
     return sepia
 
 
+def apply_de_ai_organic_enhancer(
+    image: Image.Image,
+    grain_intensity: float = 0.08,
+    gpen_contrast: float = 1.25,
+    sharpness: float = 1.45,
+    screentone_pitch: int = 4,
+) -> Image.Image:
+    """Removes smooth plastic AI surface sheen by infusing authentic manga paper grain,
+    micro-dot screentone textures in midtones, and crisp G-pen ink edge enhancement.
+    """
+    orig_mode = image.mode
+    img = image.convert("RGB")
+    try:
+        import numpy as np
+        arr = np.array(img, dtype=np.float32)
+        h, w, c = arr.shape
+        rng = np.random.RandomState(42)
+
+        # 1. High-frequency organic paper grain noise
+        noise = rng.normal(0.0, 22.0 * grain_intensity, (h, w, 1))
+
+        # 2. Authentic manga dot screentone simulation in midtones (to break AI plastic gradients)
+        y_idx, x_idx = np.ogrid[:h, :w]
+        screentone_dots = ((x_idx % screentone_pitch == 0) & (y_idx % screentone_pitch == 0)).astype(np.float32)[:, :, np.newaxis]
+        luminance = 0.299 * arr[:, :, 0] + 0.587 * arr[:, :, 1] + 0.114 * arr[:, :, 2]
+        midtones = ((luminance > 35.0) & (luminance < 225.0))[:, :, np.newaxis]
+
+        textured = arr + noise + (screentone_dots * midtones * -12.0)
+        textured = np.clip(textured, 0, 255).astype(np.uint8)
+        result = Image.fromarray(textured)
+    except Exception:
+        # Fallback without numpy: PIL filter grain & high-pass simulation
+        result = img.filter(ImageFilter.EDGE_ENHANCE_MORE)
+
+    # 3. G-pen edge sharpness & Chiaroscuro dynamic contrast boost
+    if sharpness > 1.0:
+        result = ImageEnhance.Sharpness(result).enhance(sharpness)
+    if gpen_contrast > 1.0:
+        result = ImageEnhance.Contrast(result).enhance(gpen_contrast)
+
+    if orig_mode == "RGBA":
+        result = result.convert("RGBA")
+    return result
+
+
 def apply_panel_filter(
     image: Image.Image,
     filter_type: PanelFilter | str,
@@ -850,6 +1142,18 @@ def apply_panel_filter(
         return apply_color_vibrant(image)
     elif f_str == PanelFilter.SEPIA.value:
         return apply_color_sepia(image)
+    elif f_str in (PanelFilter.DE_AI_ORGANIC.value, PanelFilter.G_PEN_GRAIN.value):
+        grain_intensity = p.get("grain_intensity", 0.08)
+        contrast = p.get("contrast", 1.25)
+        sharpness = p.get("sharpness", 1.45)
+        screentone_pitch = p.get("screentone_pitch", 4)
+        return apply_de_ai_organic_enhancer(
+            image,
+            grain_intensity=grain_intensity,
+            gpen_contrast=contrast,
+            sharpness=sharpness,
+            screentone_pitch=screentone_pitch,
+        )
     return image
 
 
@@ -1198,7 +1502,68 @@ class MangaComposer:
                         outline=b_color,
                     )
 
-            # Queue panel-specific speech bubbles
+            # Vision QA & Anti-Collision Face Avoidance check before rendering speech bubbles
+            auto_optimize = getattr(p_config, "auto_layout_bubbles", False) or getattr(config, "auto_layout_bubbles", False)
+            if p_config.bubbles and auto_optimize:
+                try:
+                    try:
+                        from app.manga_vision_qa import MangaVisionQA
+                    except ImportError:
+                        from manga_vision_qa import MangaVisionQA
+
+                    qa = MangaVisionQA(min_clearance_px=25)
+                    qa_result = qa.verify_panel_typesetting(
+                        panel_image=panel_img,
+                        bubbles_config=p_config.bubbles,
+                        panel_index=i + 1,
+                    )
+
+                    # If face collision detected, automatically resolve to optimal negative space
+                    if not qa_result.is_valid and qa_result.face_bbox is not None:
+                        for col in qa_result.face_collisions:
+                            b_idx = col["bubble_index"]
+                            if 0 <= b_idx < len(p_config.bubbles):
+                                b = p_config.bubbles[b_idx]
+                                bw_ratio = getattr(b, "width", None) or 0.35
+                                bh_ratio = getattr(b, "height", None) or 0.20
+                                b_type = getattr(b, "bubble_type", "regular")
+                                b_type_str = b_type.value if hasattr(b_type, "value") else str(b_type)
+
+                                new_x, new_y = qa.solve_optimal_negative_space(
+                                    panel_w=pw,
+                                    panel_h=ph,
+                                    face_bbox=qa_result.face_bbox,
+                                    bubble_w_ratio=bw_ratio,
+                                    bubble_h_ratio=bh_ratio,
+                                    bubble_type=b_type_str,
+                                )
+                                b.x = new_x
+                                b.y = new_y
+                                # Point tail towards mouth if not caption
+                                if b_type_str != "caption":
+                                    mouth_x = qa_result.face_bbox.center[0] / float(pw)
+                                    mouth_y = (qa_result.face_bbox.y0 + qa_result.face_bbox.height * 0.85) / float(ph)
+                                    b.tail_x = round(mouth_x, 3)
+                                    b.tail_y = round(mouth_y, 3)
+                except Exception:
+                    pass
+
+                # Also run multi-bubble anti-collision packing if multiple bubbles
+                if len(p_config.bubbles) > 1:
+                    try:
+                        try:
+                            from app.smart_bubble_layout import optimize_speech_bubbles
+                        except ImportError:
+                            from smart_bubble_layout import optimize_speech_bubbles
+                        p_config.bubbles = optimize_speech_bubbles(
+                            p_config.bubbles,
+                            panel_w=pw,
+                            panel_h=ph,
+                            reading_direction=config.reading_direction,
+                            panel_image=panel_img,
+                        )
+                    except Exception:
+                        pass
             for bubble in p_config.bubbles:
                 all_bubbles.append((bubble, rect))
 
@@ -1451,7 +1816,7 @@ def convert_story_dialogue_to_speech_bubble(
     pos_hint = str(data.get("position_hint", "top-left")).lower().strip()
     x, y, tx, ty = POSITION_HINTS_MAP.get(pos_hint, (0.5, 0.3, 0.5, 0.6))
 
-    text = str(data.get("text", "")).strip()
+    text = sanitize_manga_text(str(data.get("text", "")).strip())
 
     return SpeechBubble(
         text=text,
@@ -1506,9 +1871,31 @@ def convert_panel_plan_to_panel_config(
 
     bubbles: list[SpeechBubble] = []
 
-    # Map dialogue lines
-    for dlg in data.get("dialogues", []):
-        bubbles.append(convert_story_dialogue_to_speech_bubble(dlg))
+    # Map dialogue lines using Smart Bubble Layout (RTL flow, Anti-Collision, Face Avoidance)
+    dlgs = data.get("dialogues", [])
+    if dlgs:
+        try:
+            try:
+                from app.smart_bubble_layout import layout_panel_dialogues
+            except ImportError:
+                from smart_bubble_layout import layout_panel_dialogues
+            smart_layouts = layout_panel_dialogues(dlgs)
+            for item in smart_layouts:
+                raw_type = str(item.get("bubble_type", "regular")).lower()
+                btype = BUBBLE_TYPE_MAP.get(raw_type, BubbleType.REGULAR)
+                bubbles.append(SpeechBubble(
+                    text=sanitize_manga_text(item["text"]),
+                    bubble_type=btype,
+                    x=item["x"],
+                    y=item["y"],
+                    width=item.get("width"),
+                    height=item.get("height"),
+                    tail_x=item.get("tail_x"),
+                    tail_y=item.get("tail_y"),
+                ))
+        except Exception:
+            for dlg in dlgs:
+                bubbles.append(convert_story_dialogue_to_speech_bubble(dlg))
 
     # Map SFX
     for sfx_item in data.get("sfx", []):

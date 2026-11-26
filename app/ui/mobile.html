@@ -1,0 +1,2951 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#0d0e11">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="AI Office">
+  <meta name="mobile-web-app-capable" content="yes">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="/assets/ai-office-icon.png">
+  <link rel="icon" type="image/png" href="/assets/ai-office-icon.png">
+  <title>AI Office — Gemini Mobile</title>
+  <style>
+    :root {
+      --bg: #0d0e11;
+      --card-bg: #1e1f24;
+      --bubble-user: #2b2c31;
+      --text: #f1f5f9;
+      --text-muted: #9aa0a6;
+      --text-dim: #70757a;
+      --accent-blue: #1b72e8;
+      --accent-purple: #9b72cb;
+      --line: rgba(255, 255, 255, 0.08);
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+    body[data-theme="light"] {
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --bubble-user: #e2e8f0;
+      --text: #0f172a;
+      --text-muted: #475569;
+      --text-dim: #64748b;
+      --line: rgba(15, 23, 42, 0.12);
+    }
+    body[data-theme="light"] .gemini-header {
+      background: rgba(248, 250, 252, 0.94);
+    }
+    body[data-theme="light"] .gemini-drawer,
+    body[data-theme="light"] .drawer-footer-user {
+      background: #ffffff;
+    }
+    body[data-theme="light"] .drawer-new-chat-pill,
+    body[data-theme="light"] .gemini-popover,
+    body[data-theme="light"] .conv-action-sheet,
+    body[data-theme="light"] .settings-card {
+      background: #f1f5f9;
+      color: var(--text);
+    }
+    body[data-theme="light"] .drawer-brand-title,
+    body[data-theme="light"] .drawer-user-name,
+    body[data-theme="light"] .drawer-new-chat-pill,
+    body[data-theme="light"] .library-header-bar strong {
+      color: var(--text) !important;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      font-size: 15px;
+      line-height: 1.5;
+    }
+
+    /* ===== APP SHELL ===== */
+    .mobile-app {
+      display: flex;
+      flex-direction: column;
+      height: 100dvh;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* ===== 1. HEADER (Screen 1 & 3) ===== */
+    .gemini-header {
+      height: calc(56px + var(--safe-top));
+      padding-top: var(--safe-top);
+      padding-left: 12px;
+      padding-right: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+      background: rgba(13, 14, 17, 0.95);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      z-index: 100;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    }
+    .gemini-icon-btn {
+      width: 44px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      border: none;
+      color: var(--text);
+      cursor: pointer;
+      border-radius: 50%;
+      touch-action: manipulation;
+    }
+    .gemini-icon-btn:active {
+      background: rgba(255, 255, 255, 0.08);
+    }
+    .gemini-icon-btn svg {
+      width: 22px;
+      height: 22px;
+      stroke-width: 2;
+    }
+
+    /* Model Pill Dropdown */
+    .model-selector-pill {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 20px;
+      font-size: 13.5px;
+      font-weight: 500;
+      color: var(--text);
+      cursor: pointer;
+      max-width: 200px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .model-selector-pill:active {
+      background: rgba(255, 255, 255, 0.12);
+    }
+    .model-selector-pill .chevron {
+      width: 14px;
+      height: 14px;
+      color: var(--text-muted);
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+    }
+    .user-avatar-btn {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      overflow: hidden;
+      border: 2px solid #9b72cb;
+      background: #25262b;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-left: 4px;
+      cursor: pointer;
+    }
+    .user-avatar-btn img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    /* ===== 2. MAIN SCROLL CONTAINER ===== */
+    .gemini-scroll-body {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
+      padding: 12px 16px 110px 16px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ===== 3. HOME EMPTY STATE (Screen 1) ===== */
+    .gemini-home-hero {
+      margin: auto 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      padding: 40px 16px;
+    }
+    .gemini-sparkle-star {
+      width: 64px;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(circle, rgba(99, 102, 241, 0.18) 0%, rgba(56, 189, 248, 0.08) 60%, transparent 100%);
+      border: 1px solid rgba(99, 102, 241, 0.28);
+      border-radius: 20px;
+      margin-bottom: 22px;
+      box-shadow: 0 4px 24px rgba(99, 102, 241, 0.25), 0 0 12px rgba(56, 189, 248, 0.2);
+      animation: floatSparkle 3s ease-in-out infinite alternate;
+    }
+    .gemini-sparkle-star img, .aioffice-home-logo {
+      width: 44px;
+      height: 44px;
+      object-fit: contain;
+      filter: drop-shadow(0 2px 10px rgba(99, 102, 241, 0.5));
+    }
+    @keyframes floatSparkle {
+      0% { transform: translateY(0px) scale(0.97); filter: drop-shadow(0 4px 16px rgba(99, 102, 241, 0.35)); }
+      100% { transform: translateY(-6px) scale(1.03); filter: drop-shadow(0 8px 24px rgba(56, 189, 248, 0.5)); }
+    }
+    .gemini-greeting {
+      font-size: 26px;
+      font-weight: 500;
+      color: #ffffff;
+      line-height: 1.35;
+      margin-bottom: 24px;
+      letter-spacing: -0.02em;
+    }
+    .gemini-mode-pills {
+      display: flex;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .gemini-mode-pill {
+      padding: 6px 18px;
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: var(--text-muted);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+    }
+    .gemini-mode-pill.active {
+      background: #2b2c31;
+      color: #fff;
+      border-color: rgba(255, 255, 255, 0.16);
+    }
+
+    /* ===== 4. CHAT MESSAGES FEED (Screen 3) ===== */
+    .gemini-chat-feed {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      width: 100%;
+    }
+    .gemini-msg-user-row {
+      display: flex;
+      justify-content: flex-end;
+      width: 100%;
+    }
+    .gemini-user-bubble {
+      background: var(--bubble-user);
+      color: #ffffff;
+      border-radius: 20px 20px 4px 20px;
+      padding: 12px 18px;
+      max-width: 82%;
+      font-size: 15px;
+      line-height: 1.45;
+      word-break: break-word;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+    }
+
+    .gemini-msg-ai-row {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      width: 100%;
+      padding-top: 4px;
+    }
+    .gemini-ai-bubble {
+      color: var(--text);
+      font-size: 15px;
+      line-height: 1.6;
+      width: 100%;
+      word-break: break-word;
+    }
+    .gemini-ai-bubble p {
+      margin-bottom: 10px;
+    }
+    .gemini-ai-bubble p:last-child {
+      margin-bottom: 0;
+    }
+    .gemini-ai-actions {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-top: 12px;
+      color: var(--text-muted);
+    }
+    .ai-action-btn {
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      border-radius: 50%;
+    }
+    .ai-action-btn:active {
+      background: rgba(255, 255, 255, 0.08);
+      color: #fff;
+    }
+    .ai-action-btn svg {
+      width: 18px;
+      height: 18px;
+    }
+    .gemini-disclaimer {
+      font-size: 11.5px;
+      color: var(--text-dim);
+      margin-top: 8px;
+      display: block;
+    }
+
+    /* Embedded Generated Image Card */
+    .gemini-image-card {
+      width: 100%;
+      max-width: 360px;
+      margin: 12px 0;
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: #15161a;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    }
+    .gemini-image-wrap {
+      width: 100%;
+      aspect-ratio: 4/3;
+      background: #09090c;
+      overflow: hidden;
+    }
+    .gemini-image-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .gemini-image-footer {
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .gemini-image-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #fff;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .gemini-image-btn {
+      padding: 6px 12px;
+      font-size: 12px;
+      border-radius: 8px;
+      background: var(--accent-blue);
+      color: #fff;
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    /* ===== 5. FLOATING CAPSULE OMNIBAR (Screen 1 & 3) ===== */
+    .gemini-floating-bar-wrap {
+      position: fixed;
+      bottom: calc(14px + var(--safe-bottom));
+      left: 14px;
+      right: 14px;
+      z-index: 500;
+      pointer-events: none;
+    }
+    .gemini-omnibar {
+      pointer-events: auto;
+      background: var(--card-bg);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 32px;
+      display: flex;
+      align-items: center;
+      padding: 6px 8px 6px 12px;
+      gap: 10px;
+      box-shadow: 0 10px 32px rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+    }
+    .omnibar-attach-btn {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .omnibar-attach-btn:active {
+      background: rgba(255, 255, 255, 0.08);
+      color: #fff;
+    }
+    .omnibar-input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: var(--text);
+      font-size: 16px; /* Prevents iOS auto-zoom */
+      outline: none;
+      resize: none;
+      max-height: 120px;
+      min-height: 24px;
+      line-height: 24px;
+      font-family: inherit;
+      padding: 4px 0;
+    }
+    .omnibar-input::placeholder {
+      color: var(--text-dim);
+    }
+    .omnibar-send-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--accent-blue);
+      border: none;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      cursor: pointer;
+      box-shadow: 0 2px 10px rgba(27, 114, 232, 0.4);
+      transition: transform 0.15s ease, background 0.15s ease;
+    }
+    .omnibar-send-btn:active {
+      transform: scale(0.92);
+      background: #1765cc;
+    }
+    .omnibar-send-btn svg {
+      width: 20px;
+      height: 20px;
+    }
+    .omnibar-send-btn.is-streaming {
+      background: #ef4444;
+      box-shadow: 0 2px 10px rgba(239, 68, 68, 0.4);
+    }
+    .mobile-attach-strip {
+      pointer-events: auto;
+      display: none;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 8px;
+      padding: 0 4px;
+    }
+    .mobile-attach-strip.show {
+      display: flex;
+    }
+    .mobile-attach-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(30, 31, 36, 0.96);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 14px;
+      padding: 4px 10px;
+      font-size: 12px;
+      color: #e2e8f0;
+      max-width: 220px;
+    }
+    .mobile-attach-chip img {
+      width: 20px;
+      height: 20px;
+      border-radius: 4px;
+      object-fit: cover;
+    }
+    .mobile-attach-chip button {
+      background: transparent;
+      border: none;
+      color: #9aa0a6;
+      cursor: pointer;
+      font-size: 14px;
+      line-height: 1;
+      padding: 0 2px;
+    }
+    .gemini-ai-bubble h1, .gemini-ai-bubble h2, .gemini-ai-bubble h3 {
+      font-size: 16px;
+      font-weight: 700;
+      color: #fff;
+      margin: 10px 0 6px;
+    }
+    .gemini-ai-bubble code {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 1px 5px;
+      border-radius: 5px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 13px;
+    }
+    .gemini-ai-bubble pre {
+      background: #141519;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      padding: 10px 12px;
+      overflow-x: auto;
+      margin: 8px 0;
+    }
+    .gemini-ai-bubble pre code {
+      background: transparent;
+      padding: 0;
+    }
+    .stream-caret {
+      display: inline-block;
+      width: 2px;
+      height: 1em;
+      background: #60a5fa;
+      vertical-align: text-bottom;
+      margin-left: 2px;
+      animation: blinkCaret 0.9s infinite;
+    }
+    @keyframes blinkCaret {
+      0%, 49% { opacity: 1; }
+      50%, 100% { opacity: 0; }
+    }
+    .drawer-search-wrap {
+      display: none;
+      padding: 0 14px 10px;
+    }
+    .drawer-search-wrap.open {
+      display: block;
+    }
+    .drawer-search-input {
+      width: 100%;
+      background: #1c1d22;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 12px;
+      padding: 8px 12px;
+      color: #fff;
+      font-size: 14px;
+      outline: none;
+    }
+
+    /* ===== 6. SIDEBAR DRAWER (Screen 2) ===== */
+    .gemini-drawer-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.65);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      z-index: 1000;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+    }
+    .gemini-drawer-overlay.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .gemini-drawer {
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      width: min(85vw, 320px);
+      background: #0e0e10;
+      z-index: 1050;
+      transform: translateX(-100%);
+      transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+      display: flex;
+      flex-direction: column;
+      box-shadow: 6px 0 36px rgba(0, 0, 0, 0.8);
+      padding-top: var(--safe-top);
+      padding-bottom: var(--safe-bottom);
+    }
+    .gemini-drawer.open {
+      transform: translateX(0);
+    }
+    .drawer-top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 18px 12px;
+    }
+    .drawer-brand-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: #fff;
+      letter-spacing: -0.01em;
+    }
+    .drawer-top-actions {
+      display: flex;
+      gap: 6px;
+    }
+
+    .drawer-new-chat-pill {
+      margin: 8px 16px 14px;
+      height: 48px;
+      background: #1e1f24;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 24px;
+      display: flex;
+      align-items: center;
+      padding: 0 18px;
+      gap: 12px;
+      color: #fff;
+      font-size: 14.5px;
+      font-weight: 500;
+      cursor: pointer;
+    }
+    .drawer-new-chat-pill:active {
+      background: #282a30;
+    }
+    .drawer-new-chat-pill svg {
+      width: 18px;
+      height: 18px;
+      color: var(--text-muted);
+    }
+
+    .drawer-nav-list {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      padding: 0 10px;
+    }
+    .drawer-nav-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 10px 14px;
+      min-height: 44px;
+      border-radius: 12px;
+      background: transparent;
+      border: none;
+      color: var(--text);
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      text-align: left;
+    }
+    .drawer-nav-item:active, .drawer-nav-item.active {
+      background: rgba(255, 255, 255, 0.06);
+      color: #fff;
+    }
+    .drawer-nav-item svg {
+      width: 20px;
+      height: 20px;
+      color: var(--text-muted);
+    }
+
+    .drawer-section-heading {
+      padding: 18px 20px 8px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-dim);
+      letter-spacing: 0.03em;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .drawer-conv-scroll {
+      flex: 1;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      padding: 4px 10px;
+    }
+    .drawer-conv-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 6px 6px 6px 12px;
+      min-height: 44px;
+      border-radius: 10px;
+      font-size: 13.5px;
+      color: var(--text);
+      cursor: pointer;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+      transition: background 0.15s ease, transform 0.12s ease;
+    }
+    .drawer-conv-item:active, .drawer-conv-item.is-pressing {
+      background: rgba(255, 255, 255, 0.09);
+      transform: scale(0.985);
+    }
+    .drawer-conv-item.active {
+      background: rgba(27, 114, 232, 0.16);
+      color: #fff;
+    }
+    .drawer-conv-title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      min-width: 0;
+      flex: 1;
+    }
+    .drawer-conv-pin {
+      font-size: 12px;
+      flex-shrink: 0;
+    }
+    .drawer-conv-title {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .drawer-conv-more {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      cursor: pointer;
+    }
+    .drawer-conv-more:active {
+      background: rgba(255, 255, 255, 0.12);
+      color: #fff;
+    }
+
+    /* Long-Press Bottom Action Sheet (Pin / Rename / Delete) */
+    .conv-sheet-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.65);
+      z-index: 1250;
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+    }
+    .conv-sheet-backdrop.open {
+      display: flex;
+    }
+    .conv-action-sheet {
+      width: 100%;
+      max-width: 520px;
+      background: #1e1f24;
+      border-top-left-radius: 22px;
+      border-top-right-radius: 22px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 12px 16px calc(18px + var(--safe-bottom));
+      box-shadow: 0 -10px 36px rgba(0, 0, 0, 0.7);
+      animation: slideUpSheet 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes slideUpSheet {
+      from { transform: translateY(100%); }
+      to { transform: translateY(0); }
+    }
+    .conv-sheet-handle {
+      width: 38px;
+      height: 4px;
+      border-radius: 99px;
+      background: rgba(255, 255, 255, 0.22);
+      margin: 0 auto 12px;
+    }
+    .conv-sheet-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+      padding: 0 6px 12px;
+      border-bottom: 1px solid var(--line);
+      margin-bottom: 8px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .conv-sheet-btn {
+      width: 100%;
+      min-height: 48px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 10px 12px;
+      background: transparent;
+      border: none;
+      border-radius: 12px;
+      color: var(--text);
+      font-size: 15px;
+      font-weight: 500;
+      text-align: left;
+      cursor: pointer;
+    }
+    .conv-sheet-btn:active {
+      background: rgba(255, 255, 255, 0.08);
+    }
+    .conv-sheet-btn.danger {
+      color: #f87171;
+    }
+    .conv-sheet-btn svg {
+      width: 20px;
+      height: 20px;
+      flex-shrink: 0;
+    }
+    .conv-rename-box {
+      display: none;
+      flex-direction: column;
+      gap: 10px;
+      padding: 8px 4px;
+    }
+    .conv-rename-box.open {
+      display: flex;
+    }
+    .conv-rename-input {
+      width: 100%;
+      background: #131418;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      border-radius: 12px;
+      padding: 12px 14px;
+      color: #fff;
+      font-size: 16px;
+      outline: none;
+    }
+    .conv-rename-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+    }
+
+    /* Full-Screen Mobile Settings View */
+    .gemini-settings-view {
+      display: none;
+      flex-direction: column;
+      position: fixed;
+      inset: 0;
+      background: var(--bg);
+      z-index: 1200;
+      padding-top: var(--safe-top);
+      padding-bottom: var(--safe-bottom);
+    }
+    .gemini-settings-view.open {
+      display: flex !important;
+    }
+    .settings-scroll-body {
+      flex: 1;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .settings-card {
+      background: var(--card-bg);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .settings-card h3 {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .settings-card p.sub {
+      font-size: 12.5px;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+    .settings-field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .settings-field span {
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--text-muted);
+      letter-spacing: 0.03em;
+    }
+    .settings-input, .settings-select {
+      width: 100%;
+      min-height: 44px;
+      background: rgba(0, 0, 0, 0.25);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 10px 12px;
+      color: var(--text);
+      font-size: 16px;
+      font-family: inherit;
+      outline: none;
+    }
+    .settings-btn-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .settings-btn {
+      min-height: 44px;
+      padding: 10px 16px;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .settings-btn.primary {
+      background: var(--accent-blue);
+      border-color: var(--accent-blue);
+      color: #fff;
+    }
+    .settings-btn.danger {
+      background: rgba(239, 68, 68, 0.14);
+      border-color: rgba(239, 68, 68, 0.35);
+      color: #f87171;
+    }
+    .theme-pills {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .theme-pill-btn {
+      min-height: 44px;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--text);
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+    }
+    .theme-pill-btn.active {
+      border-color: var(--accent-blue);
+      background: rgba(27, 114, 232, 0.18);
+    }
+    .qr-preview-box {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      padding: 12px;
+      background: rgba(0, 0, 0, 0.25);
+      border-radius: 12px;
+      text-align: center;
+    }
+    .qr-preview-box.open {
+      display: flex;
+    }
+    .qr-preview-box img {
+      width: 160px;
+      height: 160px;
+      border-radius: 10px;
+      background: #fff;
+      padding: 6px;
+    }
+
+    /* Drawer Footer User Card (Screen 2) */
+    .drawer-footer-user {
+      padding: 12px 16px;
+      border-top: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      background: #0e0e10;
+    }
+    .drawer-user-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex: 1;
+      min-width: 0;
+    }
+    .drawer-user-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      overflow: hidden;
+      border: 2px solid #9b72cb;
+      flex-shrink: 0;
+    }
+    .drawer-user-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .drawer-user-text {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .drawer-user-name {
+      font-size: 13.5px;
+      font-weight: 600;
+      color: #fff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .drawer-user-badge {
+      font-size: 10.5px;
+      font-weight: 700;
+      color: #a5b4fc;
+      letter-spacing: 0.05em;
+    }
+
+    /* ===== 7. POPOVER MENUS (Screen 4 & 5) ===== */
+    .gemini-popover {
+      position: fixed;
+      background: #1e1f24;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 18px;
+      padding: 8px;
+      z-index: 1200;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7);
+      display: none;
+      flex-direction: column;
+      min-width: 240px;
+      max-width: 90vw;
+      animation: popIn 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes popIn {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    .gemini-popover.show {
+      display: flex !important;
+    }
+    .popover-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      background: transparent;
+      border: none;
+      color: var(--text);
+      font-size: 14px;
+      cursor: pointer;
+      text-align: left;
+    }
+    .popover-item:active {
+      background: rgba(255, 255, 255, 0.08);
+    }
+    .popover-item.danger {
+      color: #ef4444;
+    }
+    .popover-item svg {
+      width: 18px;
+      height: 18px;
+      color: var(--text-muted);
+    }
+    .popover-item.danger svg {
+      color: #ef4444;
+    }
+    .popover-divider {
+      height: 1px;
+      background: rgba(255, 255, 255, 0.08);
+      margin: 6px 0;
+    }
+
+    /* Model popover item with subtext */
+    .popover-model-btn {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      padding: 10px 14px;
+      border-radius: 12px;
+      background: transparent;
+      border: none;
+      color: #fff;
+      cursor: pointer;
+      text-align: left;
+    }
+    .popover-model-btn:active, .popover-model-btn.active {
+      background: rgba(255, 255, 255, 0.08);
+    }
+    .popover-model-title {
+      font-size: 13.5px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .popover-model-sub {
+      font-size: 11.5px;
+      color: var(--text-muted);
+    }
+
+    /* Modal Backdrop */
+    .popover-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 1150;
+      display: none;
+    }
+    .popover-backdrop.show {
+      display: block;
+    }
+
+    /* ===== 8. MEDIA LIBRARY VIEW (Full-Screen Mobile) ===== */
+    .gemini-library-view {
+      display: none;
+      flex-direction: column;
+      height: 100%;
+      background: var(--bg);
+      position: absolute;
+      inset: 0;
+      z-index: 200;
+      padding-top: var(--safe-top);
+      padding-bottom: var(--safe-bottom);
+    }
+    .gemini-library-view.open {
+      display: flex !important;
+    }
+    .library-header-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--line);
+    }
+    .library-grid-2col {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      padding: 14px;
+      overflow-y: auto;
+      flex: 1;
+    }
+    .library-card-mobile {
+      background: #15161b;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 14px;
+      overflow: hidden;
+      aspect-ratio: 1/1;
+      position: relative;
+      cursor: pointer;
+    }
+    .library-card-mobile img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .library-card-mobile .badge {
+      position: absolute;
+      bottom: 8px;
+      left: 8px;
+      right: 8px;
+      padding: 4px 8px;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(4px);
+      border-radius: 6px;
+      font-size: 11px;
+      color: #fff;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    /* ===== 9. QUICK IMAGE RATIO/FORMAT & WEEKLY LORE RADAR ===== */
+    .omnibar-ratio-pill {
+      height: 30px;
+      padding: 0 9px;
+      border-radius: 15px;
+      background: rgba(155, 114, 203, 0.16);
+      border: 1px solid rgba(155, 114, 203, 0.35);
+      color: #e9d5ff;
+      font-size: 11.5px;
+      font-weight: 600;
+      white-space: nowrap;
+      flex-shrink: 0;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    body[data-theme="light"] .omnibar-ratio-pill {
+      background: rgba(124, 58, 237, 0.1);
+      color: #6d28d9;
+      border-color: rgba(124, 58, 237, 0.3);
+    }
+    .omnibar-ratio-pill:active {
+      transform: scale(0.95);
+    }
+    .img-opts-section-lbl {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-muted);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      margin: 6px 4px 6px;
+    }
+    .img-opts-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+      padding: 0 4px 6px;
+    }
+    .img-opts-grid.cols-3 {
+      grid-template-columns: repeat(3, 1fr);
+    }
+    .img-opt-btn {
+      min-height: 38px;
+      padding: 6px 8px;
+      border-radius: 10px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text);
+      font-size: 12.5px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1px;
+    }
+    .img-opt-btn small {
+      font-size: 9.5px;
+      font-weight: 400;
+      color: var(--text-muted);
+    }
+    .img-opt-btn.active {
+      background: rgba(27, 114, 232, 0.22);
+      border-color: var(--accent-blue);
+      color: #93c5fd;
+    }
+    body[data-theme="light"] .img-opt-btn.active {
+      color: #1d4ed8;
+    }
+
+    /* Full-Screen Weekly Lore Radar View */
+    .gemini-radar-view {
+      display: none;
+      flex-direction: column;
+      position: fixed;
+      inset: 0;
+      background: var(--bg);
+      z-index: 1100;
+      padding-top: var(--safe-top);
+      padding-bottom: var(--safe-bottom);
+    }
+    .gemini-radar-view.open {
+      display: flex !important;
+    }
+    .radar-toolbar {
+      padding: 10px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      border-bottom: 1px solid var(--line);
+    }
+    .radar-search-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .radar-search-input {
+      flex: 1;
+      min-height: 40px;
+      background: var(--card-bg);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 8px 12px;
+      color: var(--text);
+      font-size: 15px;
+      outline: none;
+    }
+    .radar-filter-pills {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding-bottom: 2px;
+    }
+    .radar-filter-pill {
+      padding: 6px 12px;
+      border-radius: 16px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--text-muted);
+      font-size: 12.5px;
+      font-weight: 600;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .radar-filter-pill.active {
+      background: rgba(155, 114, 203, 0.22);
+      border-color: var(--accent-purple);
+      color: #e9d5ff;
+    }
+    body[data-theme="light"] .radar-filter-pill.active {
+      color: #6d28d9;
+    }
+    .radar-list-body {
+      flex: 1;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .radar-summary-banner {
+      background: linear-gradient(135deg, rgba(27, 114, 232, 0.14), rgba(155, 114, 203, 0.14));
+      border: 1px solid rgba(155, 114, 203, 0.3);
+      border-radius: 14px;
+      padding: 12px 14px;
+      font-size: 13px;
+      color: var(--text);
+      line-height: 1.45;
+    }
+    .radar-card {
+      background: var(--card-bg);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .radar-card-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 8px;
+    }
+    .radar-card-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .radar-card-sub {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+    .radar-badge {
+      padding: 3px 8px;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 600;
+      background: rgba(27, 114, 232, 0.18);
+      color: #93c5fd;
+      white-space: nowrap;
+    }
+    body[data-theme="light"] .radar-badge {
+      color: #1d4ed8;
+    }
+    .radar-card-desc {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.45;
+    }
+    .radar-card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-top: 4px;
+    }
+    .radar-draw-btn {
+      padding: 7px 14px;
+      border-radius: 10px;
+      border: none;
+      background: linear-gradient(135deg, #7c3aed, #2563eb);
+      color: #fff;
+      font-size: 12.5px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+<div class="mobile-app">
+
+  <!-- ===== 1. HEADER ===== -->
+  <header class="gemini-header">
+    <button class="gemini-icon-btn sidebar-toggle-btn" id="btn-open-drawer" aria-label="Mở Menu">
+      <!-- 2-bar clean hamburger as seen in Gemini -->
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/></svg>
+    </button>
+
+    <!-- Model/Agent Selector Pill -->
+    <button class="model-selector-pill gemini-agent-pill topbar-model-badge" id="btn-model-pill" aria-label="Chọn tác nhân">
+      <span id="header-model-name">AI Office · Điều phối chính</span>
+      <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+    </button>
+
+    <div class="header-right">
+      <button class="gemini-icon-btn gemini-new-chat-btn" id="btn-new-chat-top" title="Cuộc trò chuyện mới" aria-label="Cuộc trò chuyện mới">
+        <!-- Pen icon from Gemini -->
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+      </button>
+
+      <button class="gemini-icon-btn" id="btn-chat-menu" title="Tùy chọn cuộc trò chuyện" aria-label="Tùy chọn cuộc trò chuyện" style="display:none;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+      </button>
+
+      <div class="user-avatar-btn gemini-avatar mob-topbar-avatar" id="btn-header-avatar" title="Tài khoản Shiro Chan">
+        <img src="/api/chat/images/chat_20261124_203955_0642d4f1.png" onerror="this.src='/assets/ai-office-icon.png'" alt="Shiro Chan">
+      </div>
+    </div>
+  </header>
+
+  <!-- ===== 2. MAIN SCROLL BODY ===== -->
+  <main class="gemini-scroll-body" id="gemini-scroll-body">
+    <!-- Home Empty State -->
+    <div class="gemini-home-hero" id="gemini-home-hero">
+      <div class="gemini-sparkle-star" title="AI Office">
+        <img src="/assets/ai-office-icon.png" class="aioffice-home-logo" alt="AI Office">
+      </div>
+      <h1 class="gemini-greeting">Sẵn sàng khi bạn muốn</h1>
+      <div class="gemini-mode-pills">
+        <button class="gemini-mode-pill active" id="pill-mode-chat">Chat</button>
+        <button class="gemini-mode-pill" id="pill-mode-task">Nhiệm vụ</button>
+        <button class="gemini-mode-pill" id="pill-mode-radar">📡 Lore Radar</button>
+      </div>
+    </div>
+
+    <!-- Active Chat Messages Feed -->
+    <div class="gemini-chat-feed" id="gemini-chat-feed" style="display:none;"></div>
+  </main>
+
+  <!-- ===== 3. FLOATING CAPSULE OMNIBAR ===== -->
+  <div class="gemini-floating-bar-wrap">
+    <div class="mobile-attach-strip" id="mobile-attach-strip"></div>
+    <div class="gemini-omnibar">
+      <button class="omnibar-attach-btn omni-attach-btn" id="btn-attach" title="Đính kèm ảnh hoặc tệp" aria-label="Đính kèm ảnh">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </button>
+
+      <textarea class="omnibar-input" id="chatinput" placeholder="Hỏi AI Office..." rows="1" inputmode="text" enterkeyhint="send"></textarea>
+
+      <button type="button" class="omnibar-ratio-pill" id="btn-img-opts" title="Tỉ lệ khung hình &amp; Định dạng ảnh">3:4 · PNG</button>
+
+      <button class="omnibar-send-btn" id="sendbtn" title="Gửi tin nhắn" aria-label="Gửi tin nhắn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
+      </button>
+    </div>
+  </div>
+  <input type="file" id="chat-file-input" accept="image/*,.txt,.py,.md,.json,.csv,.html,.css,.js,.ts,.sql,.yaml,.yml,.log" multiple hidden>
+
+  <!-- ===== 4. SIDEBAR DRAWER ===== -->
+  <div class="gemini-drawer-overlay" id="gemini-drawer-overlay"></div>
+  <aside class="gemini-drawer" id="mobile-drawer">
+    <div class="drawer-top-bar">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <img src="/assets/ai-office-icon.png" style="width:24px;height:24px;object-fit:contain;" alt="AI Office">
+        <span class="drawer-brand-title">AI Office</span>
+      </div>
+      <div class="drawer-top-actions">
+        <button class="gemini-icon-btn" id="btn-drawer-search" aria-label="Tìm kiếm">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        </button>
+        <button class="gemini-icon-btn" id="btn-close-drawer" aria-label="Đóng">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="drawer-search-wrap" id="drawer-search-wrap">
+      <input type="search" class="drawer-search-input" id="drawer-search-input" placeholder="Tìm cuộc trò chuyện...">
+    </div>
+
+    <!-- Large New Chat Pill -->
+    <button class="drawer-new-chat-pill gemini-new-chat-pill drawer-new-chat" id="btn-drawer-new-chat">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+      <span>Cuộc trò chuyện mới</span>
+    </button>
+
+    <!-- Nav List -->
+    <nav class="drawer-nav-list">
+      <button class="drawer-nav-item" id="btn-drawer-library" data-drawer-view="library">
+        <!-- Grid icon from Gemini -->
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></svg>
+        <span>Thư viện</span>
+      </button>
+      <button class="drawer-nav-item" id="btn-drawer-radar" data-drawer-view="radar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="2"/><path d="M16.24 7.76a6 6 0 0 1 0 8.49m-8.48-.01a6 6 0 0 1 0-8.49m11.31-2.82a10 10 0 0 1 0 14.14m-14.14 0a10 10 0 0 1 0-14.14"/></svg>
+        <span>Weekly Lore Radar</span>
+      </button>
+      <button class="drawer-nav-item" id="btn-drawer-studio">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+        <span>Studio Sáng tạo</span>
+      </button>
+      <button class="drawer-nav-item" id="btn-drawer-workspace">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+        <span>Không gian làm việc</span>
+      </button>
+      <button class="drawer-nav-item" id="btn-drawer-settings" data-drawer-view="settings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9c.25.6.83.99 1.51 1H21a2 2 0 1 1 0 4h-.09c-.68.01-1.26.4-1.51 1z"/></svg>
+        <span>Cài đặt</span>
+      </button>
+      <button class="drawer-nav-item" id="btn-drawer-desktop-mode">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+        <span>Giao diện Máy tính (PC)</span>
+      </button>
+    </nav>
+
+    <!-- Recent History Section -->
+    <div class="drawer-section-heading">
+      <span>TẤT CẢ</span>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+    </div>
+    <div class="drawer-conv-scroll" id="drawer-conv-list">
+      <div style="padding:14px;color:var(--text-dim);font-size:13px;">Đang tải lịch sử...</div>
+    </div>
+
+    <!-- User Profile Footer -->
+    <div class="drawer-footer-user gemini-drawer-user-card drawer-user-card">
+      <div class="drawer-user-info" id="btn-drawer-profile" style="cursor:pointer;" title="Chỉnh sửa hồ sơ">
+        <div class="drawer-user-avatar">
+          <img id="drawer-user-avatar-img" src="/api/chat/images/chat_20261124_203955_0642d4f1.png" onerror="this.src='/assets/ai-office-icon.png'" alt="Shiro Chan">
+        </div>
+        <div class="drawer-user-text">
+          <span class="drawer-user-name" id="drawer-user-name-text">Shiro Chan</span>
+          <span class="drawer-user-badge">PRO · CỤC BỘ</span>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:2px;">
+        <button class="gemini-icon-btn" id="btn-footer-settings" title="Cài đặt hệ thống" aria-label="Cài đặt hệ thống">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9c.25.6.83.99 1.51 1H21a2 2 0 1 1 0 4h-.09c-.68.01-1.26.4-1.51 1z"/></svg>
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ===== 5. POPOVER MENUS ===== -->
+  <div class="popover-backdrop" id="popover-backdrop"></div>
+
+  <!-- Agent/Model Selector Dropdown (Screen 5) -->
+  <div class="gemini-popover" id="popover-model" style="top:60px;left:50%;transform:translateX(-50%);">
+    <button class="popover-model-btn active" data-agent="CEO">
+      <div class="popover-model-title">✓ Điều phối chính (CEO)</div>
+      <div class="popover-model-sub">Trợ giúp hằng ngày · Tối giản cục bộ</div>
+    </button>
+    <button class="popover-model-btn" data-agent="Vision">
+      <div class="popover-model-title">Nhận diện ảnh (Vision)</div>
+      <div class="popover-model-sub">Phân tích thị giác Qwen 4B</div>
+    </button>
+    <button class="popover-model-btn" data-agent="Developer">
+      <div class="popover-model-title">Lập trình viên (Developer)</div>
+      <div class="popover-model-sub">Viết và xử lý mã nguồn</div>
+    </button>
+    <button class="popover-model-btn" data-agent="Writer">
+      <div class="popover-model-title">Biên soạn nội dung (Writer)</div>
+      <div class="popover-model-sub">Viết kịch bản & truyện tranh</div>
+    </button>
+    <button class="popover-model-btn" data-agent="QA">
+      <div class="popover-model-title">Kiểm thử chất lượng (QA)</div>
+      <div class="popover-model-sub">Giám định & đánh giá logic</div>
+    </button>
+  </div>
+
+  <!-- Chat Options Dropdown (Screen 4) -->
+  <div class="gemini-popover" id="popover-chat-options" style="top:60px;right:16px;">
+    <button class="popover-item" id="opt-share-chat">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+      <span>Chia sẻ cuộc trò chuyện</span>
+    </button>
+    <button class="popover-item" id="opt-pin-chat">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z"/></svg>
+      <span id="opt-pin-label">Ghim</span>
+    </button>
+    <button class="popover-item" id="opt-rename-chat">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+      <span>Đổi tên</span>
+    </button>
+    <div class="popover-divider"></div>
+    <button class="popover-item danger" id="opt-delete-chat">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+      <span>Xoá cuộc trò chuyện</span>
+    </button>
+  </div>
+
+  <!-- Image Ratio & Format Popover -->
+  <div class="gemini-popover" id="popover-img-options" style="bottom:82px;right:16px;min-width:280px;">
+    <div class="img-opts-section-lbl">📐 Tỉ lệ khung hình</div>
+    <div class="img-opts-grid">
+      <button type="button" class="img-opt-btn" data-img-ratio="1:1">1:1<small>Vuông</small></button>
+      <button type="button" class="img-opt-btn active" data-img-ratio="3:4">3:4<small>Chân dung</small></button>
+      <button type="button" class="img-opt-btn" data-img-ratio="16:9">16:9<small>Ngang</small></button>
+      <button type="button" class="img-opt-btn" data-img-ratio="9:16">9:16<small>Dọc 9:16</small></button>
+    </div>
+    <div class="img-opts-section-lbl">🖼️ Định dạng xuất</div>
+    <div class="img-opts-grid cols-3">
+      <button type="button" class="img-opt-btn active" data-img-format="PNG">PNG</button>
+      <button type="button" class="img-opt-btn" data-img-format="WEBP">WEBP</button>
+      <button type="button" class="img-opt-btn" data-img-format="JPEG">JPEG</button>
+    </div>
+  </div>
+
+  <!-- ===== 6. FULL-SCREEN MOBILE LIBRARY VIEW ===== -->
+  <div class="gemini-library-view" id="page-library">
+    <div class="library-header-bar">
+      <strong style="font-size:17px;color:#fff;">📁 Thư viện Tệp & Ảnh</strong>
+      <div style="display:flex;align-items:center;gap:6px;">
+        <button type="button" class="settings-btn" id="btn-lib-select-mode" style="font-size:12px;padding:5px 10px;">☑ Chọn</button>
+        <button type="button" class="settings-btn danger" id="btn-lib-delete-selected" style="font-size:12px;padding:5px 10px;display:none;">🗑️ Xóa (0)</button>
+        <button class="gemini-icon-btn" id="btn-close-library" aria-label="Đóng thư viện">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="library-grid-2col" id="mobile-library-grid">
+      <div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text-dim);">Đang nạp ảnh...</div>
+    </div>
+  </div>
+
+  <!-- ===== 6B. FULL-SCREEN WEEKLY LORE RADAR VIEW ===== -->
+  <div class="gemini-radar-view" id="page-radar">
+    <div class="library-header-bar">
+      <strong style="font-size:17px;color:var(--text);">📡 Weekly Lore Radar</strong>
+      <div style="display:flex;align-items:center;gap:6px;">
+        <button type="button" class="settings-btn" id="btn-radar-scan" style="min-height:36px;padding:6px 12px;font-size:12.5px;">🔄 Quét mới</button>
+        <button class="gemini-icon-btn" id="btn-close-radar" aria-label="Đóng Lore Radar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="radar-toolbar">
+      <div class="radar-search-row">
+        <input type="search" class="radar-search-input" id="radar-search-input" placeholder="Tìm nhân vật Genshin, trang phục, anime...">
+      </div>
+      <div class="radar-filter-pills">
+        <button type="button" class="radar-filter-pill active" data-radar-cat="all">Tất cả</button>
+        <button type="button" class="radar-filter-pill" data-radar-cat="character">Nhân vật Genshin</button>
+        <button type="button" class="radar-filter-pill" data-radar-cat="outfit">Trang phục / Skin</button>
+        <button type="button" class="radar-filter-pill" data-radar-cat="anime">Anime mới</button>
+      </div>
+    </div>
+    <div class="radar-list-body" id="mobile-radar-list">
+      <div style="text-align:center;padding:40px;color:var(--text-dim);">Đang nạp Weekly Lore Radar...</div>
+    </div>
+  </div>
+
+  <!-- ===== 7. FULL-SCREEN MOBILE SETTINGS VIEW ===== -->
+  <div class="gemini-settings-view" id="page-settings">
+    <div class="library-header-bar">
+      <strong style="font-size:17px;color:var(--text);">⚙️ Cài đặt AI Office</strong>
+      <button class="gemini-icon-btn" id="btn-close-settings" aria-label="Đóng cài đặt">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="settings-scroll-body">
+      <!-- Quản lý Người dùng -->
+      <div class="settings-card">
+        <h3>👤 Quản lý người dùng</h3>
+        <p class="sub">Tùy biến tên hiển thị và ảnh đại diện trên thiết bị này.</p>
+        <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;">
+          <div style="width:56px;height:56px;border-radius:50%;overflow:hidden;border:2px solid #9b72cb;background:#25262b;flex-shrink:0;">
+            <img id="mob-profile-avatar-preview" src="/api/chat/images/chat_20261124_203955_0642d4f1.png" style="width:100%;height:100%;object-fit:cover;">
+          </div>
+          <div style="flex:1;">
+            <button type="button" class="settings-btn" id="mob-btn-upload-avatar">📸 Đổi ảnh đại diện</button>
+            <input type="file" id="mob-file-avatar" accept="image/*" style="display:none;">
+          </div>
+        </div>
+        <label class="settings-field">
+          <span>TÊN NGƯỜI DÙNG (USERNAME)</span>
+          <input class="settings-input" id="mob-user-username" value="Shiro Chan">
+        </label>
+        <label class="settings-field">
+          <span>BIỆT DANH THÂN MẬT (NICKNAME)</span>
+          <input class="settings-input" id="mob-user-nickname" value="Shiro">
+        </label>
+      </div>
+
+      <!-- Cài đặt Chung & Hình tham chiếu -->
+      <div class="settings-card">
+        <h3>🎨 Cài đặt chung & Hình tham chiếu</h3>
+        <p class="sub">Ảnh tham chiếu cố định khuôn mặt và tỷ lệ chiều cao toàn thân khi tạo ảnh.</p>
+        <label class="settings-field">
+          <span>GIAO DIỆN CHỦ ĐỀ</span>
+          <div class="theme-pills" style="margin-top:6px;">
+            <button type="button" class="theme-pill-btn active" id="mob-theme-dark" data-mob-theme="dark">🌙 Tối (Mặc định)</button>
+            <button type="button" class="theme-pill-btn" id="mob-theme-light" data-mob-theme="light">☀️ Sáng</button>
+          </div>
+        </label>
+
+        <div style="margin-top:14px;display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <!-- Face Anchor -->
+          <div style="background:rgba(255,255,255,0.03);border:1px dashed rgba(168,85,247,0.35);border-radius:12px;padding:12px;text-align:center;">
+            <div style="font-size:12px;font-weight:600;margin-bottom:8px;color:#c084fc;letter-spacing:0.3px;">ẢNH KHUÔN MẶT</div>
+            <div style="width:100%;height:100px;border-radius:8px;background:rgba(0,0,0,0.4);overflow:hidden;margin-bottom:10px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,0.05);">
+              <img id="mob-face-ref-preview" style="max-width:100%;max-height:100%;object-fit:cover;display:none;">
+              <span id="mob-face-ref-empty" style="font-size:12px;color:var(--text-dim);">Chưa có</span>
+            </div>
+            <button type="button" class="settings-btn" id="mob-btn-upload-face" style="font-size:12px;padding:6px 10px;width:100%;">📸 Chọn ảnh mặt</button>
+            <input type="file" id="mob-file-face" accept="image/*" style="display:none;">
+          </div>
+          <!-- Body Anchor -->
+          <div style="background:rgba(255,255,255,0.03);border:1px dashed rgba(168,85,247,0.35);border-radius:12px;padding:12px;text-align:center;">
+            <div style="font-size:12px;font-weight:600;margin-bottom:8px;color:#c084fc;letter-spacing:0.3px;">ẢNH TOÀN THÂN</div>
+            <div style="width:100%;height:100px;border-radius:8px;background:rgba(0,0,0,0.4);overflow:hidden;margin-bottom:10px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,0.05);">
+              <img id="mob-body-ref-preview" style="max-width:100%;max-height:100%;object-fit:cover;display:none;">
+              <span id="mob-body-ref-empty" style="font-size:12px;color:var(--text-dim);">Chưa có</span>
+            </div>
+            <button type="button" class="settings-btn" id="mob-btn-upload-body" style="font-size:12px;padding:6px 10px;width:100%;">🧍 Chọn ảnh dáng</button>
+            <input type="file" id="mob-file-body" accept="image/*" style="display:none;">
+          </div>
+        </div>
+        <div class="settings-btn-row" style="margin-top:16px;">
+          <button type="button" class="settings-btn primary" id="mob-btn-save-profile" style="background:linear-gradient(135deg, #7c3aed, #2563eb);border:none;font-weight:600;padding:10px 18px;border-radius:20px;box-shadow:0 2px 10px rgba(124,58,237,0.3);">✨ Lưu hồ sơ &amp; Hình mẫu</button>
+        </div>
+        <div id="mob-profile-msg" style="font-size:13px;color:var(--text-muted);margin-top:4px;"></div>
+      </div>
+
+      <!-- Tùy chọn Tỉ lệ & Định dạng tạo ảnh -->
+      <div class="settings-card">
+        <h3>📐 Tỉ lệ &amp; Định dạng tạo ảnh</h3>
+        <p class="sub">Áp dụng mặc định cho các yêu cầu vẽ/tạo ảnh ComfyUI từ khung chat.</p>
+        <div class="img-opts-section-lbl">Tỉ lệ khung hình</div>
+        <div class="img-opts-grid">
+          <button type="button" class="img-opt-btn" data-img-ratio="1:1">1:1<small>1024²</small></button>
+          <button type="button" class="img-opt-btn active" data-img-ratio="3:4">3:4<small>768×1024</small></button>
+          <button type="button" class="img-opt-btn" data-img-ratio="16:9">16:9<small>1344×768</small></button>
+          <button type="button" class="img-opt-btn" data-img-ratio="9:16">9:16<small>768×1344</small></button>
+        </div>
+        <div class="img-opts-section-lbl">Định dạng file</div>
+        <div class="img-opts-grid cols-3">
+          <button type="button" class="img-opt-btn active" data-img-format="PNG">PNG</button>
+          <button type="button" class="img-opt-btn" data-img-format="WEBP">WEBP</button>
+          <button type="button" class="img-opt-btn" data-img-format="JPEG">JPEG</button>
+        </div>
+      </div>
+
+      <form class="settings-card" id="mob-model-form">
+        <h3>Mô hình AI &amp; Bộ nhớ ngữ cảnh</h3>
+        <p class="sub">Chạy 100% cục bộ bằng Ollama hoặc bật Cloud API để suy luận nhanh và viết dài hơn.</p>
+        <label class="settings-field">
+          <span>NGUỒN SUY LUẬN</span>
+          <select class="settings-select" id="mob-cfg-provider">
+            <option value="local">Local · Ollama (Mặc định)</option>
+            <option value="cloud">Cloud API (OpenAI-compatible)</option>
+          </select>
+        </label>
+        <label class="settings-field">
+          <span>MODEL OLLAMA LOCAL</span>
+          <input class="settings-input" id="mob-cfg-local-model" value="qwen3.5:4b">
+        </label>
+        <label class="settings-field">
+          <span>BỘ NHỚ NGỮ CẢNH LOCAL</span>
+          <select class="settings-select" id="mob-cfg-local-ctx">
+            <option value="2048">2.048 tokens (Tối giản)</option>
+            <option value="4096">4.096 tokens</option>
+            <option value="8192">8.192 tokens (Khuyên dùng)</option>
+            <option value="16384">16.384 tokens (Viết truyện dài)</option>
+          </select>
+        </label>
+        <label class="settings-field">
+          <span>CLOUD BASE URL</span>
+          <input class="settings-input" id="mob-cfg-cloud-url" placeholder="https://api.openai.com/v1">
+        </label>
+        <label class="settings-field">
+          <span>CLOUD MODEL</span>
+          <input class="settings-input" id="mob-cfg-cloud-model" placeholder="gpt-4o-mini">
+        </label>
+        <label class="settings-field">
+          <span>CLOUD API KEY <small id="mob-cfg-key-hint"></small></span>
+          <input class="settings-input" id="mob-cfg-cloud-key" type="password" autocomplete="off" placeholder="Để trống nếu giữ nguyên key cũ">
+        </label>
+        <div class="settings-btn-row">
+          <button type="submit" class="settings-btn primary">Lưu cấu hình</button>
+          <button type="button" class="settings-btn" id="mob-cfg-test">Kiểm tra kết nối</button>
+        </div>
+        <div id="mob-cfg-msg" style="font-size:13px;color:var(--text-muted);"></div>
+      </form>
+
+      <div class="settings-card">
+        <h3>Dữ liệu &amp; Điều hướng</h3>
+        <div class="settings-btn-row">
+          <button type="button" class="settings-btn" id="mob-settings-pc">💻 Giao diện PC</button>
+          <button type="button" class="settings-btn danger" id="mob-settings-clear-all">🗑️ Xóa toàn bộ lịch sử</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 8. LONG-PRESS CONVERSATION ACTION SHEET ===== -->
+  <div class="conv-sheet-backdrop" id="conv-sheet-backdrop">
+    <div class="conv-action-sheet" id="conv-action-sheet" role="dialog" aria-label="Tùy chọn hội thoại">
+      <div class="conv-sheet-handle"></div>
+      <div class="conv-sheet-title" id="conv-sheet-title">Cuộc trò chuyện</div>
+      <div id="conv-sheet-actions">
+        <button type="button" class="conv-sheet-btn" id="sheet-btn-pin">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z"/></svg>
+          <span id="sheet-pin-label">Ghim cuộc trò chuyện</span>
+        </button>
+        <button type="button" class="conv-sheet-btn" id="sheet-btn-rename">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+          <span>Đổi tên</span>
+        </button>
+        <button type="button" class="conv-sheet-btn danger" id="sheet-btn-delete">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+          <span>Xoá cuộc trò chuyện</span>
+        </button>
+      </div>
+      <div class="conv-rename-box" id="conv-rename-box">
+        <input type="text" class="conv-rename-input" id="conv-rename-input" placeholder="Nhập tên mới...">
+        <div class="conv-rename-actions">
+          <button type="button" class="settings-btn" id="conv-rename-cancel">Hủy</button>
+          <button type="button" class="settings-btn primary" id="conv-rename-save">Lưu tên</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- SCRIPT: CONTROLLER & API BINDINGS -->
+<script>
+(function() {
+  let currentConversationId = null;
+  let currentAgent = 'CEO';
+  let conversationsCache = [];
+  let pendingAttachments = [];
+  let activeAbortController = null;
+  let lastUserMessage = '';
+
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const sendIconSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>';
+  const stopIconSvg = '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>';
+
+  function renderMarkdownMobile(raw) {
+    let text = String(raw || '');
+    const codeBlocks = [];
+    text = text.replace(/```([\w-]*)\n([\s\S]*?)```/g, (_, lang, code) => {
+      const idx = codeBlocks.length;
+      codeBlocks.push(`<pre><code>${esc(code)}</code></pre>`);
+      return `\u0000CODEBLOCK_${idx}\u0000`;
+    });
+
+    let html = esc(text);
+    html = html.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (_, title, url) => `
+      <div class="gemini-image-card">
+        <div class="gemini-image-wrap">
+          <img src="${url}" alt="${title}" loading="lazy" />
+        </div>
+        <div class="gemini-image-footer">
+          <span class="gemini-image-title">🎨 ${title || 'Ảnh sáng tạo'}</span>
+          <a href="${url}" download class="gemini-image-btn">💾 Tải ảnh</a>
+        </div>
+      </div>
+    `);
+    html = html.replace(/^###\s+(.+)$/gm, '<h3>$1</h3>');
+    html = html.replace(/^##\s+(.+)$/gm, '<h2>$1</h2>');
+    html = html.replace(/^#\s+(.+)$/gm, '<h1>$1</h1>');
+    html = html.replace(/`([^`\n]+)`/g, '<code>$1</code>');
+    html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+    html = html.replace(/\*([^*\n]+)\*/g, '<em>$1</em>');
+    html = html.replace(/\n/g, '<br>');
+    html = html.replace(/\u0000CODEBLOCK_(\d+)\u0000/g, (_, i) => codeBlocks[Number(i)] || '');
+    return html;
+  }
+
+  // 1. Drawer Toggle & Search
+  const drawer = $('mobile-drawer') || $('gemini-drawer');
+  const overlay = $('gemini-drawer-overlay');
+  function openDrawer() {
+    refreshConversations();
+    drawer.classList.add('open');
+    overlay.classList.add('open');
+  }
+  function closeDrawer() {
+    drawer.classList.remove('open');
+    overlay.classList.remove('open');
+  }
+  $('btn-open-drawer').onclick = openDrawer;
+  $('btn-close-drawer').onclick = closeDrawer;
+  overlay.onclick = closeDrawer;
+
+  $('btn-drawer-search').onclick = () => {
+    const wrap = $('drawer-search-wrap');
+    wrap.classList.toggle('open');
+    if (wrap.classList.contains('open')) {
+      $('drawer-search-input').focus();
+    } else {
+      $('drawer-search-input').value = '';
+      renderDrawerConversations();
+    }
+  };
+  $('drawer-search-input').oninput = () => renderDrawerConversations();
+
+  let touchStartX = 0;
+  drawer.ontouchstart = e => { touchStartX = e.touches[0].clientX; };
+  drawer.ontouchend = e => {
+    if (touchStartX - e.changedTouches[0].clientX > 50) closeDrawer();
+  };
+
+  // 2. Popovers Toggle & Quick Image Options
+  const popoverBackdrop = $('popover-backdrop');
+  const popoverModel = $('popover-model');
+  const popoverChat = $('popover-chat-options');
+  const popoverImgOpts = $('popover-img-options');
+
+  let selectedAspectRatio = localStorage.getItem('ai-office-img-ratio') || '3:4';
+  let selectedOutputFormat = localStorage.getItem('ai-office-img-format') || 'PNG';
+
+  function syncImageOptionUI() {
+    const pill = $('btn-img-opts');
+    if (pill) pill.textContent = `${selectedAspectRatio} · ${selectedOutputFormat}`;
+    document.querySelectorAll('[data-img-ratio]').forEach(b => {
+      b.classList.toggle('active', b.dataset.imgRatio === selectedAspectRatio);
+    });
+    document.querySelectorAll('[data-img-format]').forEach(b => {
+      b.classList.toggle('active', b.dataset.imgFormat === selectedOutputFormat);
+    });
+  }
+  syncImageOptionUI();
+
+  document.querySelectorAll('[data-img-ratio]').forEach(btn => {
+    btn.onclick = () => {
+      selectedAspectRatio = btn.dataset.imgRatio || '3:4';
+      localStorage.setItem('ai-office-img-ratio', selectedAspectRatio);
+      syncImageOptionUI();
+    };
+  });
+  document.querySelectorAll('[data-img-format]').forEach(btn => {
+    btn.onclick = () => {
+      selectedOutputFormat = btn.dataset.imgFormat || 'PNG';
+      localStorage.setItem('ai-office-img-format', selectedOutputFormat);
+      syncImageOptionUI();
+    };
+  });
+
+  function closeAllPopovers() {
+    popoverModel.classList.remove('show');
+    popoverChat.classList.remove('show');
+    if (popoverImgOpts) popoverImgOpts.classList.remove('show');
+    popoverBackdrop.classList.remove('show');
+  }
+  popoverBackdrop.onclick = closeAllPopovers;
+
+  if ($('btn-img-opts')) {
+    $('btn-img-opts').onclick = (e) => {
+      e.stopPropagation();
+      const isShowing = popoverImgOpts.classList.contains('show');
+      closeAllPopovers();
+      if (!isShowing) {
+        popoverImgOpts.classList.add('show');
+        popoverBackdrop.classList.add('show');
+      }
+    };
+  }
+
+  $('btn-model-pill').onclick = (e) => {
+    e.stopPropagation();
+    const isShowing = popoverModel.classList.contains('show');
+    closeAllPopovers();
+    if (!isShowing) {
+      popoverModel.classList.add('show');
+      popoverBackdrop.classList.add('show');
+    }
+  };
+
+  $('btn-chat-menu').onclick = (e) => {
+    e.stopPropagation();
+    const isShowing = popoverChat.classList.contains('show');
+    closeAllPopovers();
+    if (!isShowing) {
+      const curConv = (conversationsCache || []).find(c => c.id === currentConversationId);
+      const pinLbl = $('opt-pin-label');
+      if (pinLbl) pinLbl.textContent = curConv && curConv.pinned ? 'Bỏ ghim' : 'Ghim';
+      popoverChat.classList.add('show');
+      popoverBackdrop.classList.add('show');
+    }
+  };
+
+  document.querySelectorAll('.popover-model-btn').forEach(btn => {
+    btn.onclick = () => {
+      document.querySelectorAll('.popover-model-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentAgent = btn.dataset.agent;
+      const titles = {
+        'CEO': 'AI Office · Điều phối chính',
+        'Vision': 'AI Office · Nhận diện ảnh',
+        'Developer': 'AI Office · Lập trình viên',
+        'Writer': 'AI Office · Biên soạn nội dung',
+        'QA': 'AI Office · Kiểm thử QA'
+      };
+      $('header-model-name').textContent = titles[currentAgent] || 'AI Office';
+      closeAllPopovers();
+    };
+  });
+
+  // 3. New Chat, Conversation Manager, Long-Press Action Sheet & Chat Options
+  let activeSheetConv = null;
+  const sheetBackdrop = $('conv-sheet-backdrop');
+
+  function openConvActionSheet(conv, startInRename = false) {
+    if (!conv) return;
+    activeSheetConv = conv;
+    $('conv-sheet-title').textContent = conv.title || 'Cuộc trò chuyện mới';
+    $('sheet-pin-label').textContent = conv.pinned ? 'Bỏ ghim cuộc trò chuyện' : 'Ghim cuộc trò chuyện';
+    $('conv-sheet-actions').style.display = startInRename ? 'none' : 'block';
+    $('conv-rename-box').classList.toggle('open', startInRename);
+    $('conv-rename-input').value = conv.title || '';
+    sheetBackdrop.classList.add('open');
+    if (startInRename) setTimeout(() => $('conv-rename-input').focus(), 60);
+  }
+  function closeConvActionSheet() {
+    sheetBackdrop.classList.remove('open');
+    $('conv-rename-box').classList.remove('open');
+    $('conv-sheet-actions').style.display = 'block';
+    activeSheetConv = null;
+  }
+  sheetBackdrop.onclick = (e) => {
+    if (e.target === sheetBackdrop) closeConvActionSheet();
+  };
+
+  async function togglePinConversation(conv) {
+    if (!conv) return;
+    await fetch(`/api/conversations/${conv.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pinned: !conv.pinned })
+    });
+    await refreshConversations();
+  }
+
+  async function deleteConversationById(id) {
+    if (!id) return;
+    await fetch(`/api/conversations/${id}`, { method: 'DELETE' });
+    if (currentConversationId === id) {
+      await createNewChat();
+    }
+    await refreshConversations();
+  }
+
+  $('sheet-btn-pin').onclick = async () => {
+    const conv = activeSheetConv;
+    closeConvActionSheet();
+    await togglePinConversation(conv);
+  };
+  $('sheet-btn-rename').onclick = () => {
+    if (!activeSheetConv) return;
+    $('conv-sheet-actions').style.display = 'none';
+    $('conv-rename-box').classList.add('open');
+    $('conv-rename-input').value = activeSheetConv.title || '';
+    setTimeout(() => $('conv-rename-input').focus(), 50);
+  };
+  $('conv-rename-cancel').onclick = () => {
+    $('conv-rename-box').classList.remove('open');
+    $('conv-sheet-actions').style.display = 'block';
+  };
+  $('conv-rename-save').onclick = async () => {
+    const conv = activeSheetConv;
+    const nextTitle = ($('conv-rename-input').value || '').trim();
+    if (!conv || !nextTitle) return;
+    closeConvActionSheet();
+    await fetch(`/api/conversations/${conv.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title: nextTitle })
+    });
+    await refreshConversations();
+  };
+  $('sheet-btn-delete').onclick = async () => {
+    const conv = activeSheetConv;
+    if (!conv) return;
+    if (!confirm(`Xoá cuộc trò chuyện "${conv.title || 'Cuộc trò chuyện mới'}"?`)) return;
+    closeConvActionSheet();
+    await deleteConversationById(conv.id);
+  };
+
+  async function createNewChat() {
+    if (activeAbortController) activeAbortController.abort();
+    closeDrawer();
+    closeAllPopovers();
+    currentConversationId = null;
+    lastUserMessage = '';
+    $('gemini-chat-feed').innerHTML = '';
+    $('gemini-chat-feed').style.display = 'none';
+    $('gemini-home-hero').style.display = 'flex';
+    $('btn-chat-menu').style.display = 'none';
+    $('chatinput').value = '';
+    $('chatinput').style.height = 'auto';
+    $('chatinput').focus();
+  }
+  $('btn-new-chat-top').onclick = createNewChat;
+  $('btn-drawer-new-chat').onclick = createNewChat;
+
+  function renderDrawerConversations() {
+    const listEl = $('drawer-conv-list');
+    const q = ($('drawer-search-input')?.value || '').trim().toLowerCase();
+    const items = (conversationsCache || []).filter(c => !q || String(c.title || '').toLowerCase().includes(q));
+    if (items.length === 0) {
+      listEl.innerHTML = `<div style="padding:14px;color:var(--text-dim);font-size:13px;">${q ? 'Không tìm thấy hội thoại phù hợp' : 'Chưa có hội thoại nào'}</div>`;
+      return;
+    }
+    listEl.innerHTML = '';
+    for (const conv of items) {
+      const item = document.createElement('div');
+      item.className = 'drawer-conv-item' + (conv.id === currentConversationId ? ' active' : '');
+      item.dataset.id = conv.id;
+
+      const wrap = document.createElement('div');
+      wrap.className = 'drawer-conv-title-wrap';
+      if (conv.pinned) {
+        const pin = document.createElement('span');
+        pin.className = 'drawer-conv-pin';
+        pin.title = 'Đã ghim';
+        pin.textContent = '📌';
+        wrap.appendChild(pin);
+      }
+      const titleEl = document.createElement('span');
+      titleEl.className = 'drawer-conv-title';
+      titleEl.textContent = conv.title || 'Cuộc trò chuyện mới';
+      wrap.appendChild(titleEl);
+
+      const moreBtn = document.createElement('button');
+      moreBtn.type = 'button';
+      moreBtn.className = 'drawer-conv-more';
+      moreBtn.setAttribute('aria-label', 'Tùy chọn hội thoại');
+      moreBtn.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>';
+      moreBtn.onclick = (e) => {
+        e.stopPropagation();
+        openConvActionSheet(conv);
+      };
+
+      item.appendChild(wrap);
+      item.appendChild(moreBtn);
+
+      // Long-press (mobile touch/pointer hold 450ms) + right-click contextmenu
+      let pressTimer = null;
+      let longPressed = false;
+      let startX = 0;
+      let startY = 0;
+
+      const clearPress = () => {
+        if (pressTimer) { clearTimeout(pressTimer); pressTimer = null; }
+        item.classList.remove('is-pressing');
+      };
+      const startPress = (cx, cy) => {
+        clearPress();
+        longPressed = false;
+        startX = cx;
+        startY = cy;
+        item.classList.add('is-pressing');
+        pressTimer = setTimeout(() => {
+          longPressed = true;
+          item.classList.remove('is-pressing');
+          if (navigator.vibrate) { try { navigator.vibrate(20); } catch {} }
+          openConvActionSheet(conv);
+        }, 450);
+      };
+
+      item.addEventListener('pointerdown', (e) => {
+        if (e.target.closest('.drawer-conv-more') || e.button === 2) return;
+        startPress(e.clientX, e.clientY);
+      });
+      item.addEventListener('pointermove', (e) => {
+        if (pressTimer && (Math.abs(e.clientX - startX) > 10 || Math.abs(e.clientY - startY) > 10)) {
+          clearPress();
+        }
+      });
+      item.addEventListener('pointerup', clearPress);
+      item.addEventListener('pointercancel', clearPress);
+      item.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        clearPress();
+        longPressed = true;
+        openConvActionSheet(conv);
+      });
+      item.addEventListener('click', (e) => {
+        if (e.target.closest('.drawer-conv-more')) return;
+        if (longPressed) {
+          e.preventDefault();
+          longPressed = false;
+          return;
+        }
+        loadConversation(conv.id);
+      });
+
+      listEl.appendChild(item);
+    }
+  }
+
+  async function refreshConversations() {
+    try {
+      const res = await fetch('/api/conversations');
+      if (!res.ok) return;
+      conversationsCache = await res.json();
+      renderDrawerConversations();
+    } catch (e) {}
+  }
+
+  async function loadConversation(id) {
+    closeDrawer();
+    currentConversationId = id;
+    try {
+      const res = await fetch(`/api/conversations/${id}/messages`);
+      if (!res.ok) return;
+      const messages = await res.json();
+      renderMessages(messages);
+      $('btn-chat-menu').style.display = 'flex';
+    } catch(e) {}
+  }
+
+  $('opt-share-chat').onclick = async () => {
+    closeAllPopovers();
+    const bubbles = Array.from(document.querySelectorAll('#gemini-chat-feed .gemini-user-bubble, #gemini-chat-feed .gemini-ai-bubble'));
+    const text = bubbles.map(el => el.innerText).join('\n\n---\n\n');
+    if (navigator.share) {
+      try { await navigator.share({ title: 'AI Office', text }); return; } catch {}
+    }
+    if (text && navigator.clipboard) {
+      await navigator.clipboard.writeText(text);
+      alert('Đã sao chép toàn bộ nội dung cuộc trò chuyện.');
+    }
+  };
+  $('opt-pin-chat').onclick = async () => {
+    closeAllPopovers();
+    const curConv = (conversationsCache || []).find(c => c.id === currentConversationId);
+    if (curConv) await togglePinConversation(curConv);
+  };
+  $('opt-rename-chat').onclick = () => {
+    closeAllPopovers();
+    const curConv = (conversationsCache || []).find(c => c.id === currentConversationId)
+      || (currentConversationId ? { id: currentConversationId, title: '' } : null);
+    if (curConv) openConvActionSheet(curConv, true);
+  };
+  $('opt-delete-chat').onclick = async () => {
+    closeAllPopovers();
+    if (!currentConversationId) return;
+    if (!confirm('Xoá cuộc trò chuyện này?')) return;
+    await deleteConversationById(currentConversationId);
+  };
+
+  function renderMessages(messages) {
+    const feed = $('gemini-chat-feed');
+    const hero = $('gemini-home-hero');
+    if (!messages || messages.length === 0) {
+      feed.style.display = 'none';
+      hero.style.display = 'flex';
+      return;
+    }
+    hero.style.display = 'none';
+    feed.style.display = 'flex';
+    feed.innerHTML = '';
+
+    for (const msg of messages) {
+      if (msg.role === 'user') lastUserMessage = msg.content || lastUserMessage;
+      appendMessageToDOM(msg.role, msg.content);
+    }
+    scrollToBottom();
+  }
+
+  function wireRowActions(row, getTextFn) {
+    const copyBtn = row.querySelector('[data-action="copy"]');
+    if (copyBtn) {
+      copyBtn.onclick = async () => {
+        try {
+          await navigator.clipboard.writeText(getTextFn());
+          copyBtn.style.color = '#60a5fa';
+          setTimeout(() => { copyBtn.style.color = ''; }, 1200);
+        } catch {}
+      };
+    }
+    const retryBtn = row.querySelector('[data-action="retry"]');
+    if (retryBtn) {
+      retryBtn.onclick = () => retryLastMessage();
+    }
+  }
+
+  function appendMessageToDOM(role, content) {
+    const feed = $('gemini-chat-feed');
+    $('gemini-home-hero').style.display = 'none';
+    feed.style.display = 'flex';
+    $('btn-chat-menu').style.display = 'flex';
+
+    if (role === 'user') {
+      const row = document.createElement('div');
+      row.className = 'gemini-msg-user-row';
+      row.innerHTML = `<div class="gemini-user-bubble">${esc(content)}</div>`;
+      feed.appendChild(row);
+      scrollToBottom();
+      return row;
+    }
+
+    const row = document.createElement('div');
+    row.className = 'gemini-msg-ai-row';
+    row.innerHTML = `
+      <div class="gemini-ai-bubble">${renderMarkdownMobile(content)}</div>
+      <div class="gemini-ai-actions">
+        <button class="ai-action-btn" title="Thích"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg></button>
+        <button class="ai-action-btn" title="Không thích"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h3a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-3"/></svg></button>
+        <button class="ai-action-btn" data-action="copy" title="Sao chép"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        <button class="ai-action-btn" data-action="retry" title="Thử lại"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg></button>
+      </div>
+      <small class="gemini-disclaimer">AI Office là một AI và có thể mắc sai sót.</small>
+    `;
+    wireRowActions(row, () => content);
+    feed.appendChild(row);
+    scrollToBottom();
+    return row;
+  }
+
+  function scrollToBottom() {
+    const scroller = $('gemini-scroll-body');
+    setTimeout(() => {
+      scroller.scrollTop = scroller.scrollHeight;
+    }, 30);
+  }
+
+  // Attachments (+) support
+  function renderAttachmentStrip() {
+    const strip = $('mobile-attach-strip');
+    if (!pendingAttachments.length) {
+      strip.innerHTML = '';
+      strip.classList.remove('show');
+      return;
+    }
+    strip.classList.add('show');
+    strip.innerHTML = pendingAttachments.map((att, idx) => {
+      const thumb = att.data_base64 ? `<img src="data:${esc(att.media_type)};base64,${att.data_base64}" alt="">` : '📄';
+      return `<span class="mobile-attach-chip">${thumb}<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(att.name)}</span><button type="button" data-idx="${idx}" aria-label="Xóa">×</button></span>`;
+    }).join('');
+    strip.querySelectorAll('button[data-idx]').forEach(btn => {
+      btn.onclick = () => {
+        pendingAttachments.splice(Number(btn.dataset.idx), 1);
+        renderAttachmentStrip();
+      };
+    });
+  }
+
+  $('btn-attach').onclick = () => $('chat-file-input').click();
+  $('chat-file-input').onchange = async (e) => {
+    const files = Array.from(e.target.files || []);
+    for (const f of files) {
+      if (pendingAttachments.length >= 10) break;
+      if (f.type.startsWith('image/')) {
+        const b64 = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(String(reader.result || '').split(',')[1] || '');
+          reader.onerror = reject;
+          reader.readAsDataURL(f);
+        });
+        pendingAttachments.push({ name: f.name, media_type: f.type || 'image/jpeg', content: '', data_base64: b64 });
+      } else {
+        const txt = await f.text();
+        pendingAttachments.push({ name: f.name, media_type: f.type || 'text/plain', content: txt.slice(0, 200000), data_base64: '' });
+      }
+    }
+    e.target.value = '';
+    renderAttachmentStrip();
+  };
+
+  function setStreamingState(streaming) {
+    const btn = $('sendbtn');
+    if (streaming) {
+      btn.classList.add('is-streaming');
+      btn.innerHTML = stopIconSvg;
+      btn.title = 'Dừng trả lời';
+    } else {
+      btn.classList.remove('is-streaming');
+      btn.innerHTML = sendIconSvg;
+      btn.title = 'Gửi tin nhắn';
+    }
+  }
+
+  async function retryLastMessage() {
+    if (!lastUserMessage || activeAbortController) return;
+    $('chatinput').value = lastUserMessage;
+    await sendMessage();
+  }
+  window.retryLastMessage = retryLastMessage;
+
+  // 4. Send Message Handler (SSE Streaming)
+  async function sendMessage() {
+    if (activeAbortController) {
+      activeAbortController.abort();
+      return;
+    }
+    const input = $('chatinput');
+    const text = input.value.trim();
+    if (!text && !pendingAttachments.length) return;
+    const messageText = text || 'Phân tích tệp đính kèm giúp tôi.';
+    const attachmentsToSend = pendingAttachments.slice();
+
+    lastUserMessage = messageText;
+    input.value = '';
+    input.style.height = 'auto';
+    pendingAttachments = [];
+    renderAttachmentStrip();
+
+    const displayUserText = attachmentsToSend.length
+      ? `${messageText}\n[📎 ${attachmentsToSend.map(a => a.name).join(', ')}]`
+      : messageText;
+    appendMessageToDOM('user', displayUserText);
+
+    const feed = $('gemini-chat-feed');
+    const aiRow = document.createElement('div');
+    aiRow.className = 'gemini-msg-ai-row';
+    aiRow.innerHTML = `
+      <div class="gemini-ai-bubble" style="color:var(--text-muted);">Đang suy nghĩ...<span class="stream-caret"></span></div>
+      <div class="gemini-ai-actions" style="display:none;">
+        <button class="ai-action-btn" title="Thích"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg></button>
+        <button class="ai-action-btn" title="Không thích"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h3a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-3"/></svg></button>
+        <button class="ai-action-btn" data-action="copy" title="Sao chép"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        <button class="ai-action-btn" data-action="retry" title="Thử lại"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg></button>
+      </div>
+      <small class="gemini-disclaimer" style="display:none;">AI Office là một AI và có thể mắc sai sót.</small>
+    `;
+    feed.appendChild(aiRow);
+    const bubbleEl = aiRow.querySelector('.gemini-ai-bubble');
+    const actionsEl = aiRow.querySelector('.gemini-ai-actions');
+    const discEl = aiRow.querySelector('.gemini-disclaimer');
+    scrollToBottom();
+
+    let fullText = '';
+    activeAbortController = new AbortController();
+    setStreamingState(true);
+
+    try {
+      const payload = {
+        message: messageText,
+        agent: currentAgent || 'CEO',
+        attachments: attachmentsToSend,
+        conversation_id: currentConversationId || '',
+        aspect_ratio: selectedAspectRatio,
+        output_format: selectedOutputFormat
+      };
+      const res = await fetch('/api/chat/stream', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+        signal: activeAbortController.signal
+      });
+      if (!res.ok) {
+        let errDetail = 'HTTP ' + res.status;
+        try { const errJson = await res.json(); if (errJson.detail) errDetail = errJson.detail; } catch {}
+        throw new Error(errDetail);
+      }
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder('utf-8');
+      let buffer = '';
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop();
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (!trimmed.startsWith('data:')) continue;
+          const raw = trimmed.slice(5).trim();
+          if (!raw) continue;
+          try {
+            const d = JSON.parse(raw);
+            if (d.error) throw new Error(d.error);
+            if (d.conversation_id) currentConversationId = d.conversation_id;
+            if (d.token) {
+              fullText += d.token;
+              bubbleEl.style.color = '';
+              bubbleEl.innerHTML = renderMarkdownMobile(fullText) + '<span class="stream-caret"></span>';
+              scrollToBottom();
+            }
+          } catch (parseErr) {
+            if (parseErr.message && !parseErr.message.includes('JSON')) throw parseErr;
+          }
+        }
+      }
+      bubbleEl.style.color = '';
+      bubbleEl.innerHTML = renderMarkdownMobile(fullText || 'Model không trả về nội dung.');
+      actionsEl.style.display = '';
+      discEl.style.display = '';
+      wireRowActions(aiRow, () => fullText);
+      refreshConversations();
+    } catch (err) {
+      if (err.name === 'AbortError') {
+        bubbleEl.style.color = '';
+        bubbleEl.innerHTML = renderMarkdownMobile(fullText ? fullText + '\n\n*(Đã dừng)*' : '*(Đã dừng)*');
+        actionsEl.style.display = '';
+        wireRowActions(aiRow, () => fullText);
+      } else {
+        bubbleEl.style.color = '';
+        bubbleEl.innerHTML = renderMarkdownMobile((fullText ? fullText + '\n\n' : '') + '⚠️ Lỗi kết nối: ' + err.message);
+        actionsEl.style.display = '';
+      }
+    } finally {
+      activeAbortController = null;
+      setStreamingState(false);
+    }
+  }
+
+  $('sendbtn').onclick = sendMessage;
+  $('chatinput').oninput = () => {
+    const el = $('chatinput');
+    el.style.height = 'auto';
+    el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+  };
+  $('chatinput').onkeydown = e => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  };
+
+  // 5. Library View (Full Screen)
+  const libView = $('page-library') || $('gemini-library-view');
+  let libSelectMode = false;
+  const libSelectedIds = new Set();
+
+  function updateLibSelectUI() {
+    const selBtn = $('btn-lib-select-mode');
+    const delBtn = $('btn-lib-delete-selected');
+    if (selBtn) selBtn.textContent = libSelectMode ? '✕ Hủy chọn' : '☑ Chọn';
+    if (delBtn) {
+      delBtn.style.display = (libSelectMode && libSelectedIds.size > 0) ? 'inline-flex' : 'none';
+      delBtn.textContent = `🗑️ Xóa (${libSelectedIds.size})`;
+    }
+  }
+
+  async function openLibrary() {
+    closeDrawer();
+    libView.classList.add('open');
+    libSelectMode = false;
+    libSelectedIds.clear();
+    updateLibSelectUI();
+    const grid = $('mobile-library-grid');
+    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text-dim);">Đang nạp ảnh...</div>';
+    try {
+      const res = await fetch('/api/library/items');
+      const data = await res.json();
+      const items = data.items || [];
+      if (items.length === 0) {
+        grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text-dim);">Chưa có tệp nào</div>';
+        return;
+      }
+      let html = '';
+      for (const it of items) {
+        const thumb = it.type === 'image' ? it.url : '/assets/ai-office-icon.png';
+        html += `
+          <div class="library-card-mobile" data-lib-id="${esc(it.id)}" onclick="handleLibCardClick('${esc(it.id)}', '${esc(it.url)}', '${esc(it.title)}', this)">
+            <img src="${esc(thumb)}" alt="${esc(it.title)}" loading="lazy">
+            <span class="badge">${esc(it.title)}</span>
+          </div>
+        `;
+      }
+      grid.innerHTML = html;
+    } catch(e) {
+      grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:#ef4444;">Lỗi nạp thư viện</div>';
+    }
+  }
+
+  window.handleLibCardClick = (id, url, title, el) => {
+    if (!libSelectMode) {
+      insertImageToChat(url, title);
+      return;
+    }
+    if (libSelectedIds.has(id)) {
+      libSelectedIds.delete(id);
+      el.style.outline = '';
+      el.style.opacity = '';
+    } else {
+      libSelectedIds.add(id);
+      el.style.outline = '2px solid #ef4444';
+      el.style.opacity = '0.82';
+    }
+    updateLibSelectUI();
+  };
+
+  if ($('btn-lib-select-mode')) {
+    $('btn-lib-select-mode').onclick = () => {
+      libSelectMode = !libSelectMode;
+      if (!libSelectMode) {
+        libSelectedIds.clear();
+        document.querySelectorAll('#mobile-library-grid .library-card-mobile').forEach(el => {
+          el.style.outline = '';
+          el.style.opacity = '';
+        });
+      }
+      updateLibSelectUI();
+    };
+  }
+
+  if ($('btn-lib-delete-selected')) {
+    $('btn-lib-delete-selected').onclick = async () => {
+      if (libSelectedIds.size === 0) return;
+      if (!confirm(`Xóa vĩnh viễn ${libSelectedIds.size} mục đã chọn khỏi thư viện?`)) return;
+      for (const id of Array.from(libSelectedIds)) {
+        try {
+          await fetch(`/api/library/items/${encodeURIComponent(id)}`, { method: 'DELETE' });
+        } catch {}
+      }
+      await openLibrary();
+    };
+  }
+
+  window.insertImageToChat = (url, title) => {
+    libView.classList.remove('open');
+    $('chatinput').value += `![${title}](${url})\n`;
+    $('chatinput').focus();
+  };
+  $('btn-drawer-library').onclick = openLibrary;
+  $('btn-close-library').onclick = () => libView.classList.remove('open');
+
+  // 6. Settings View (Full Screen Mobile)
+  const settingsView = $('page-settings');
+  function applyMobileTheme(theme) {
+    const t = theme === 'light' ? 'light' : 'dark';
+    document.body.dataset.theme = t;
+    localStorage.setItem('ai-office-theme', t);
+    $('mob-theme-dark').classList.toggle('active', t === 'dark');
+    $('mob-theme-light').classList.toggle('active', t === 'light');
+  }
+  applyMobileTheme(localStorage.getItem('ai-office-theme') || 'dark');
+  document.querySelectorAll('[data-mob-theme]').forEach(btn => {
+    btn.onclick = () => applyMobileTheme(btn.dataset.mobTheme);
+  });
+
+  async function openSettings() {
+    closeDrawer();
+    closeAllPopovers();
+    settingsView.classList.add('open');
+    $('mob-cfg-msg').textContent = '';
+    try {
+      const res = await fetch('/api/settings/model');
+      if (res.ok) {
+        const cfg = await res.json();
+        $('mob-cfg-provider').value = cfg.provider || 'local';
+        $('mob-cfg-local-model').value = cfg.local_model || 'qwen3.5:4b';
+        $('mob-cfg-local-ctx').value = String(cfg.local_num_ctx || 8192);
+        $('mob-cfg-cloud-url').value = cfg.cloud_base_url || 'https://api.openai.com/v1';
+        $('mob-cfg-cloud-model').value = cfg.cloud_model || 'gpt-4o-mini';
+        $('mob-cfg-key-hint').textContent = cfg.cloud_api_key_set ? `(Đã lưu: ${cfg.cloud_api_key_preview})` : '(Chưa nhập)';
+      }
+    } catch {}
+  }
+  $('btn-drawer-settings').onclick = openSettings;
+  $('btn-footer-settings').onclick = openSettings;
+  $('btn-close-settings').onclick = () => settingsView.classList.remove('open');
+
+  $('mob-model-form').onsubmit = async (e) => {
+    e.preventDefault();
+    const msgEl = $('mob-cfg-msg');
+    msgEl.textContent = 'Đang lưu cấu hình...';
+    const prov = $('mob-cfg-provider').value;
+    const payload = {
+      provider: prov,
+      local_model: $('mob-cfg-local-model').value.trim(),
+      local_num_ctx: Number($('mob-cfg-local-ctx').value),
+      cloud_enabled: prov === 'cloud',
+      cloud_base_url: $('mob-cfg-cloud-url').value.trim(),
+      cloud_model: $('mob-cfg-cloud-model').value.trim(),
+      cloud_api_key: $('mob-cfg-cloud-key').value.trim() || null
+    };
+    try {
+      const r = await fetch('/api/settings/model', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.detail || 'Không lưu được.');
+      msgEl.textContent = `✓ Đã lưu (${d.provider} · ${d.local_num_ctx} tokens)`;
+      $('mob-cfg-cloud-key').value = '';
+    } catch (err) {
+      msgEl.textContent = 'Lỗi: ' + (err.message || err);
+    }
+  };
+
+  $('mob-cfg-test').onclick = async () => {
+    const msgEl = $('mob-cfg-msg');
+    msgEl.textContent = 'Đang kiểm tra kết nối...';
+    try {
+      const r = await fetch('/api/settings/model/test', { method: 'POST' });
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.detail || 'Thất bại');
+      msgEl.textContent = `✓ ${d.mode} · ${d.model}: ${d.reply}`;
+    } catch (err) {
+      msgEl.textContent = 'Lỗi: ' + (err.message || err);
+    }
+  };
+
+  // Profile & Reference Anchors logic
+  let currentAvatarUrl = '/api/chat/images/chat_20261124_203955_0642d4f1.png';
+  let currentFaceRefUrl = '';
+  let currentBodyRefUrl = '';
+
+  async function loadUserProfile() {
+    try {
+      const res = await fetch('/api/user/profile');
+      if (res.ok) {
+        const p = await res.json();
+        $('mob-user-username').value = p.username || 'Shiro Chan';
+        $('mob-user-nickname').value = p.nickname || 'Shiro';
+        if (p.avatar_url) {
+          currentAvatarUrl = p.avatar_url;
+          $('mob-profile-avatar-preview').src = p.avatar_url;
+          $('drawer-user-avatar-img').src = p.avatar_url;
+          const headerAvatar = document.querySelector('#btn-header-avatar img');
+          if (headerAvatar) headerAvatar.src = p.avatar_url;
+        }
+        $('drawer-user-name-text').textContent = p.username || 'Shiro Chan';
+        if (p.face_ref_url) {
+          currentFaceRefUrl = p.face_ref_url;
+          $('mob-face-ref-preview').src = p.face_ref_url;
+          $('mob-face-ref-preview').style.display = 'block';
+          $('mob-face-ref-empty').style.display = 'none';
+        }
+        if (p.body_ref_url) {
+          currentBodyRefUrl = p.body_ref_url;
+          $('mob-body-ref-preview').src = p.body_ref_url;
+          $('mob-body-ref-preview').style.display = 'block';
+          $('mob-body-ref-empty').style.display = 'none';
+        }
+        if (p.theme) applyMobileTheme(p.theme);
+      }
+    } catch (e) {
+      console.warn('Could not load profile:', e);
+    }
+  }
+
+  $('mob-btn-upload-avatar').onclick = () => $('mob-file-avatar').click();
+  $('mob-btn-upload-face').onclick = () => $('mob-file-face').click();
+  $('mob-btn-upload-body').onclick = () => $('mob-file-body').click();
+
+  async function uploadImageFile(file) {
+    const res = await fetch('/api/user/upload-asset', {
+      method: 'POST',
+      headers: { 'Content-Type': file.type || 'image/png' },
+      body: file
+    });
+    if (!res.ok) throw new Error('Tải ảnh thất bại');
+    const data = await res.json();
+    return data.url;
+  }
+
+  $('mob-file-avatar').onchange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    try {
+      const url = await uploadImageFile(file);
+      currentAvatarUrl = url;
+      $('mob-profile-avatar-preview').src = url;
+    } catch (err) { alert('Lỗi tải avatar: ' + err.message); }
+  };
+
+  $('mob-file-face').onchange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    try {
+      const url = await uploadImageFile(file);
+      currentFaceRefUrl = url;
+      $('mob-face-ref-preview').src = url;
+      $('mob-face-ref-preview').style.display = 'block';
+      $('mob-face-ref-empty').style.display = 'none';
+    } catch (err) { alert('Lỗi tải ảnh mặt: ' + err.message); }
+  };
+
+  $('mob-file-body').onchange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    try {
+      const url = await uploadImageFile(file);
+      currentBodyRefUrl = url;
+      $('mob-body-ref-preview').src = url;
+      $('mob-body-ref-preview').style.display = 'block';
+      $('mob-body-ref-empty').style.display = 'none';
+    } catch (err) { alert('Lỗi tải ảnh dáng: ' + err.message); }
+  };
+
+  $('mob-btn-save-profile').onclick = async () => {
+    const msg = $('mob-profile-msg');
+    msg.textContent = 'Đang lưu hồ sơ...';
+    try {
+      const payload = {
+        username: $('mob-user-username').value.trim() || 'Shiro Chan',
+        nickname: $('mob-user-nickname').value.trim() || 'Shiro',
+        avatar_url: currentAvatarUrl,
+        face_ref_url: currentFaceRefUrl,
+        body_ref_url: currentBodyRefUrl,
+        theme: localStorage.getItem('ai-office-theme') || 'dark'
+      };
+      const res = await fetch('/api/user/profile', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (!res.ok) throw new Error('Không lưu được');
+      msg.textContent = '✓ Đã cập nhật hồ sơ & hình mẫu thành công!';
+      $('drawer-user-name-text').textContent = payload.username;
+      $('drawer-user-avatar-img').src = currentAvatarUrl;
+      const headerAvatar = document.querySelector('#btn-header-avatar img');
+      if (headerAvatar) headerAvatar.src = currentAvatarUrl;
+    } catch (err) {
+      msg.textContent = 'Lỗi: ' + (err.message || err);
+    }
+  };
+
+  $('btn-drawer-profile').onclick = async () => {
+    closeDrawer();
+    await openSettings();
+  };
+
+  // 6B. Weekly Lore Radar View (Full Screen Mobile)
+  const radarView = $('page-radar');
+  let radarReportCache = null;
+  let activeRadarCat = 'all';
+
+  function getRadarAllEntries(report) {
+    if (!report) return [];
+    const seen = new Set();
+    const combined = [];
+    for (const group of [report.characters || [], report.outfits || [], report.anime_spotlight || []]) {
+      for (const item of group) {
+        if (!seen.has(item.id)) {
+          seen.add(item.id);
+          combined.push(item);
+        }
+      }
+    }
+    return combined;
+  }
+
+  function renderRadarList() {
+    const container = $('mobile-radar-list');
+    if (!radarReportCache) {
+      container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-dim);">Chưa có dữ liệu radar</div>';
+      return;
+    }
+    const q = ($('radar-search-input')?.value || '').trim().toLowerCase();
+    const entries = getRadarAllEntries(radarReportCache).filter(item => {
+      if (activeRadarCat !== 'all' && item.category !== activeRadarCat) return false;
+      if (!q) return true;
+      const pool = `${item.name} ${item.franchise} ${item.title} ${item.summary} ${item.outfit_name || ''}`.toLowerCase();
+      return pool.includes(q);
+    });
+
+    let html = `
+      <div class="radar-summary-banner">
+        <strong>📅 Tuần ${esc(radarReportCache.week_id)}</strong> · ${esc(radarReportCache.total_entries)} mục<br>
+        ${esc(radarReportCache.summary)}
+      </div>
+    `;
+
+    if (entries.length === 0) {
+      html += '<div style="text-align:center;padding:30px;color:var(--text-dim);">Không tìm thấy mục phù hợp</div>';
+      container.innerHTML = html;
+      return;
+    }
+
+    for (const item of entries) {
+      const catLabel = item.category === 'outfit' ? '👗 Trang phục' : (item.category === 'anime' ? '🎬 Anime' : '🌟 Nhân vật');
+      let promptHint = `vẽ ${item.name}`;
+      if (item.category === 'outfit' && item.outfit_name) {
+        const charHint = (item.title || '').toLowerCase().includes('ningguang') ? 'Ningguang' : 'Citlali';
+        promptHint = `vẽ ${charHint} trong trang phục ${item.outfit_name}`;
+      }
+      html += `
+        <div class="radar-card">
+          <div class="radar-card-head">
+            <div>
+              <div class="radar-card-title">${esc(item.name)}</div>
+              <div class="radar-card-sub">${esc(item.franchise)} · ${esc(item.version_or_season)}</div>
+            </div>
+            <span class="radar-badge">${catLabel}</span>
+          </div>
+          <div class="radar-card-desc">${esc(item.summary)}</div>
+          <div class="radar-card-footer">
+            <span style="font-size:11.5px;color:var(--text-dim);">Khuyên dùng: <code>${esc(item.recommended_aspect_ratio || '3:4')}</code></span>
+            <button type="button" class="radar-draw-btn" data-radar-prompt="${esc(promptHint)}" data-radar-ratio="${esc(item.recommended_aspect_ratio || '3:4')}">🎨 Vẽ ngay</button>
+          </div>
+        </div>
+      `;
+    }
+    container.innerHTML = html;
+
+    container.querySelectorAll('.radar-draw-btn').forEach(btn => {
+      btn.onclick = () => {
+        const prompt = btn.dataset.radarPrompt || '';
+        const ratio = btn.dataset.radarRatio || selectedAspectRatio;
+        selectedAspectRatio = ratio;
+        localStorage.setItem('ai-office-img-ratio', selectedAspectRatio);
+        syncImageOptionUI();
+        radarView.classList.remove('open');
+        $('chatinput').value = prompt;
+        $('chatinput').focus();
+      };
+    });
+  }
+
+  async function loadRadarData(forceScan = false) {
+    const container = $('mobile-radar-list');
+    container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-dim);">Đang quét &amp; nạp dữ liệu Lore Radar...</div>';
+    try {
+      const res = forceScan
+        ? await fetch('/api/radar/scan', { method: 'POST' })
+        : await fetch('/api/radar/weekly');
+      const data = await res.json();
+      radarReportCache = forceScan ? data.report : data;
+      renderRadarList();
+    } catch (err) {
+      container.innerHTML = `<div style="text-align:center;padding:40px;color:#ef4444;">Lỗi nạp Lore Radar: ${esc(err.message || err)}</div>`;
+    }
+  }
+
+  async function openRadar() {
+    closeDrawer();
+    closeAllPopovers();
+    radarView.classList.add('open');
+    await loadRadarData(false);
+  }
+  if ($('btn-drawer-radar')) $('btn-drawer-radar').onclick = openRadar;
+  if ($('pill-mode-radar')) $('pill-mode-radar').onclick = openRadar;
+  if ($('btn-close-radar')) $('btn-close-radar').onclick = () => radarView.classList.remove('open');
+  if ($('btn-radar-scan')) $('btn-radar-scan').onclick = () => loadRadarData(true);
+  if ($('radar-search-input')) $('radar-search-input').oninput = () => renderRadarList();
+  document.querySelectorAll('.radar-filter-pill').forEach(pill => {
+    pill.onclick = () => {
+      document.querySelectorAll('.radar-filter-pill').forEach(p => p.classList.remove('active'));
+      pill.classList.add('active');
+      activeRadarCat = pill.dataset.radarCat || 'all';
+      renderRadarList();
+    };
+  });
+
+  $('mob-settings-pc').onclick = () => { window.location.href = '/pc'; };
+  $('mob-settings-clear-all').onclick = async () => {
+    if (!confirm('Xóa toàn bộ lịch sử trò chuyện?')) return;
+    await fetch('/api/conversations', { method: 'DELETE' });
+    await createNewChat();
+    await refreshConversations();
+    settingsView.classList.remove('open');
+  };
+
+  // 7. Navigation links
+  $('btn-drawer-desktop-mode').onclick = () => {
+    window.location.href = '/pc';
+  };
+  $('btn-drawer-studio').onclick = () => {
+    window.location.href = '/pc?view=studio';
+  };
+  $('btn-drawer-workspace').onclick = () => {
+    window.location.href = '/pc?view=workspace';
+  };
+
+  // Init
+  loadUserProfile();
+  refreshConversations();
+})();
+</script>
+</body>
+</html>

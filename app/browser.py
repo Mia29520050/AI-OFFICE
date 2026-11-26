@@ -166,6 +166,12 @@ def _ensure_browser() -> None:
             raise RuntimeError(f"Không tìm thấy Chrome tại {CHROME}")
         PROFILE.mkdir(parents=True, exist_ok=True)
         flags = getattr(subprocess, "DETACHED_PROCESS", 0) | getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0)
+        si = None
+        if os.name == "nt":
+            flags |= getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000)
+            si = subprocess.STARTUPINFO()
+            si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+            si.wShowWindow = 0  # SW_HIDE
         CHROME_PROCESS = subprocess.Popen(
             [
                 str(CHROME),
@@ -186,6 +192,7 @@ def _ensure_browser() -> None:
             stderr=subprocess.DEVNULL,
             close_fds=True,
             creationflags=flags,
+            startupinfo=si,
         )
         deadline = time.time() + 15
         while time.time() < deadline:
@@ -766,12 +773,11 @@ def _with_hidden_background_context(callback):
         with sync_playwright() as p:
             launch_options = {
                 "user_data_dir": str(RESEARCH_PROFILE),
-                "headless": False,
+                "headless": True,
                 "viewport": {"width": 1280, "height": 800},
                 "accept_downloads": False,
                 "args": [
-                    "--start-minimized",
-                    "--window-position=-32000,-32000",
+                    "--headless=new",
                     "--window-size=1280,800",
                     "--no-first-run",
                     "--no-default-browser-check",

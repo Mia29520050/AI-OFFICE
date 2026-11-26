@@ -43,6 +43,7 @@ from game_playbooks import (
     build_step_guidance,
     configure_learned_store,
     detect_czn_phase,
+    detect_game_profile,
     extract_visible_czn_scout_note,
     get_czn_knowledge_summary,
     inject_czn_icon_hints,
@@ -173,6 +174,7 @@ class GameSessionManager:
             "goal": "",
             "playbook": "none",
             "playbook_phase": "",
+            "game_profile": None,
             "scouted_notes": [],
             "mode": "auto_play",
             "vtuber_name": "Mina AI",
@@ -422,7 +424,12 @@ class GameSessionManager:
         phase_name, playbook_guidance = build_step_guidance(
             req.playbook, req.playbook_config, ocr_items, self._scouted_notes, history, corner_state=corner_state
         )
-        self._update(playbook_phase=phase_name, scouted_notes=list(self._scouted_notes))
+        detected_profile = detect_game_profile(target_info.get("title", ""), ocr_items, req.goal)
+        if req.playbook == "none" and detected_profile.get("genre") != "generic":
+            phase_name = detected_profile["genre"]
+            controls_str = ", ".join(f"{k}:{v}" for k, v in list(detected_profile["controls_map"].items())[:6])
+            playbook_guidance = f"{detected_profile['guidance']} Phím gợi ý: {controls_str}."
+        self._update(playbook_phase=phase_name, game_profile=detected_profile, scouted_notes=list(self._scouted_notes))
 
         if req.playbook == "czn" and req.source == "desktop":
             fast_plan = advise_czn_action(req.playbook_config, ocr_items, corner_state, self._czn_state, history)

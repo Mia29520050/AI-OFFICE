@@ -1,0 +1,26 @@
+{
+  "name": "AI Office Studio",
+  "short_name": "AI Office",
+  "description": "Hệ thống AI Đa Năng Cục Bộ: Manga · Motion Comic · Lập trình · Vision",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#09090b",
+  "theme_color": "#09090b",
+  "icons": [
+    {
+      "src": "/assets/ai-office-icon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/assets/ai-office-icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["productivity", "utilities"],
+  "lang": "vi"
+}

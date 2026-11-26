@@ -37,6 +37,7 @@ except ImportError:
 logger = logging.getLogger("manga_studio")
 
 ROOT = Path(__file__).resolve().parents[1]
+ROOT_DIR = ROOT
 DATA = ROOT / "data"
 DB = DATA / "office.db"
 MANGA_DATA = DATA / "manga"
@@ -381,6 +382,7 @@ class GenerateScenesRequest(BaseModel):
     chapter_id: str
     prompt: Optional[str] = None
     scene_count: int = Field(default=4, ge=1, le=12)
+    panels_per_scene: int = Field(default=2, ge=1, le=6)
 
 
 class CheckContinuityRequest(BaseModel):
@@ -414,6 +416,33 @@ class RenderPageRequest(BaseModel):
 class ExportChapterRequest(BaseModel):
     chapter_id: str
     format: str = "all"  # 'cbz', 'pdf', 'png', or 'all'
+
+
+class StoryBranchingEndpointRequest(BaseModel):
+    chapter_id: Optional[str] = None
+    series_title: Optional[str] = None
+    genre: str = "Shonen Manga"
+    art_style: str = "b_w"
+    premise: Optional[str] = None
+    chapter_number: int = 1
+    chapter_title: Optional[str] = None
+    current_scene_context: Optional[str] = None
+    decision_prompt: Optional[str] = None
+    branch_count: int = Field(default=3, ge=2, le=5)
+    scenes_per_branch: int = Field(default=2, ge=1, le=4)
+    panels_per_scene: int = Field(default=2, ge=1, le=4)
+    user_instructions: Optional[str] = None
+
+
+class StoryTwistsEndpointRequest(BaseModel):
+    chapter_id: Optional[str] = None
+    series_title: Optional[str] = None
+    genre: str = "Shonen Manga"
+    current_context: Optional[str] = None
+    num_twists: int = Field(default=3, ge=1, le=6)
+    num_conflicts: int = Field(default=2, ge=1, le=5)
+    num_choices: int = Field(default=3, ge=1, le=6)
+    user_instructions: Optional[str] = None
 
 
 # ---------------------------------------------------------------------------
@@ -954,44 +983,82 @@ async def generate_scenes_endpoint(body: GenerateScenesRequest):
     if manga_story:
         for c in characters_raw:
             try:
+                identity_obj = json.loads(c["identity_json"] or "{}")
+                personality_obj = json.loads(c["personality_json"] or "{}")
+                raw_traits = json.loads(c["locked_traits_json"] or "[]")
+                locked_traits_dict: dict[str, Any] = {}
+                if isinstance(raw_traits, dict):
+                    locked_traits_dict = raw_traits
+                elif isinstance(raw_traits, list) and raw_traits:
+                    locked_traits_dict = {"diffusion_positive_tags": ", ".join(str(x) for x in raw_traits if x)}
+                role_val = identity_obj.get("role", "supporting")
+                if role_val not in {"protagonist", "antagonist", "supporting", "mentor", "rival", "comic_relief", "extra"}:
+                    role_val = "protagonist" if "chính" in str(role_val).lower() else "supporting"
                 char_data = {
                     "id": c["id"],
                     "series_id": series_id,
                     "name": c["name"],
+                    "role": role_val,
                     "speech_rules": json.loads(c["speech_rules_json"] or "{}"),
-                    "personality": json.loads(c["personality_json"] or "{}").get("description", ""),
-                    "backstory": json.loads(c["identity_json"] or "{}").get("backstory", ""),
+                    "personality": personality_obj.get("description", "") if isinstance(personality_obj, dict) else str(personality_obj),
+                    "backstory": identity_obj.get("backstory", "") if isinstance(identity_obj, dict) else "",
+                    "locked_traits": locked_traits_dict,
                 }
                 characters_profiles.append(manga_story.CharacterProfile.model_validate(char_data))
             except Exception:
                 pass
 
     scenes_data = []
+    story_mode_used = "fallback_template"
+    story_model_name = "fallback"
+    story_gen_ms = 0
     if manga_story and hasattr(manga_story, "generate_chapter_plan"):
         try:
             series_title = series_row["title"] if series_row else "Bộ Truyện Manga"
+            series_genre = series_row["genre"] if series_row and series_row["genre"] else "Manga"
             req = manga_story.StoryGenerationRequest(
                 series_title=series_title,
+                genre=series_genre,
                 premise=body.prompt or chapter["synopsis"] or "Kịch bản chương mới",
                 chapter_title=chapter["title"],
                 chapter_number=int(chapter["number"]),
                 target_scene_count=body.scene_count,
+                target_panels_per_scene=body.panels_per_scene,
                 characters=characters_profiles,
                 art_style="b_w" if art_style == "bw" else "color"
             )
             resp = await manga_story.generate_chapter_plan(req)
+            if resp:
+                story_mode_used = resp.mode_used
+                story_model_name = resp.model_name
+                story_gen_ms = resp.generation_time_ms
             if resp and resp.chapter_plan and resp.chapter_plan.scenes:
                 for sc in resp.chapter_plan.scenes:
                     pos = getattr(sc, "scene_number", getattr(sc, "order_index", len(scenes_data) + 1))
+                    serialized_panels = [
+                        p.model_dump() if hasattr(p, "model_dump") else dict(p)
+                        for p in (sc.panels or [])
+                    ]
+                    first_line = ""
+                    for pan in serialized_panels:
+                        d_list = pan.get("dialogues") or []
+                        if d_list:
+                            first_line = f"{d_list[0].get('speaker', '')}: {d_list[0].get('text', '')}".strip(": ")
+                            break
                     scenes_data.append({
                         "position": pos,
                         "summary": sc.summary,
                         "location": sc.location,
                         "characters": sc.characters_present,
                         "content": {
+                            "title": getattr(sc, "title", ""),
                             "time_of_day": sc.time_of_day,
                             "emotional_beat": sc.emotional_beat,
-                            "panels_count": len(sc.panels)
+                            "conflict": getattr(sc, "conflict", ""),
+                            "outcome": getattr(sc, "outcome", ""),
+                            "dialogue_preview": first_line,
+                            "panels_count": len(serialized_panels),
+                            "panels": serialized_panels,
                         }
                     })
         except Exception as e:
@@ -1044,7 +1111,14 @@ async def generate_scenes_endpoint(body: GenerateScenesRequest):
             })
         db.commit()
 
-    return {"chapter_id": body.chapter_id, "scenes": created_scenes, "count": len(created_scenes)}
+    return {
+        "chapter_id": body.chapter_id,
+        "scenes": created_scenes,
+        "count": len(created_scenes),
+        "mode_used": story_mode_used,
+        "model_name": story_model_name,
+        "generation_time_ms": story_gen_ms,
+    }
 
 
 @router.post("/story/check-continuity")
@@ -1114,6 +1188,242 @@ async def check_continuity_endpoint(body: CheckContinuityRequest):
         "issues": issues,
         "summary": "Kiểm tra tính nhất quán cốt truyện hoàn tất." if not issues else f"Phát hiện {len(issues)} điểm cần rà soát."
     }
+
+
+# --- Story Branching & Interactive Progression ---
+
+@router.post("/story/branching")
+async def generate_story_branching_endpoint(body: StoryBranchingEndpointRequest):
+    """
+    Sinh cốt truyện phân nhánh đa chiều (Route A, Route B, Route C)
+    cho phép người đọc lựa chọn hướng rẽ kịch bản với hệ quả và diễn biến riêng biệt.
+    """
+    series_title = body.series_title or "Manga Series"
+    series_genre = body.genre
+    art_style = body.art_style
+    chapter_num = body.chapter_number
+    chapter_title = body.chapter_title
+    premise = body.premise or "Tình huống cao trào tại ngã rẽ cốt truyện"
+    current_context = body.current_scene_context or ""
+    characters_profiles: list[Any] = []
+
+    if body.chapter_id:
+        with connect() as db:
+            chapter_row = db.execute("SELECT * FROM manga_chapters WHERE id = ?", (body.chapter_id,)).fetchone()
+            if chapter_row:
+                chapter = dict(chapter_row)
+                chapter_num = int(chapter.get("number", chapter_num))
+                chapter_title = chapter.get("title", chapter_title)
+                if not body.premise and chapter.get("synopsis"):
+                    premise = chapter["synopsis"]
+
+                series_id = chapter["series_id"]
+                series_row = db.execute("SELECT * FROM manga_series WHERE id = ?", (series_id,)).fetchone()
+                if series_row:
+                    series = dict(series_row)
+                    if not body.series_title and series.get("title"):
+                        series_title = series["title"]
+                    if not body.genre and series.get("genre"):
+                        series_genre = series["genre"]
+                    if not body.art_style and series.get("art_style"):
+                        art_style = "b_w" if series["art_style"] == "bw" else "color"
+
+                chars_raw = db.execute("SELECT * FROM manga_characters WHERE series_id = ?", (series_id,)).fetchall()
+                if manga_story:
+                    for c in chars_raw:
+                        try:
+                            c_dict = dict(c)
+                            identity_obj = json.loads(c_dict.get("identity_json") or "{}")
+                            personality_obj = json.loads(c_dict.get("personality_json") or "{}")
+                            raw_traits = json.loads(c_dict.get("locked_traits_json") or "[]")
+                            locked_traits_dict: dict[str, Any] = {}
+                            if isinstance(raw_traits, dict):
+                                locked_traits_dict = raw_traits
+                            elif isinstance(raw_traits, list) and raw_traits:
+                                locked_traits_dict = {"diffusion_positive_tags": ", ".join(str(x) for x in raw_traits if x)}
+
+                            role_val = identity_obj.get("role", "supporting")
+                            if role_val not in {"protagonist", "antagonist", "supporting", "mentor", "rival", "comic_relief", "extra"}:
+                                role_val = "protagonist" if "chính" in str(role_val).lower() else "supporting"
+
+                            char_data = {
+                                "id": c_dict["id"],
+                                "series_id": series_id,
+                                "name": c_dict["name"],
+                                "role": role_val,
+                                "speech_rules": json.loads(c_dict.get("speech_rules_json") or "{}"),
+                                "personality": personality_obj.get("description", "") if isinstance(personality_obj, dict) else str(personality_obj),
+                                "backstory": identity_obj.get("backstory", "") if isinstance(identity_obj, dict) else "",
+                                "locked_traits": locked_traits_dict,
+                            }
+                            characters_profiles.append(manga_story.CharacterProfile.model_validate(char_data))
+                        except Exception:
+                            pass
+
+                # Lấy bối cảnh phân cảnh gần nhất nếu chưa truyền
+                if not current_context:
+                    scene_rows = db.execute("SELECT position, summary FROM manga_scenes WHERE chapter_id = ? ORDER BY position DESC LIMIT 2", (body.chapter_id,)).fetchall()
+                    if scene_rows:
+                        current_context = " | ".join(f"Cảnh {s['position']}: {s['summary']}" for s in reversed(scene_rows))
+
+    if manga_story and hasattr(manga_story, "BranchingProgressionRequest") and hasattr(manga_story, "generate_story_branching"):
+        req = manga_story.BranchingProgressionRequest(
+            series_title=series_title,
+            genre=series_genre,
+            art_style="b_w" if art_style in ("bw", "b_w") else "color",
+            premise=premise,
+            chapter_number=chapter_num,
+            chapter_title=chapter_title,
+            current_scene_context=current_context,
+            decision_prompt=body.decision_prompt or "Thời khắc quyết định: Hãy chọn hướng hành động tiếp theo:",
+            characters=characters_profiles,
+            branch_count=body.branch_count,
+            scenes_per_branch=body.scenes_per_branch,
+            panels_per_scene=body.panels_per_scene,
+            user_instructions=body.user_instructions
+        )
+        resp = await manga_story.generate_story_branching(req)
+        return resp.model_dump()
+
+    # Fallback tối thiểu nếu manga_story không khả dụng
+    return {
+        "progression": {
+            "series_title": series_title,
+            "chapter_number": chapter_num,
+            "decision_point": body.decision_prompt or "Lựa chọn hướng đi cho nhân vật:",
+            "decision_context": current_context or premise,
+            "routes": [
+                {
+                    "route_id": "route_a",
+                    "route_name": "Route A: Đột Kích Trực Diện",
+                    "branch_type": "action_heroic",
+                    "choice_trigger": "Nhân vật chính tấn công trực diện",
+                    "synopsis": "Đột phá vòng vây trong chiến đấu quyết liệt",
+                    "central_conflict": "Tiêu hao sức lực",
+                    "key_twist": "Kẻ thù có cùng dấu ấn",
+                    "character_impacts": {},
+                    "consequences": ["Phá vỡ kết giới"],
+                    "scenes": [],
+                    "cliffhanger": "Cánh cửa hầm mở ra"
+                },
+                {
+                    "route_id": "route_b",
+                    "route_name": "Route B: Ẩn Thân Điều Tra",
+                    "branch_type": "stealth_investigation",
+                    "choice_trigger": "Rút lui vào bóng tối và tìm kiếm tài liệu mật",
+                    "synopsis": "Trinh thám thu thập bí mật",
+                    "central_conflict": "Bẫy cơ quan",
+                    "key_twist": "Tài liệu gia tộc bị tiết lộ",
+                    "character_impacts": {},
+                    "consequences": ["Nắm giữ bằng chứng"],
+                    "scenes": [],
+                    "cliffhanger": "Có người theo dõi phía sau"
+                },
+                {
+                    "route_id": "route_c",
+                    "route_name": "Route C: Đồng Minh Bất Đắc Dĩ",
+                    "branch_type": "forbidden_alliance",
+                    "choice_trigger": "Đàm phán cấm thuật",
+                    "synopsis": "Liên kết với bóng tối",
+                    "central_conflict": "Mâu thuẫn danh dự",
+                    "key_twist": "Linh thú là vệ binh bảo vệ",
+                    "character_impacts": {},
+                    "consequences": ["Ký kết khế ước"],
+                    "scenes": [],
+                    "cliffhanger": "Dấu ấn phát sáng"
+                }
+            ],
+            "reader_choices": [
+                {"choice_id": "choice_a", "route_target": "route_a", "text": "Tấn công trực diện"},
+                {"choice_id": "choice_b", "route_target": "route_b", "text": "Thâm nhập lén lút"},
+                {"choice_id": "choice_c", "route_target": "route_c", "text": "Đàm phán liên minh"}
+            ],
+            "divergence_analysis": "Ba hướng rẽ kịch bản đối lập",
+            "recommended_route": "route_a"
+        },
+        "mode_used": "fallback_template",
+        "model_name": "fallback",
+        "generation_time_ms": 1
+    }
+
+
+@router.post("/story/suggest-twists-and-choices")
+async def suggest_twists_and_choices_endpoint(body: StoryTwistsEndpointRequest):
+    """
+    Gợi ý các nút thắt cốt truyện (plot twists), xung đột nhân vật (character conflicts)
+    và lựa chọn kịch tính cho người đọc (reader choices).
+    """
+    series_title = body.series_title or "Manga Series"
+    series_genre = body.genre
+    context = body.current_context or "Tình huống căng thẳng nơi cao trào câu chuyện"
+    characters_profiles: list[Any] = []
+
+    if body.chapter_id:
+        with connect() as db:
+            chapter_row = db.execute("SELECT * FROM manga_chapters WHERE id = ?", (body.chapter_id,)).fetchone()
+            if chapter_row:
+                chapter = dict(chapter_row)
+                if not body.current_context and chapter.get("synopsis"):
+                    context = chapter["synopsis"]
+
+                series_id = chapter["series_id"]
+                series_row = db.execute("SELECT * FROM manga_series WHERE id = ?", (series_id,)).fetchone()
+                if series_row:
+                    series = dict(series_row)
+                    if not body.series_title and series.get("title"):
+                        series_title = series["title"]
+                    if not body.genre and series.get("genre"):
+                        series_genre = series["genre"]
+
+                chars_raw = db.execute("SELECT * FROM manga_characters WHERE series_id = ?", (series_id,)).fetchall()
+                if manga_story:
+                    for c in chars_raw:
+                        try:
+                            characters_profiles.append(manga_story.CharacterProfile(
+                                name=c["name"],
+                                speech_rules=json.loads(c["speech_rules_json"] or "{}"),
+                                personality=json.loads(c["personality_json"] or "{}").get("description", "")
+                            ))
+                        except Exception:
+                            pass
+
+    if manga_story and hasattr(manga_story, "PlotTwistAndChoiceRequest") and hasattr(manga_story, "suggest_plot_twists_and_choices"):
+        req = manga_story.PlotTwistAndChoiceRequest(
+            series_title=series_title,
+            genre=series_genre,
+            current_context=context,
+            characters=characters_profiles,
+            num_twists=body.num_twists,
+            num_conflicts=body.num_conflicts,
+            num_choices=body.num_choices,
+            user_instructions=body.user_instructions
+        )
+        resp = await manga_story.suggest_plot_twists_and_choices(req)
+        return resp.model_dump()
+
+    return {
+        "plot_twists": [],
+        "character_conflicts": [],
+        "reader_choices": [],
+        "editor_notes": "manga_story module not fully loaded.",
+        "mode_used": "fallback_template",
+        "model_name": "fallback",
+        "generation_time_ms": 1
+    }
+
+
+@router.get("/story/routes-template")
+def get_routes_template():
+    """Lấy cấu trúc dữ liệu mẫu cho tính năng Story Branching và Plot Twists."""
+    if manga_story and hasattr(manga_story, "create_sample_story_data"):
+        data = manga_story.create_sample_story_data()
+        return {
+            "status": "success",
+            "series": data.get("series", {}),
+            "sample_branching": data.get("sample_branching").model_dump() if hasattr(data.get("sample_branching"), "model_dump") else data.get("sample_branching"),
+            "sample_twists": data.get("sample_twists").model_dump() if hasattr(data.get("sample_twists"), "model_dump") else data.get("sample_twists")
+        }
+    return {"status": "ok", "message": "Routes template ready."}
 
 
 # --- Storyboard & Panels ---
@@ -1256,6 +1566,10 @@ def auto_storyboard(chapter_id: str):
         if not chapter:
             raise HTTPException(status_code=404, detail="Không tìm thấy chapter.")
 
+        series_row = db.execute("SELECT art_style, reading_direction FROM manga_series WHERE id = ?", (chapter["series_id"],)).fetchone()
+        art_style = series_row["art_style"] if series_row else "bw"
+        is_color = (art_style != "bw")
+
         scenes = [dict(s) for s in db.execute("SELECT * FROM manga_scenes WHERE chapter_id = ? ORDER BY position ASC", (chapter_id,)).fetchall()]
         for s in scenes:
             s["characters"] = json.loads(s.pop("characters_json", "[]") or "[]")
@@ -1274,52 +1588,131 @@ def auto_storyboard(chapter_id: str):
         db.execute("DELETE FROM manga_panels WHERE page_id IN (SELECT id FROM manga_storyboard_pages WHERE chapter_id = ?)", (chapter_id,))
         db.execute("DELETE FROM manga_storyboard_pages WHERE chapter_id = ?", (chapter_id,))
 
-        page_idx = 1
-        page_id = uuid.uuid4().hex
-        stamp = now()
-        db.execute("""
-            INSERT INTO manga_storyboard_pages (id, chapter_id, page_number, layout_template, status, metadata_json, created_at, updated_at)
-            VALUES (?, ?, ?, '4-panel', 'draft', '{}', ?, ?)
-        """, (page_id, chapter_id, page_idx, stamp, stamp))
+        pos_hint_coords = {
+            "top-left": (0.28, 0.22),
+            "top-right": (0.72, 0.22),
+            "bottom-left": (0.28, 0.78),
+            "bottom-right": (0.72, 0.78),
+            "center": (0.50, 0.26),
+        }
 
-        panel_num = 1
+        def _map_bubble_type(raw_bt: str) -> str:
+            bt = (raw_bt or "regular").lower().strip()
+            if bt in {"speech", "regular"}:
+                return "regular"
+            if bt in {"narrator", "narration", "caption"}:
+                return "caption"
+            if bt == "scream":
+                return "shout"
+            return bt
+
+        # Collect rich panels either from manga_story panels or scene summaries
+        planned_panels: list[dict[str, Any]] = []
         for sc in scenes:
-            summary = sc.get("summary", "Panel cảnh truyện")
-            char_list = sc.get("characters", [])
-            speaker = char_list[0] if char_list else "Nhân vật"
-            prompt_obj = {
-                "positive": f"manga style, 1girl/1boy, dynamic composition, detailed lineart, screen tones, {summary}",
-                "negative": "text, watermark, low quality, bad anatomy, deformed",
-                "camera": "medium shot" if panel_num % 2 == 0 else "close-up",
-                "characters": char_list
-            }
-            dialogue_obj = [{
-                "speaker": speaker,
-                "text": sc.get("content", {}).get("dialogue_preview", "...") or "...",
-                "bubble_type": "regular",
-                "x_norm": 0.25 if panel_num % 2 == 1 else 0.75,
-                "y_norm": 0.25
-            }]
+            content = sc.get("content", {}) or {}
+            sc_panels = content.get("panels") or []
+            sc_chars = sc.get("characters", [])
+            if isinstance(sc_panels, list) and sc_panels:
+                for p in sc_panels:
+                    char_list = p.get("characters_in_panel") or p.get("characters_present") or sc_chars
+                    raw_pos = (p.get("diffusion_prompt_en") or "").strip()
+                    if not raw_pos:
+                        desc = p.get("visual_description") or sc.get("summary", "Manga scene")
+                        if is_color:
+                            raw_pos = f"colored manga, vibrant anime illustration, full color, cel shading, detailed lighting, {desc}"
+                        else:
+                            raw_pos = f"manga style, monochrome, detailed lineart, screentones, {desc}"
+                    raw_neg = (p.get("diffusion_negative_prompt") or "").strip()
+                    if not raw_neg:
+                        raw_neg = "text, speech bubble, watermark, low quality, bad anatomy, deformed" + (", monochrome, greyscale" if is_color else "")
 
-            pan_id = uuid.uuid4().hex
+                    dialogues_formatted = []
+                    for d_idx, d in enumerate(p.get("dialogues") or []):
+                        hint = str(d.get("position_hint", "auto")).lower()
+                        default_x = 0.28 if d_idx % 2 == 0 else 0.72
+                        default_y = 0.22 if d_idx < 2 else 0.76
+                        x_norm, y_norm = pos_hint_coords.get(hint, (default_x, default_y))
+                        dialogues_formatted.append({
+                            "speaker": d.get("speaker") or (char_list[0] if char_list else "Nhân vật"),
+                            "text": d.get("text") or "...",
+                            "bubble_type": _map_bubble_type(d.get("bubble_type", "speech")),
+                            "x_norm": x_norm,
+                            "y_norm": y_norm,
+                        })
+
+                    sfx_formatted = [
+                        {
+                            "text": sx.get("text", ""),
+                            "meaning": sx.get("meaning", ""),
+                            "visual_style": sx.get("visual_style", "impact"),
+                        }
+                        for sx in (p.get("sfx") or []) if sx.get("text")
+                    ]
+
+                    planned_panels.append({
+                        "prompt": {
+                            "positive": raw_pos,
+                            "negative": raw_neg,
+                            "camera": p.get("camera_angle", "medium_shot"),
+                            "characters": char_list,
+                        },
+                        "dialogue": dialogues_formatted,
+                        "sfx": sfx_formatted,
+                    })
+            else:
+                summary = sc.get("summary", "Panel cảnh truyện")
+                char_list = sc_chars
+                speaker = char_list[0] if char_list else "Nhân vật"
+                if is_color:
+                    pos_prompt = f"colored manga, vibrant anime illustration, full color, cel shading, detailed background, {summary}"
+                    neg_prompt = "text, speech bubble, watermark, low quality, bad anatomy, deformed, monochrome, greyscale"
+                else:
+                    pos_prompt = f"manga style, 1girl/1boy, dynamic composition, detailed lineart, screen tones, {summary}"
+                    neg_prompt = "text, speech bubble, watermark, low quality, bad anatomy, deformed"
+                planned_panels.append({
+                    "prompt": {
+                        "positive": pos_prompt,
+                        "negative": neg_prompt,
+                        "camera": "medium_shot" if (len(planned_panels) + 1) % 2 == 0 else "close_up",
+                        "characters": char_list,
+                    },
+                    "dialogue": [{
+                        "speaker": speaker,
+                        "text": content.get("dialogue_preview", "...") or "...",
+                        "bubble_type": "regular",
+                        "x_norm": 0.28 if len(planned_panels) % 2 == 0 else 0.72,
+                        "y_norm": 0.22,
+                    }],
+                    "sfx": [],
+                })
+
+        # Partition planned panels into pages of 4 (or remainder on final page)
+        stamp = now()
+        chunk_size = 4
+        for page_idx in range(0, len(planned_panels), chunk_size):
+            page_panels = planned_panels[page_idx:page_idx + chunk_size]
+            page_number = (page_idx // chunk_size) + 1
+            page_id = uuid.uuid4().hex
+            layout_tpl = "grid_2x2" if len(page_panels) == 4 else (
+                "top1_bottom2" if len(page_panels) == 3 else ("grid_1x2" if len(page_panels) == 2 else "single")
+            )
             db.execute("""
-                INSERT INTO manga_panels (id, page_id, panel_number, prompt_json, dialogue_json, sfx_json, status, metadata_json, created_at, updated_at)
-                VALUES (?, ?, ?, ?, ?, '[]', 'pending', '{}', ?, ?)
-            """, (
-                pan_id, page_id, panel_num,
-                json.dumps(prompt_obj, ensure_ascii=False),
-                json.dumps(dialogue_obj, ensure_ascii=False),
-                stamp, stamp
-            ))
-            panel_num += 1
-            if panel_num > 4:
-                page_idx += 1
-                page_id = uuid.uuid4().hex
-                panel_num = 1
+                INSERT INTO manga_storyboard_pages (id, chapter_id, page_number, layout_template, status, metadata_json, created_at, updated_at)
+                VALUES (?, ?, ?, ?, 'draft', '{}', ?, ?)
+            """, (page_id, chapter_id, page_number, layout_tpl, stamp, stamp))
+
+            for pan_idx, pan_data in enumerate(page_panels, start=1):
+                pan_id = uuid.uuid4().hex
                 db.execute("""
-                    INSERT INTO manga_storyboard_pages (id, chapter_id, page_number, layout_template, status, metadata_json, created_at, updated_at)
-                    VALUES (?, ?, ?, '4-panel', 'draft', '{}', ?, ?)
-                """, (page_id, chapter_id, page_idx, stamp, stamp))
+                    INSERT INTO manga_panels (id, page_id, panel_number, prompt_json, dialogue_json, sfx_json, status, metadata_json, created_at, updated_at)
+                    VALUES (?, ?, ?, ?, ?, ?, 'pending', '{}', ?, ?)
+                """, (
+                    pan_id, page_id, pan_idx,
+                    json.dumps(pan_data["prompt"], ensure_ascii=False),
+                    json.dumps(pan_data["dialogue"], ensure_ascii=False),
+                    json.dumps(pan_data["sfx"], ensure_ascii=False),
+                    stamp, stamp
+                ))
 
         db.commit()
 
@@ -1379,6 +1772,7 @@ async def generate_panel_art(body: GeneratePanelArtRequest):
     job_id = uuid.uuid4().hex
     asset_id = uuid.uuid4().hex
     stamp = now()
+    art_result = None
 
     # Delegate to manga_comfy if present
     if manga_comfy and hasattr(manga_comfy, "get_comfy_adapter"):
@@ -1433,10 +1827,17 @@ async def generate_panel_art(body: GeneratePanelArtRequest):
             WHERE id = ?
         """, (asset_id, stamp, body.panel_id))
 
-        db.execute("""
-            INSERT OR REPLACE INTO manga_art_jobs (id, panel_id, status, attempt, seed, input_json, output_asset_id, created_at, updated_at)
-            VALUES (?, ?, 'completed', 1, ?, ?, ?, ?, ?)
-        """, (job_id, body.panel_id, body.seed or -1, json.dumps({"prompt": positive_prompt}), asset_id, stamp, stamp))
+        if art_result is not None:
+            db.execute("""
+                UPDATE manga_art_jobs
+                SET output_asset_id = ?, updated_at = ?
+                WHERE id = ?
+            """, (asset_id, stamp, job_id))
+        else:
+            db.execute("""
+                INSERT OR REPLACE INTO manga_art_jobs (id, panel_id, series_id, chapter_id, page_id, status, mode, art_style, attempt, seed, input_json, output_asset_id, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, 'completed', 'mock', ?, 1, ?, ?, ?, ?, ?)
+            """, (job_id, body.panel_id, series_id, chapter_id, page_id, "manga_bw" if art_style == "bw" else "manga_color", body.seed or -1, json.dumps({"prompt": positive_prompt}), asset_id, stamp, stamp))
         db.commit()
 
     return {
@@ -1444,6 +1845,7 @@ async def generate_panel_art(body: GeneratePanelArtRequest):
         "job_id": job_id,
         "panel_id": body.panel_id,
         "asset_id": asset_id,
+        "mode": getattr(art_result, "mode", "mock") if art_result is not None else "mock",
         "image_url": f"/api/manga/assets/{asset_id}",
         "file_path": str(panel_img_path)
     }
@@ -1507,7 +1909,7 @@ async def render_page_endpoint(page_id: str, body: Optional[RenderPageRequest] =
     """Composes panels, speech bubbles, and gutters into a complete page image."""
     with connect() as db:
         page_row = db.execute("""
-            SELECT pg.*, c.series_id, s.art_style
+            SELECT pg.*, c.series_id, s.art_style, s.reading_direction
             FROM manga_storyboard_pages pg
             JOIN manga_chapters c ON pg.chapter_id = c.id
             JOIN manga_series s ON c.series_id = s.id
@@ -1546,15 +1948,8 @@ async def render_page_endpoint(page_id: str, body: Optional[RenderPageRequest] =
 
                 bubbles = []
                 for dia in pan.get("dialogue", []):
-                    b_type = manga_composer.BubbleType.REGULAR
-                    raw_type = dia.get("bubble_type", "regular").lower()
-                    if "thought" in raw_type:
-                        b_type = manga_composer.BubbleType.THOUGHT
-                    elif "shout" in raw_type:
-                        b_type = manga_composer.BubbleType.SHOUT
-                    elif "sfx" in raw_type:
-                        b_type = manga_composer.BubbleType.SFX
-
+                    raw_type = str(dia.get("bubble_type", "regular")).lower().strip()
+                    b_type = manga_composer.BUBBLE_TYPE_MAP.get(raw_type, manga_composer.BubbleType.REGULAR)
                     bubbles.append(manga_composer.SpeechBubble(
                         text=dia.get("text", "") or "...",
                         speaker=dia.get("speaker", ""),
@@ -1563,16 +1958,42 @@ async def render_page_endpoint(page_id: str, body: Optional[RenderPageRequest] =
                         center_y=float(dia.get("y_norm", 0.25))
                     ))
 
+                for sx in pan.get("sfx", []):
+                    if isinstance(sx, dict) and sx.get("text"):
+                        bubbles.append(manga_composer.convert_story_sfx_to_speech_bubble(sx))
+
                 panel_configs.append(manga_composer.PanelConfig(
                     image_path=img_path,
                     prompt=json.loads(pan.get("prompt_json", "{}") or "{}").get("positive", ""),
-                    bubbles=bubbles
+                    bubbles=bubbles,
+                    auto_layout_bubbles=True,
                 ))
+
+            layout_tpl = str(page.get("layout_template", "") or "").lower()
+            n_panels = len(panel_configs)
+            if body and body.layout_override:
+                chosen_layout = manga_composer.PanelLayoutType(body.layout_override)
+            elif layout_tpl == "yonkoma" and n_panels == 4:
+                chosen_layout = manga_composer.PanelLayoutType.YONKOMA
+            elif n_panels <= 1:
+                chosen_layout = manga_composer.PanelLayoutType.SINGLE
+            elif n_panels == 2:
+                chosen_layout = manga_composer.PanelLayoutType.GRID_1X2
+            elif n_panels == 3:
+                chosen_layout = manga_composer.PanelLayoutType.TOP1_BOTTOM2
+            elif n_panels == 4:
+                chosen_layout = manga_composer.PanelLayoutType.GRID_2X2
+            elif n_panels == 5:
+                chosen_layout = manga_composer.PanelLayoutType.ACTION_5
+            else:
+                chosen_layout = manga_composer.PanelLayoutType.DRAMA_6
 
             page_config = manga_composer.PageConfig(
                 page_number=page_num,
                 panels=panel_configs,
-                layout_type=manga_composer.PanelLayoutType.YONKOMA
+                layout_type=chosen_layout,
+                reading_direction=page.get("reading_direction", "rtl") or "rtl",
+                auto_layout_bubbles=True,
             )
             composer = manga_composer.MangaComposer()
             composed_img = composer.compose_page(page_config)
@@ -1678,6 +2099,18 @@ async def export_chapter_endpoint(body: ExportChapterRequest):
     export_id = uuid.uuid4().hex
     stamp = now()
     final_output_path = str(cbz_path if body.format == "cbz" else pdf_path)
+
+    # Auto-copy exported manga (CBZ, PDF) to Central Export directory F:\AI-Office\Export\Manga\
+    central_manga_dir = ROOT_DIR / "Export" / "Manga"
+    central_manga_dir.mkdir(parents=True, exist_ok=True)
+    try:
+        import shutil
+        if cbz_path.exists():
+            shutil.copy2(cbz_path, central_manga_dir / cbz_path.name)
+        if pdf_path.exists():
+            shutil.copy2(pdf_path, central_manga_dir / pdf_path.name)
+    except Exception as copy_err:
+        logger.warning(f"Failed to copy exported files to central Export/Manga: {copy_err}")
 
     with connect() as db:
         db.execute("""

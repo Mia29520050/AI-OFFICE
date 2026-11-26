@@ -74,3 +74,23 @@ async def test_model_provider_chat_instant_math():
     # Math question should return directly without contacting Ollama
     res = await manager.chat([{"role": "user", "content": "123456789012 * 987654321098"}])
     assert "121,932,631,136,585,886,175,176" in res
+
+
+def test_classify_prompt_speed_long_form_chapter():
+    decision = classify_prompt_speed("Chương 1 viết khoảng 5000 chữ")
+    assert decision.is_simple_query is False
+    assert decision.recommended_num_predict >= 8192
+
+
+def test_classify_prompt_speed_story_continuation():
+    for prompt in ("Tùy em", "Sao ngắn ngủi vậy", "Viết tiếp đi"):
+        decision = classify_prompt_speed(prompt)
+        assert decision.is_simple_query is False
+        assert decision.recommended_num_predict >= 4096
+
+
+def test_local_options_anti_repetition():
+    opts = ModelProviderManager._build_local_options(ctx_size=8192, num_predict=8192, temperature=0.25, json_mode=False)
+    assert opts["repeat_penalty"] >= 1.15
+    assert opts["repeat_last_n"] >= 256
+    assert opts["temperature"] == 0.65

@@ -348,3 +348,84 @@ def test_fastapi_comfy_routes(temp_env):
     assert data["mode"] == "mock"
     assert data["status"] == "completed"
     assert Path(data["image_path"]).is_file()
+
+
+def test_auto_attach_character_refs_from_refs_and_characters_dir(tmp_path: Path):
+    db_file = tmp_path / "refs_test.db"
+    manga_dir = tmp_path / "manga"
+    fake_comfy = tmp_path / "comfy"
+    refs_dir = tmp_path / "refs"
+    chars_dir = tmp_path / "data" / "characters"
+    (fake_comfy / "models" / "checkpoints").mkdir(parents=True, exist_ok=True)
+    (fake_comfy / "input").mkdir(parents=True, exist_ok=True)
+    refs_dir.mkdir(parents=True, exist_ok=True)
+    chars_dir.mkdir(parents=True, exist_ok=True)
+
+    # Create dummy Elara reference sheet in refs/
+    elara_ref = refs_dir / "elara_sheet.png"
+    Image.new("RGB", (256, 256), (200, 210, 220)).save(elara_ref)
+
+    adapter = ComfyAdapter(
+        base_url="http://127.0.0.1:58188",
+        comfy_path=fake_comfy,
+        manga_dir=manga_dir,
+        db_path=db_file,
+        refs_dir=refs_dir,
+        characters_dir=chars_dir,
+    )
+
+    async def _run():
+        # Panel 1 mentions Elara -> auto-attaches elara_sheet.png even when character_refs is empty
+        req1 = PanelArtRequest(
+            panel_id="elara_p1",
+            series_id="elara_chronicles",
+            chapter_id="ch01",
+            prompt="Elara standing on cathedral balcony, silver hair, crimson eyes",
+            seed=111,
+            width=512,
+            height=512,
+        )
+        res1 = await adapter.generate_panel_art(req1)
+        assert res1.status == JobStatus.COMPLETED.value
+        assert res1.mode == GenerationMode.MOCK.value
+        assert len(res1.metadata.get("character_refs", [])) >= 1
+        assert res1.metadata["character_refs"][0]["image_path"] == str(elara_ref)
+
+        # Build prompt graph with auto-attached ref -> routes through AnimaRefAdapterApply
+        graph = adapter.workflow_discovery.build_prompt_graph(
+            req1, model_name="anima-turbo-q4_k_m.gguf"
+        )
+        assert "8" in graph
+        assert graph["8"]["class_type"] == "AnimaRefAdapterApply"
+        # Reference image was staged into ComfyUI input/
+        assert (fake_comfy / "input" / "ref_elara_sheet.png").is_file()
+
+        # Panel 2 in a series without static refs chains Panel 1 automatically
+        req2_p1 = PanelArtRequest(
+            panel_id="chain_p1",
+            series_id="chain_series",
+            chapter_id="ch01",
+            prompt="1girl heroine looking at the moon",
+            seed=222,
+            width=512,
+            height=512,
+        )
+        res_chain_1 = await adapter.generate_panel_art(req2_p1)
+        assert res_chain_1.metadata.get("character_refs") is None
+
+        req2_p2 = PanelArtRequest(
+            panel_id="chain_p2",
+            series_id="chain_series",
+            chapter_id="ch01",
+            prompt="1girl heroine drawing her sword",
+            seed=223,
+            width=512,
+            height=512,
+        )
+        res_chain_2 = await adapter.generate_panel_art(req2_p2)
+        chained = res_chain_2.metadata.get("character_refs", [])
+        assert len(chained) == 1
+        assert chained[0]["source"] == "series_first_panel_anchor"
+        assert chained[0]["image_path"] == res_chain_1.image_path
+
+    asyncio.run(_run())

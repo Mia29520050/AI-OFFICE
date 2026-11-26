@@ -1,0 +1,13 @@
+# Training dependencies for QLoRA 4-bit on 6GB VRAM GPU (Windows + CUDA)
+# PyTorch with CUDA 12.4+ installation:
+# pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu124
+
+transformers>=4.40.0,<5
+peft>=0.10.0,<1
+trl>=0.8.0,<1
+bitsandbytes>=0.43.0
+accelerate>=0.28.0,<1
+datasets>=2.18.0,<3
+scipy>=1.11.0
+sentencepiece>=0.2.0
+protobuf>=4.25.0

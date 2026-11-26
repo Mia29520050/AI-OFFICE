@@ -54,13 +54,15 @@ ROOT_DIR = Path(__file__).resolve().parents[1]
 DATA_DIR = ROOT_DIR / "data"
 DEFAULT_DB_PATH = DATA_DIR / "office.db"
 DEFAULT_MANGA_DIR = DATA_DIR / "manga"
+DEFAULT_REFS_DIR = ROOT_DIR / "refs"
+DEFAULT_CHARACTERS_DIR = DATA_DIR / "characters"
 
 DEFAULT_COMFY_URL = os.getenv("COMFYUI_HOST", "http://127.0.0.1:8188").rstrip("/")
-DEFAULT_COMFY_PATH = Path(os.getenv("COMFYUI_PATH", r"F:\AI\ComfyUI"))
+DEFAULT_COMFY_PATH = Path(os.getenv("COMFYUI_PATH", r"F:\AI-Office\engine\ComfyUI"))
 DEFAULT_FONT_PATH = ROOT_DIR / "app" / "ui" / "assets" / "Inter-Variable.ttf"
 
 # Hardware protection constants for 6GB VRAM / 12GB RAM environment
-DEFAULT_GENERATION_TIMEOUT_SECS = 180.0
+DEFAULT_GENERATION_TIMEOUT_SECS = 360.0
 DEFAULT_CONNECT_TIMEOUT_SECS = 3.0
 
 
@@ -598,8 +600,10 @@ class ModelRegistryManager:
                             )
                         )
 
-        has_2d = any(c.is_2d_manga for c in checkpoints)
+        has_2d = any(c.is_2d_manga for c in checkpoints) or any(m.is_2d_manga for m in diffusion_models)
         active_ckpt = next((c.name for c in checkpoints if c.is_2d_manga), None)
+        if not active_ckpt and diffusion_models:
+            active_ckpt = next((m.name for m in diffusion_models if m.is_2d_manga), None)
         if not active_ckpt and checkpoints:
             active_ckpt = checkpoints[0].name
 
@@ -760,6 +764,24 @@ class WorkflowDiscovery:
             logger.warning("Failed to parse workflow file %s: %s", path, e)
             return None
 
+    def _prepare_ref_image_for_comfy(self, ref_path: str) -> str:
+        """Copy reference image into ComfyUI input/ if needed so LoadImage can resolve it."""
+        if not ref_path:
+            return ""
+        src = Path(ref_path)
+        comfy_input_dir = self.comfy_path / "input"
+        if src.is_file() and comfy_input_dir.is_dir():
+            try:
+                import shutil
+                dest_name = f"ref_{src.stem}{src.suffix.lower()}"
+                dest = comfy_input_dir / dest_name
+                if not dest.exists() or dest.stat().st_size != src.stat().st_size:
+                    shutil.copy2(src, dest)
+                return dest_name
+            except Exception as e:
+                logger.warning("Failed to copy reference image %s to ComfyUI input/: %s", src, e)
+        return ref_path
+
     def build_prompt_graph(
         self,
         request: PanelArtRequest,
@@ -767,12 +789,25 @@ class WorkflowDiscovery:
         workflow_id: str | None = None,
     ) -> dict[str, Any]:
         """Construct standard ComfyUI API prompt graph."""
-        if workflow_id == "builtin_anima_ref_adapter":
-            ref_path = ""
-            if request.character_refs and "image_path" in request.character_refs[0]:
-                ref_path = request.character_refs[0]["image_path"]
-            return self.build_anima_ref_adapter_prompt_graph(request, model_name, ref_path)
-        if workflow_id == "builtin_anima_turbo_gguf":
+        ref_path = ""
+        if request.character_refs:
+            for ref in request.character_refs:
+                if isinstance(ref, dict) and ref.get("image_path"):
+                    ref_path = str(ref["image_path"])
+                    break
+        has_char_ref = bool(ref_path)
+        prepared_ref = self._prepare_ref_image_for_comfy(ref_path) if has_char_ref else ""
+
+        is_anima_model = (
+            workflow_id == "builtin_anima_turbo_gguf"
+            or model_name.endswith(".gguf")
+            or "anima" in model_name.lower()
+        )
+        if workflow_id == "builtin_anima_ref_adapter" or (
+            has_char_ref and (workflow_id in (None, "") or is_anima_model)
+        ):
+            return self.build_anima_ref_adapter_prompt_graph(request, model_name, prepared_ref)
+        if is_anima_model:
             return self.build_anima_turbo_gguf_prompt_graph(request, model_name)
 
         pos_prompt = request.prompt
@@ -783,8 +818,8 @@ class WorkflowDiscovery:
 
         neg_prompt = request.negative_prompt
 
-        # Standard 7-node standard SD1.5 / SDXL generation pipeline
-        return {
+        # Standard 7-node SD1.5 / SDXL generation pipeline (with optional AnimaRefAdapter lock)
+        graph: dict[str, Any] = {
             "1": {
                 "class_type": "CheckpointLoaderSimple",
                 "inputs": {"ckpt_name": model_name},
@@ -832,6 +867,27 @@ class WorkflowDiscovery:
                 },
             },
         }
+        if has_char_ref:
+            graph["8"] = {
+                "class_type": "LoadImage",
+                "inputs": {"image": prepared_ref},
+            }
+            graph["9"] = {
+                "class_type": "AnimaRefAdapter",
+                "inputs": {
+                    "model": ["1", 0],
+                    "vae": ["1", 2],
+                    "image": ["8", 0],
+                    "lora_name": "anima_ref_adapter_v2_r64.safetensors",
+                    "ref_guidance": 1.5,
+                    "correction": "apg",
+                    "strength": 0.85,
+                    "ref_end": 0.55,
+                    "ref_megapixels": 0.75,
+                },
+            }
+            graph["5"]["inputs"]["model"] = ["9", 0]
+        return graph
 
     def build_anima_ref_adapter_prompt_graph(
         self,
@@ -928,14 +984,16 @@ class WorkflowDiscovery:
         elif request.art_style == "manga_color":
             pos_prompt = f"colored anime illustration, vibrant cel shading, masterpiece, {pos_prompt}"
 
+        neg_prompt = request.negative_prompt or "worst quality, low quality, blurry, deformed, bad anatomy"
+
         return {
             "1": {
                 "class_type": "UnetLoaderGGUF",
-                "inputs": {"unet_name": model_name or "anima-turbo-q4_k_m.gguf"},
+                "inputs": {"unet_name": model_name or "anima-turbo-v1.1-Q4_K_M.gguf"},
             },
             "2": {
-                "class_type": "CLIPLoaderGGUF",
-                "inputs": {"clip_name": "t5xxl_q4_k_m.gguf", "type": "cosmos"},
+                "class_type": "CLIPLoader",
+                "inputs": {"clip_name": "qwen_3_06b_base.safetensors", "type": "stable_diffusion"},
             },
             "3": {
                 "class_type": "CLIPTextEncode",
@@ -943,11 +1001,11 @@ class WorkflowDiscovery:
             },
             "4": {
                 "class_type": "CLIPTextEncode",
-                "inputs": {"text": request.negative_prompt, "clip": ["2", 0]},
+                "inputs": {"text": neg_prompt, "clip": ["2", 0]},
             },
             "5": {
                 "class_type": "VAELoader",
-                "inputs": {"vae_name": "cosmos_vae.safetensors"},
+                "inputs": {"vae_name": "qwen_image_vae.safetensors"},
             },
             "6": {
                 "class_type": "EmptyLatentImage",
@@ -957,10 +1015,10 @@ class WorkflowDiscovery:
                 "class_type": "KSampler",
                 "inputs": {
                     "seed": request.seed,
-                    "steps": min(10, max(4, request.steps)),
-                    "cfg": 4.5,
-                    "sampler_name": "euler_ancestral",
-                    "scheduler": "normal",
+                    "steps": min(12, max(8, request.steps)),
+                    "cfg": 1.5,
+                    "sampler_name": "euler",
+                    "scheduler": "simple",
                     "denoise": 1.0,
                     "model": ["1", 0],
                     "positive": ["3", 0],
@@ -969,8 +1027,8 @@ class WorkflowDiscovery:
                 },
             },
             "8": {
-                "class_type": "VAEDecodeTiled",
-                "inputs": {"samples": ["7", 0], "vae": ["5", 0], "tile_size": 512, "overlap": 64},
+                "class_type": "VAEDecode",
+                "inputs": {"samples": ["7", 0], "vae": ["5", 0]},
             },
             "9": {
                 "class_type": "SaveImage",
@@ -1373,12 +1431,16 @@ class ComfyAdapter:
         db_path: Path | str = DEFAULT_DB_PATH,
         db_getter: Callable[[], sqlite3.Connection] | None = None,
         external_semaphore: asyncio.Semaphore | None = None,
+        refs_dir: Path = DEFAULT_REFS_DIR,
+        characters_dir: Path = DEFAULT_CHARACTERS_DIR,
     ) -> None:
         self.base_url = base_url.rstrip("/")
         self.comfy_path = comfy_path
         self.manga_dir = manga_dir
         self.db_path = Path(db_path)
         self._db_getter = db_getter
+        self.refs_dir = Path(refs_dir)
+        self.characters_dir = Path(characters_dir)
 
         # Sub-components
         self.client = ComfyUIClient(self.base_url)
@@ -1739,6 +1801,129 @@ class ComfyAdapter:
         filename = f"panel_{request.panel_id}_{ts}_{seed}.png"
         return target_dir / filename
 
+    def resolve_character_references(self, request: PanelArtRequest) -> list[dict[str, Any]]:
+        """Auto-discover and attach character reference sheets from refs/, data/characters/,
+        series character directories, or earlier panels in the same series/chapter."""
+        resolved: list[dict[str, Any]] = list(request.character_refs or [])
+        seen_paths: set[str] = {
+            str(r["image_path"]) for r in resolved if isinstance(r, dict) and r.get("image_path")
+        }
+
+        prompt_lower = (request.prompt or "").lower()
+        meta_chars = request.metadata.get("characters", []) if isinstance(request.metadata, dict) else []
+        target_names: list[str] = [str(c).strip().lower() for c in meta_chars if str(c).strip()]
+
+        img_exts = {".png", ".jpg", ".jpeg", ".webp"}
+        candidate_dirs: list[tuple[Path, str, bool]] = []
+        if request.series_id:
+            candidate_dirs.extend([
+                (self.manga_dir / "projects" / request.series_id / "refs", "series_refs", True),
+                (self.manga_dir / "projects" / request.series_id / "characters", "series_characters", True),
+                (self.manga_dir / "series" / request.series_id / "refs", "series_legacy_refs", True),
+            ])
+        candidate_dirs.extend([
+            (self.refs_dir, "global_refs", False),
+            (self.manga_dir / "refs", "manga_refs", False),
+            (self.characters_dir, "data_characters", False),
+        ])
+
+        def _matches_character(stem: str) -> bool:
+            norm = re.sub(r"(_ref|_reference|_sheet|_character_sheet)$", "", stem.lower()).strip("_- ")
+            if not norm:
+                return False
+            tokens = [t for t in re.split(r"[\s_\-]+", norm) if len(t) >= 3]
+            if any(norm in name or name in norm for name in target_names):
+                return True
+            if norm in prompt_lower or any(re.search(rf"\b{re.escape(tok)}\b", prompt_lower) for tok in tokens):
+                return True
+            return False
+
+        for base_dir, source_tag, allow_series_default in candidate_dirs:
+            if not base_dir.is_dir():
+                continue
+            for p in sorted(base_dir.rglob("*")):
+                if not p.is_file():
+                    continue
+                if p.suffix.lower() in img_exts:
+                    p_str = str(p)
+                    if p_str in seen_paths:
+                        continue
+                    is_match = _matches_character(p.stem) or _matches_character(p.parent.name)
+                    if is_match or allow_series_default:
+                        resolved.append({
+                            "image_path": p_str,
+                            "character_name": p.stem,
+                            "source": source_tag,
+                            "matched_by_name": is_match,
+                        })
+                        seen_paths.add(p_str)
+                elif p.suffix.lower() == ".json":
+                    try:
+                        data = json.loads(p.read_text(encoding="utf-8"))
+                        if not isinstance(data, dict):
+                            continue
+                        char_label = str(data.get("display_name") or data.get("name") or p.stem)
+                        if not (_matches_character(p.stem) or _matches_character(char_label)):
+                            continue
+                        for key in ("image_path", "ref_image", "reference_image", "sheet_image"):
+                            img_val = data.get(key)
+                            if not img_val:
+                                continue
+                            img_p = Path(str(img_val))
+                            if not img_p.is_absolute():
+                                img_p = (p.parent / img_p) if (p.parent / img_p).is_file() else (ROOT_DIR / img_p)
+                            if img_p.is_file() and str(img_p) not in seen_paths:
+                                resolved.append({
+                                    "image_path": str(img_p),
+                                    "character_name": char_label,
+                                    "source": f"{source_tag}_json",
+                                    "matched_by_name": True,
+                                })
+                                seen_paths.add(str(img_p))
+                    except Exception:
+                        pass
+
+        # Prioritize explicit name matches over generic series fallbacks
+        resolved.sort(key=lambda r: (0 if r.get("matched_by_name", True) else 1))
+
+        # Multi-panel consistency anchor: if still no image reference found and generating
+        # a subsequent panel for the same series/chapter containing a character, anchor to panel 1.
+        auto_chain = True
+        if isinstance(request.metadata, dict) and "auto_chain_panel_ref" in request.metadata:
+            auto_chain = bool(request.metadata["auto_chain_panel_ref"])
+        has_char_cue = bool(target_names) or any(
+            kw in prompt_lower
+            for kw in ("1girl", "1boy", "girl", "boy", "woman", "man", "character", "protagonist", "heroine", "elara")
+        )
+        if not resolved and auto_chain and has_char_cue and (request.series_id or request.chapter_id):
+            try:
+                with self.get_db() as db:
+                    if request.series_id:
+                        row = db.execute(
+                            """SELECT file_path, owner_id FROM manga_assets
+                               WHERE owner_type='panel' AND series_id=? AND owner_id!=?
+                               ORDER BY created_at ASC LIMIT 1""",
+                            (request.series_id, request.panel_id),
+                        ).fetchone()
+                    else:
+                        row = db.execute(
+                            """SELECT a.file_path, a.owner_id FROM manga_assets a
+                               JOIN manga_art_jobs j ON j.panel_id = a.owner_id
+                               WHERE a.owner_type='panel' AND j.chapter_id=? AND a.owner_id!=?
+                               ORDER BY a.created_at ASC LIMIT 1""",
+                            (request.chapter_id, request.panel_id),
+                        ).fetchone()
+                    if row and row["file_path"] and Path(row["file_path"]).is_file():
+                        resolved.append({
+                            "image_path": str(row["file_path"]),
+                            "source": "series_first_panel_anchor",
+                            "anchor_panel_id": row["owner_id"],
+                        })
+            except Exception as e:
+                logger.debug("Panel consistency anchor lookup skipped: %s", e)
+
+        return resolved
+
     async def generate_panel_art(self, request: PanelArtRequest) -> PanelArtResult:
         """Execute panel art generation protected by ResourceScheduler.
 
@@ -1746,9 +1931,15 @@ class ComfyAdapter:
         If ComfyUI is offline or has no 2D checkpoint or fails, seamlessly and safely
         falls back to MockPanelGenerator so the pipeline NEVER crashes!
         """
-        # 1. Normalize seed and initialize job
+        # 1. Normalize seed, auto-attach character reference sheets, and initialize job
         if request.seed < 0:
             request.seed = random.randint(100_000, 999_999_999)
+
+        resolved_refs = self.resolve_character_references(request)
+        if resolved_refs:
+            request.character_refs = resolved_refs
+            if isinstance(request.metadata, dict):
+                request.metadata["character_refs"] = resolved_refs
 
         job = self.create_job(request)
         target_path = self._determine_target_path(request, request.seed)

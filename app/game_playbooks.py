@@ -1066,3 +1066,184 @@ def build_step_guidance(
     if phase == "event_or_map":
         return phase, "CZN MAP/EVENT: " + CZN_HELP_TOPICS["map_nodes"] + " Chỉ bấm Confirm khi sáng [CAM]." + btn_rule
     return phase, "CZN RUN: Chỉ bấm Confirm/Enter khi sáng [CAM]/[TÍM] (không bấm [XÁM]), bấm Back_◁ (44, 44) khi cần thoát menu." + btn_rule
+
+
+GAME_PROFILES: dict[str, dict[str, Any]] = {
+    "fps": {
+        "label": "FPS / Bắn súng góc nhìn thứ nhất",
+        "title_keywords": (
+            "counter-strike", "cs2", "valorant", "apex legends", "overwatch",
+            "call of duty", "pubg", "rainbow six", "doom", "halo",
+        ),
+        "hud_keywords": (
+            "ammo", "hp", "armor", "kevlar", "round", "bomb", "spike",
+            "headshot", "k/d", "buy", "crosshair", "defuse", "plant",
+        ),
+        "controls_map": {
+            "w/a/s/d": "Di chuyển",
+            "space": "Nhảy",
+            "r": "Nạp đạn",
+            "1/2/3/4": "Đổi vũ khí / Lựu đạn",
+            "e": "Tương tác / Gỡ bom",
+            "b": "Mở shop mua đồ",
+            "click_xy": "Ngắm / Bắn mục tiêu",
+        },
+        "recommended_keys": ["w", "a", "s", "d", "space", "r", "1", "2", "3", "e", "b"],
+        "guidance": "PROFILE FPS: Di chuyển WASD, nạp đạn R, đổi súng 1/2/3, tương tác E, bám crosshair và check góc.",
+    },
+    "moba": {
+        "label": "MOBA / Đấu trường chiến thuật",
+        "title_keywords": (
+            "league of legends", "dota 2", "liên minh", "arena of valor",
+            "liên quân", "mobile legends", "heroes of the storm", "smite",
+        ),
+        "hud_keywords": (
+            "gold", "kda", "mana", "turret", "tower", "dragon", "baron",
+            "minion", "recall", "cooldown", "cs ", "inhibitor", "nexus",
+        ),
+        "controls_map": {
+            "q/w/e/r": "Tung kỹ năng Q/W/E và Chiêu cuối R",
+            "d/f": "Phép bổ trợ",
+            "1/2/3/4/5/6": "Kích hoạt trang bị",
+            "b": "Biến về (Recall)",
+            "space": "Khóa camera về tướng",
+            "right_click_xy": "Di chuyển / Đánh thường",
+            "a": "Attack-move",
+        },
+        "recommended_keys": ["q", "w", "e", "r", "d", "f", "b", "space", "a"],
+        "guidance": "PROFILE MOBA: Dùng Q/W/E/R tung chiêu, D/F phép bổ trợ, B biến về hồi máu, right_click_xy để di chuyển/last-hit.",
+    },
+    "rpg": {
+        "label": "RPG / Nhập vai phiêu lưu",
+        "title_keywords": (
+            "elden ring", "witcher", "cyberpunk", "skyrim", "final fantasy",
+            "baldur", "diablo", "path of exile", "persona", "monster hunter",
+            "black myth", "dark souls",
+        ),
+        "hud_keywords": (
+            "quest", "exp", "lvl", "level", "stamina", "inventory", "equip",
+            "boss", "mp", "hp", "interact", "talk", "skill", "potion",
+        ),
+        "controls_map": {
+            "w/a/s/d": "Di chuyển nhân vật",
+            "space": "Né đòn / Nhảy",
+            "e/f": "Nói chuyện / Nhặt đồ / Tương tác",
+            "q/r": "Kỹ năng / Tuyệt kỹ",
+            "i/tab": "Mở túi đồ",
+            "m": "Mở bản đồ",
+            "1/2/3/4": "Dùng bình hồi phục / ô nhanh",
+        },
+        "recommended_keys": ["w", "a", "s", "d", "space", "e", "f", "q", "r", "1", "2", "m", "tab"],
+        "guidance": "PROFILE RPG: Di chuyển WASD, né Space, tương tác E/F, dùng bình/skill 1..4 và theo dấu Quest.",
+    },
+    "visual_novel": {
+        "label": "Visual Novel / Cốt truyện tương tác",
+        "title_keywords": (
+            "ren'py", "renpy", "nekopara", "steins;gate", "ace attorney",
+            "doki doki", "visual novel", "clannad", "tsukihime", "mahoyo",
+        ),
+        "hud_keywords": (
+            "auto", "skip", "save", "load", "backlog", "history",
+            "choice", "hide", "q.save", "q.load", "dialogue",
+        ),
+        "controls_map": {
+            "space/enter": "Qua câu thoại tiếp theo",
+            "a": "Bật/tắt Auto-read",
+            "s": "Quick Save",
+            "l": "Quick Load",
+            "esc": "Mở menu hệ thống",
+            "click_xy": "Chọn nhánh hội thoại / nút UI",
+        },
+        "recommended_keys": ["space", "enter", "a", "s", "l", "esc"],
+        "guidance": "PROFILE VISUAL NOVEL: Bấm Space/Enter hoặc click_xy để đọc thoại, chú ý chọn đáp án nhánh cốt truyện khi hiện Choice.",
+    },
+    "gacha": {
+        "label": "Gacha / Turn-based & Chiến thuật thẻ bài",
+        "title_keywords": (
+            "chaos zero nightmare", "honkai: star rail", "star rail", "genshin impact",
+            "zenless zone zero", "arknights", "blue archive", "nikke",
+            "fate/grand order", "wuthering waves", "epic seven", "reverse: 1999",
+        ),
+        "hud_keywords": (
+            "pull", "gacha", "warp", "wish", "banner", "trailblaze", "sanity",
+            "tenacity", "ego", "ap", "sp", "auto battle", "combatant", "ultimate",
+        ),
+        "controls_map": {
+            "1/2/3/4/5/0": "Chọn thẻ kỹ năng / Tuyệt kỹ",
+            "e": "Kết thúc lượt / Chiến kỹ",
+            "r": "Bật/tắt Auto Battle",
+            "tab": "Đổi mục tiêu",
+            "esc": "Quay lại / Hủy chọn",
+            "click_xy": "Chọn thẻ, node bản đồ, nút Confirm",
+        },
+        "recommended_keys": ["1", "2", "3", "4", "e", "r", "tab", "esc", "space"],
+        "guidance": "PROFILE GACHA: Quản lý tài nguyên lượt (AP/SP/Energy), ưu tiên nút Confirm/Enter sáng màu và dùng 1..4 hoặc click_xy chọn thẻ.",
+    },
+}
+
+
+def detect_game_profile(
+    window_title: str = "",
+    ocr_items: list[dict[str, Any]] | list[str] | None = None,
+    goal: str = "",
+) -> dict[str, Any]:
+    """Detect game genre (FPS/MOBA/RPG/Visual Novel/Gacha) from window title + OCR HUD and map controls."""
+    title_low = (window_title or "").lower()
+    goal_low = (goal or "").lower()
+    ocr_texts: list[str] = []
+    for item in ocr_items or []:
+        if isinstance(item, dict):
+            txt = str(item.get("text", "")).strip()
+        else:
+            txt = str(item).strip()
+        if txt:
+            ocr_texts.append(txt.lower())
+    hud_blob = " ".join(ocr_texts)
+
+    best_genre = "generic"
+    best_score = 0
+    best_signals: list[str] = []
+
+    for genre, spec in GAME_PROFILES.items():
+        score = 0
+        signals: list[str] = []
+        for kw in spec["title_keywords"]:
+            if kw in title_low or kw in goal_low:
+                score += 4
+                signals.append(f"title:{kw}")
+        for kw in spec["hud_keywords"]:
+            if kw in hud_blob:
+                score += 1
+                signals.append(f"hud:{kw}")
+        if score > best_score:
+            best_score = score
+            best_genre = genre
+            best_signals = signals[:6]
+
+    if best_genre == "generic" or best_score == 0:
+        return {
+            "genre": "generic",
+            "label": "Game tổng quát",
+            "confidence": 0.2,
+            "matched_signals": [],
+            "controls_map": {
+                "click_xy": "Tương tác nút / đối tượng trên màn hình",
+                "w/a/s/d": "Di chuyển",
+                "space/enter": "Xác nhận / Nhảy",
+                "esc": "Menu / Quay lại",
+            },
+            "recommended_keys": ["w", "a", "s", "d", "space", "enter", "esc"],
+            "guidance": "PROFILE GENERIC: Đọc kỹ nhãn OCR và lưới tọa độ 0..1000 trước khi click hoặc nhấn phím.",
+        }
+
+    spec = GAME_PROFILES[best_genre]
+    confidence = round(min(0.98, 0.35 + best_score * 0.12), 2)
+    return {
+        "genre": best_genre,
+        "label": spec["label"],
+        "confidence": confidence,
+        "matched_signals": best_signals,
+        "controls_map": dict(spec["controls_map"]),
+        "recommended_keys": list(spec["recommended_keys"]),
+        "guidance": spec["guidance"],
+    }

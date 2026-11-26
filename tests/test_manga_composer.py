@@ -160,6 +160,17 @@ def test_speech_bubble_types_and_overlay():
     overlay_sfx = render_speech_bubble_overlay(canvas_size, b_sfx)
     assert overlay_sfx.size == canvas_size
 
+    # 6b. Crude English SFX auto-sanitization to authentic Vietnamese manga SFX
+    b_sfx_crude = SpeechBubble(
+        text="CLANNNG!",
+        bubble_type=BubbleType.SFX,
+        x=0.5,
+        y=0.5,
+    )
+    overlay_sfx_crude = render_speech_bubble_overlay(canvas_size, b_sfx_crude)
+    assert overlay_sfx_crude.size == canvas_size
+    assert overlay_sfx_crude.getextrema()[3][1] > 0
+
     # 7. Inverted bubble
     b_inv = SpeechBubble(
         text="Ngươi đã quá trễ rồi...",
@@ -270,9 +281,25 @@ def test_screentone_and_image_filters():
     sepia = apply_color_sepia(base)
     assert sepia.size == (200, 200)
 
+    # De-AI organic enhancer filter
+    from app.manga_composer import apply_de_ai_organic_enhancer
+    de_ai = apply_de_ai_organic_enhancer(base, grain_intensity=0.08)
+    assert de_ai.size == (200, 200)
+
     # Dispatcher apply_panel_filter
     dispatched = apply_panel_filter(base, PanelFilter.HALFTONE_DOTS, {"dot_size": 4})
     assert dispatched.size == (200, 200)
+
+    dispatched_de_ai = apply_panel_filter(base, PanelFilter.DE_AI_ORGANIC)
+    assert dispatched_de_ai.size == (200, 200)
+
+    dispatched_gpen = apply_panel_filter(base, PanelFilter.G_PEN_GRAIN)
+    assert dispatched_gpen.size == (200, 200)
+
+    # Test manga_pipeline integration
+    from app.manga_pipeline import apply_dark_fantasy_postprocessing
+    dark_fantasy_out = apply_dark_fantasy_postprocessing(base)
+    assert dark_fantasy_out.size == (200, 200)
 
 
 def test_image_fitting_and_placeholder():
@@ -452,6 +479,45 @@ def test_story_bridge_conversions():
     )
     assert len(pages) == 1
     assert len(pages[0].panels) == 2
+
+
+def test_sanitize_outer_single_quotes_and_thought_tail_clearance():
+    from manga_composer import sanitize_manga_text
+
+    # 1. Outer single quotes stripped cleanly
+    assert sanitize_manga_text("'Chúng ta nhất định không thể dừng lại ở đây!'") == "Chúng ta nhất định không thể dừng lại ở đây!"
+    assert sanitize_manga_text("‘Suy nghĩ này thật đáng sợ...’") == "Suy nghĩ này thật đáng sợ..."
+    # Preserve apostrophe inside English words while stripping outer quotes
+    assert sanitize_manga_text("'It's time to move!'") == "It's time to move!"
+    # Preserve distinct inner quoted segments
+    assert sanitize_manga_text("'Một' và 'hai'") == "'Một' và 'hai'"
+
+    # Dialogue converter cleans outer quotes automatically
+    dlg_bubble = convert_story_dialogue_to_speech_bubble({
+        "speaker": "Elara",
+        "text": "'Tôi sẽ bảo vệ nơi này!'",
+        "bubble_type": "speech",
+    })
+    assert dlg_bubble.text == "Tôi sẽ bảo vệ nơi này!"
+
+    # 2. Thought bubble trail must NOT stick to bottom edge of panel frame
+    canvas_size = (800, 1000)
+    panel_rect = (40, 50, 500, 400)  # bottom edge at y = 450
+    b_thought_low = SpeechBubble(
+        text="Liệu có kịp không?",
+        bubble_type=BubbleType.THOUGHT,
+        x=0.5,
+        y=0.72,
+        width=0.45,
+        height=0.22,
+        tail_x=0.5,
+        tail_y=0.99,  # Pointing straight at bottom frame border
+    )
+    overlay = render_speech_bubble_overlay(canvas_size, b_thought_low, panel_rect=panel_rect)
+    alpha = overlay.split()[3]
+    # Inspect bottom 18px clearance inside panel (y = 432..450): no trail dots should bleed/stick there
+    bottom_strip = alpha.crop((40, 432, 540, 450))
+    assert bottom_strip.getextrema()[1] == 0, "Thought bubble tail dots should stay clear of bottom panel border"
 
 
 if __name__ == "__main__":

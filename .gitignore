@@ -21,6 +21,11 @@ htmlcov/
 data/*
 !data/.gitkeep
 
+# Local Engine, Models & Exports
+engine/
+Export/
+models/
+
 # Scratch & Temporary Folders
 scratch/
 *.tmp
