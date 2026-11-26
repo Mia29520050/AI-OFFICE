@@ -8,6 +8,7 @@ Lightweight design tailored for small local LLMs (e.g. Qwen 4B) with compact mem
 from __future__ import annotations
 
 import datetime
+import json
 import logging
 import re
 import sqlite3
@@ -30,6 +31,8 @@ VALID_CATEGORIES = {
     "correction",
     "web_knowledge",
     "character_style",
+    "golden_template",
+    "qa_feedback",
 }
 
 # Stopwords to filter out when generating search keywords
@@ -59,7 +62,7 @@ def get_connection(db_path: Optional[Path | str] = None) -> sqlite3.Connection:
 
 
 def init_memory_db(db_path: Optional[Path | str] = None) -> None:
-    """Initialize the learned_memories table and indexes."""
+    """Initialize the learned_memories table, migrations, and indexes."""
     conn = get_connection(db_path)
     try:
         with conn:
@@ -72,11 +75,32 @@ def init_memory_db(db_path: Optional[Path | str] = None) -> None:
                     keywords TEXT NOT NULL DEFAULT '',
                     source TEXT NOT NULL DEFAULT 'chat',
                     importance INTEGER NOT NULL DEFAULT 3,
+                    success_count INTEGER NOT NULL DEFAULT 0,
+                    fail_count INTEGER NOT NULL DEFAULT 0,
+                    metadata_json TEXT NOT NULL DEFAULT '{}',
                     created_at TEXT NOT NULL,
                     updated_at TEXT NOT NULL
                 );
                 """
             )
+            # Safe migration for existing databases lacking QA/Golden Template columns
+            existing_cols = {
+                row["name"]
+                for row in conn.execute("PRAGMA table_info(learned_memories)").fetchall()
+            }
+            if "success_count" not in existing_cols:
+                conn.execute(
+                    "ALTER TABLE learned_memories ADD COLUMN success_count INTEGER NOT NULL DEFAULT 0;"
+                )
+            if "fail_count" not in existing_cols:
+                conn.execute(
+                    "ALTER TABLE learned_memories ADD COLUMN fail_count INTEGER NOT NULL DEFAULT 0;"
+                )
+            if "metadata_json" not in existing_cols:
+                conn.execute(
+                    "ALTER TABLE learned_memories ADD COLUMN metadata_json TEXT NOT NULL DEFAULT '{}';"
+                )
+
             conn.execute(
                 "CREATE INDEX IF NOT EXISTS idx_learned_memories_cat ON learned_memories(category);"
             )
@@ -363,6 +387,198 @@ def detect_and_learn_from_turn(
     return learned
 
 
+def save_golden_template(
+    task_key: str,
+    template_content: str,
+    keywords: Optional[str] = None,
+    source: str = "auto_qa",
+    importance: int = 5,
+    metadata: Optional[Dict[str, Any]] = None,
+    db_path: Optional[Path | str] = None,
+) -> Optional[Dict[str, Any]]:
+    """Store or reinforce a reusable high-priority Golden Template (workflow/prompt/fix).
+
+    Deduplicates by normalized content within 'golden_template', increments success_count,
+    and merges metadata/keywords so proven patterns rank highest in recall.
+    """
+    cleaned_key = (task_key or "").strip()
+    cleaned_body = (template_content or "").strip()
+    if not cleaned_body:
+        return None
+
+    formatted_content = (
+        cleaned_body
+        if cleaned_body.lower().startswith("[golden template")
+        else (f"[Golden Template: {cleaned_key}] {cleaned_body}" if cleaned_key else f"[Golden Template] {cleaned_body}")
+    )
+
+    extra_kw = " ".join(
+        filter(None, [extract_keywords(cleaned_key), (keywords or "").strip(), extract_keywords(cleaned_body)])
+    )
+    saved = learn_fact(
+        content=formatted_content,
+        category="golden_template",
+        source=source,
+        importance=max(4, min(5, int(importance))),
+        keywords=extra_kw or None,
+        db_path=db_path,
+    )
+    if not saved:
+        return None
+
+    meta_json = json.dumps(metadata or {}, ensure_ascii=False)
+    now_iso = datetime.datetime.now(datetime.timezone.utc).isoformat()
+    conn = get_connection(db_path)
+    try:
+        with conn:
+            conn.execute(
+                """
+                UPDATE learned_memories
+                SET success_count = success_count + 1,
+                    metadata_json = CASE WHEN ? != '{}' THEN ? ELSE metadata_json END,
+                    updated_at = ?
+                WHERE id = ?
+                """,
+                (meta_json, meta_json, now_iso, saved["id"]),
+            )
+            cur = conn.execute("SELECT * FROM learned_memories WHERE id = ?", (saved["id"],))
+            row = cur.fetchone()
+            return dict(row) if row else saved
+    finally:
+        conn.close()
+
+
+def record_qa_feedback(
+    task_key: str,
+    success: bool,
+    details: str = "",
+    template_content: Optional[str] = None,
+    metadata: Optional[Dict[str, Any]] = None,
+    db_path: Optional[Path | str] = None,
+) -> Optional[Dict[str, Any]]:
+    """Record Auto-QA pass/fail feedback into memory_engine.
+
+    - On pass: promotes/reinforces `template_content` as a Golden Template (or logs QA pass).
+    - On fail: logs diagnostic `qa_feedback` with incremented `fail_count` and demotes any
+      matching Golden Template whose failures exceed successes.
+    """
+    cleaned_key = (task_key or "task").strip()
+    cleaned_details = (details or "").strip()
+    now_iso = datetime.datetime.now(datetime.timezone.utc).isoformat()
+
+    if success:
+        if template_content and template_content.strip():
+            merged_meta = dict(metadata or {})
+            if cleaned_details:
+                merged_meta.setdefault("qa_note", cleaned_details)
+            return save_golden_template(
+                task_key=cleaned_key,
+                template_content=template_content,
+                source="auto_qa",
+                importance=5,
+                metadata=merged_meta,
+                db_path=db_path,
+            )
+
+        msg = f"[QA Pass: {cleaned_key}] {cleaned_details or 'Output verified successfully'}"
+        saved = learn_fact(
+            content=msg,
+            category="qa_feedback",
+            source="auto_qa",
+            importance=3,
+            keywords=extract_keywords(f"{cleaned_key} {cleaned_details}"),
+            db_path=db_path,
+        )
+        if not saved:
+            return None
+        conn = get_connection(db_path)
+        try:
+            with conn:
+                conn.execute(
+                    "UPDATE learned_memories SET success_count = success_count + 1, updated_at = ? WHERE id = ?",
+                    (now_iso, saved["id"]),
+                )
+                row = conn.execute("SELECT * FROM learned_memories WHERE id = ?", (saved["id"],)).fetchone()
+                return dict(row) if row else saved
+        finally:
+            conn.close()
+
+    # Failure path: record qa_feedback and demote matching unreliable golden_template if any
+    fail_msg = f"[QA Fail: {cleaned_key}] {cleaned_details or 'Verification failed'}"
+    saved_fail = learn_fact(
+        content=fail_msg,
+        category="qa_feedback",
+        source="auto_qa",
+        importance=4,
+        keywords=extract_keywords(f"{cleaned_key} {cleaned_details}"),
+        db_path=db_path,
+    )
+    meta_json = json.dumps(metadata or {}, ensure_ascii=False)
+    conn = get_connection(db_path)
+    try:
+        with conn:
+            if saved_fail:
+                conn.execute(
+                    """
+                    UPDATE learned_memories
+                    SET fail_count = fail_count + 1,
+                        metadata_json = CASE WHEN ? != '{}' THEN ? ELSE metadata_json END,
+                        updated_at = ?
+                    WHERE id = ?
+                    """,
+                    (meta_json, meta_json, now_iso, saved_fail["id"]),
+                )
+            if template_content and template_content.strip():
+                norm_body = normalize_content(template_content)
+                rows = conn.execute(
+                    "SELECT id, content, importance, success_count, fail_count FROM learned_memories WHERE category = 'golden_template'"
+                ).fetchall()
+                for row in rows:
+                    if norm_body in normalize_content(row["content"]):
+                        new_fails = int(row["fail_count"]) + 1
+                        new_imp = row["importance"]
+                        if new_fails > int(row["success_count"]):
+                            new_imp = max(2, int(row["importance"]) - 1)
+                        conn.execute(
+                            "UPDATE learned_memories SET fail_count = ?, importance = ?, updated_at = ? WHERE id = ?",
+                            (new_fails, new_imp, now_iso, row["id"]),
+                        )
+            if saved_fail:
+                row = conn.execute("SELECT * FROM learned_memories WHERE id = ?", (saved_fail["id"],)).fetchone()
+                return dict(row) if row else saved_fail
+    finally:
+        conn.close()
+    return None
+
+
+def recall_golden_templates(
+    query: str = "",
+    limit: int = 3,
+    min_net_score: int = -1,
+    db_path: Optional[Path | str] = None,
+) -> List[Dict[str, Any]]:
+    """Retrieve top-performing Golden Templates matching `query`, ordered by reliability and score."""
+    candidates = recall_relevant_memories(
+        query=query,
+        limit=max(1, limit * 3),
+        category="golden_template",
+        db_path=db_path,
+    )
+    reliable = [
+        item for item in candidates
+        if (int(item.get("success_count", 0)) - int(item.get("fail_count", 0))) >= min_net_score
+    ]
+    reliable.sort(
+        key=lambda item: (
+            int(item.get("success_count", 0)) - int(item.get("fail_count", 0)),
+            int(item.get("importance", 3)),
+            item.get("updated_at", ""),
+        ),
+        reverse=True,
+    )
+    return reliable[:max(1, limit)]
+
+
 def recall_relevant_memories(
     query: str,
     limit: int = 5,
@@ -386,13 +602,13 @@ def recall_relevant_memories(
         cur = conn.cursor()
         if category and category in VALID_CATEGORIES:
             cur.execute(
-                "SELECT id, category, content, keywords, source, importance, created_at, updated_at "
+                "SELECT id, category, content, keywords, source, importance, success_count, fail_count, metadata_json, created_at, updated_at "
                 "FROM learned_memories WHERE category = ?",
                 (category,),
             )
         else:
             cur.execute(
-                "SELECT id, category, content, keywords, source, importance, created_at, updated_at "
+                "SELECT id, category, content, keywords, source, importance, success_count, fail_count, metadata_json, created_at, updated_at "
                 "FROM learned_memories"
             )
         rows = [dict(r) for r in cur.fetchall()]
@@ -431,7 +647,10 @@ def recall_relevant_memories(
                 score += 3.0
 
         # Category relevance
-        if r["category"] == "correction":
+        if r["category"] == "golden_template":
+            net_success = int(r.get("success_count", 0)) - int(r.get("fail_count", 0))
+            score += 8.0 + max(-6.0, min(6.0, float(net_success) * 1.5))
+        elif r["category"] == "correction":
             score += 2.0  # Corrections and rules have slight priority
 
         # Importance multiplier
@@ -469,6 +688,8 @@ def build_memory_context_block(
         "correction": "Lưu ý",
         "web_knowledge": "Kiến thức",
         "character_style": "Tạo hình",
+        "golden_template": "Mẫu chuẩn",
+        "qa_feedback": "QA",
     }
 
     header = "[Ký ức & Sở thích người dùng]:"
@@ -587,6 +808,41 @@ def api_delete_memory(item_id: int):
     if not deleted:
         raise HTTPException(status_code=404, detail="Memory item not found.")
     return {"status": "success", "deleted_id": item_id}
+
+
+class GoldenTemplateRequest(BaseModel):
+    task_key: str = Field(..., min_length=1, description="Task or workflow key")
+    template_content: str = Field(..., min_length=1, description="Reusable prompt, workflow, or fix")
+    keywords: Optional[str] = Field(default=None, description="Optional custom keywords")
+    source: str = Field(default="manual", description="Origin of template")
+    importance: int = Field(default=5, ge=1, le=5, description="Importance level 1-5")
+    metadata: Optional[Dict[str, Any]] = Field(default=None, description="Optional structured parameters")
+
+
+@router.get("/templates")
+def get_golden_templates(
+    query: str = Query("", description="Optional search term"),
+    limit: int = Query(5, ge=1, le=50, description="Max templates to return"),
+):
+    """Retrieve high-priority Golden Templates."""
+    items = recall_golden_templates(query=query.strip(), limit=limit)
+    return {"status": "success", "templates": items, "count": len(items)}
+
+
+@router.post("/templates")
+def api_save_golden_template(req: GoldenTemplateRequest):
+    """Save or reinforce a Golden Template."""
+    saved = save_golden_template(
+        task_key=req.task_key,
+        template_content=req.template_content,
+        keywords=req.keywords,
+        source=req.source,
+        importance=req.importance,
+        metadata=req.metadata,
+    )
+    if not saved:
+        raise HTTPException(status_code=400, detail="Failed to save golden template.")
+    return {"status": "success", "template": saved}
 
 
 def register_routes(app: FastAPI) -> None:
