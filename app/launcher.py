@@ -72,54 +72,13 @@ def server_is_running() -> bool:
         return False
 
 
-_OLLAMA_PROC: subprocess.Popen | None = None
-
-
 def ensure_local_ollama() -> bool:
-    """Start local `ollama serve` silently in the background if not already listening."""
-    try:
-        urllib.request.urlopen("http://127.0.0.1:11434/api/tags", timeout=2.0).read()
-        return True
-    except Exception:
-        pass
-    candidate = Path(os.path.expandvars(r"%LOCALAPPDATA%\Programs\Ollama\ollama.exe"))
-    ollama_exe = str(candidate) if candidate.is_file() else (shutil.which("ollama") or "")
-    if not ollama_exe:
-        return False
-    try:
-        flags = (
-            getattr(subprocess, "CREATE_NO_WINDOW", 0)
-            | getattr(subprocess, "DETACHED_PROCESS", 0)
-            | getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0)
-        )
-        si = subprocess.STARTUPINFO()
-        si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-        si.wShowWindow = 0  # SW_HIDE
-        global _OLLAMA_PROC
-        _OLLAMA_PROC = subprocess.Popen(
-            [ollama_exe, "serve"],
-            stdin=subprocess.DEVNULL,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-            close_fds=True,
-            creationflags=flags,
-            startupinfo=si,
-        )
-        for _ in range(16):
-            time.sleep(0.5)
-            try:
-                urllib.request.urlopen("http://127.0.0.1:11434/api/tags", timeout=1.0).read()
-                return True
-            except Exception:
-                pass
-        return True
-    except Exception:
-        return False
+    """Start local `ollama serve` silently inside EngineManager Job Object."""
+    return get_engines().ensure_ollama(wait_secs=10.0)
 
 
 def shutdown_local_ollama() -> None:
-    """When the app window closes, unload model from VRAM and stop Ollama process if we started it."""
-    global _OLLAMA_PROC
+    """When the app window closes, unload model from VRAM (process is terminated by Job Object)."""
     try:
         req = urllib.request.Request(
             "http://127.0.0.1:11434/api/generate",
@@ -130,16 +89,6 @@ def shutdown_local_ollama() -> None:
         urllib.request.urlopen(req, timeout=3).read()
     except Exception:
         pass
-    if _OLLAMA_PROC and _OLLAMA_PROC.poll() is None:
-        try:
-            _OLLAMA_PROC.terminate()
-            _OLLAMA_PROC.wait(timeout=2)
-        except Exception:
-            try:
-                _OLLAMA_PROC.kill()
-            except Exception:
-                pass
-        _OLLAMA_PROC = None
 
 
 def warmup_ollama_model() -> None:
