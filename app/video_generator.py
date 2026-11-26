@@ -37,6 +37,7 @@ from typing import Any, Dict, List, Optional
 
 import imageio_ffmpeg
 from fastapi import APIRouter, FastAPI, HTTPException
+from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 
 try:
@@ -727,6 +728,16 @@ async def api_de_ai_enhance(req: DeAIEnhanceRequest) -> Dict[str, Any]:
     except Exception as exc:
         logger.exception("De-AI enhancement failed")
         raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+@router.get("/file/{filename}")
+def serve_video_file(filename: str):
+    """Serve an exported MP4 video file from F:\\AI-Office\\Export\\Video\\."""
+    safe_name = os.path.basename(filename)
+    file_path = EXPORT_VIDEO_DIR / safe_name
+    if not file_path.is_file():
+        raise HTTPException(status_code=404, detail=f"Video file not found: {safe_name}")
+    return FileResponse(file_path, media_type="video/mp4", filename=safe_name)
 
 
 def register_routes(app: FastAPI) -> None:

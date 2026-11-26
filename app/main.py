@@ -63,6 +63,14 @@ from weekly_radar import (
     get_weekly_radar_report,
     check_and_refresh_weekly_radar,
 )
+import logging
+logger = logging.getLogger("main")
+from memory_engine import (
+    register_routes as register_memory_routes,
+    build_memory_context_block,
+    detect_and_learn_from_turn,
+)
+from chat_orchestrator import orchestrate_chat_action
 
 ROOT = Path(__file__).resolve().parents[1]
 DATA = ROOT / "data"
@@ -1025,6 +1033,12 @@ AN TOÀN HỆ THỐNG CỐT LÕI: Không tự ý thực thi các lệnh phá ho�
         skill_text = load_skill(inferred_skill).strip()
         if skill_text and "No specialist skill" not in skill_text:
             system_prompt += f"\nKỸ NĂNG ({inferred_skill})\n{skill_text[:900]}"
+    try:
+        memory_block = build_memory_context_block(req.message, limit=4)
+        if memory_block:
+            system_prompt += f"\n\n{memory_block}"
+    except Exception as _exc:
+        logger.warning("Failed to recall memories for chat context: %s", _exc)
     messages = [{"role": "system", "content": system_prompt}]
     messages += [{"role": r["role"], "content": r["content"]} for r in reversed(history)]
     user_message: dict[str, Any] = {"role": "user", "content": req.message}
@@ -1275,6 +1289,31 @@ def _direct_fast_answer(message: str) -> str | None:
 
 @app.post("/api/chat")
 async def chat(req: ChatRequest) -> dict[str, Any]:
+    # 0. Action Orchestrator (Video / 3D / Voice / Memory)
+    action_res = await orchestrate_chat_action(
+        message=req.message,
+        attachments=req.attachments,
+        aspect_ratio=req.aspect_ratio,
+        output_format=req.output_format,
+    )
+    if action_res and action_res.get("handled"):
+        conversation_id, messages, stored_user_message = _build_chat_context(req)
+        answer = action_res.get("text", "")
+        active_model_name = f"Action Orchestrator ({action_res.get('action_type', 'direct')})"
+        _save_chat_turn(conversation_id, req, stored_user_message, answer)
+        try:
+            detect_and_learn_from_turn(req.message, answer)
+        except Exception as _e:
+            logger.warning("detect_and_learn_from_turn failed: %s", _e)
+        return {
+            "answer": answer,
+            "model": active_model_name,
+            "attachments_received": len(req.attachments),
+            "conversation_id": conversation_id,
+            "action_type": action_res.get("action_type"),
+            "artifacts": action_res.get("artifacts", []),
+        }
+
     # 1. Image Generation Intent Check (Studio Sáng tạo Merge)
     is_img, subject, extra = detect_image_generation_intent(req.message)
     if is_img:
@@ -1290,6 +1329,10 @@ async def chat(req: ChatRequest) -> dict[str, Any]:
         answer = gen_res.get("text", "Không thể tạo ảnh.")
         active_model_name = "Anima DeltaMix 2.9B (Studio Sáng tạo)"
         _save_chat_turn(conversation_id, req, stored_user_message, answer)
+        try:
+            detect_and_learn_from_turn(req.message, answer)
+        except Exception as _e:
+            logger.warning("detect_and_learn_from_turn failed: %s", _e)
         return {
             "answer": answer,
             "model": active_model_name,
@@ -1312,6 +1355,10 @@ async def chat(req: ChatRequest) -> dict[str, Any]:
     answer = direct_answer if direct_answer is not None else await ollama_chat(messages)
     active_model_name = MODEL_MANAGER.active_route()["model"]
     _save_chat_turn(conversation_id, req, stored_user_message, answer)
+    try:
+        detect_and_learn_from_turn(req.message, answer)
+    except Exception as _e:
+        logger.warning("detect_and_learn_from_turn failed: %s", _e)
     return {
         "answer": answer,
         "model": active_model_name,
@@ -1322,6 +1369,58 @@ async def chat(req: ChatRequest) -> dict[str, Any]:
 
 @app.post("/api/chat/stream")
 async def chat_stream(req: ChatRequest) -> StreamingResponse:
+    # 0. Action Orchestrator (Video / 3D / Voice / Memory)
+    action_res = await orchestrate_chat_action(
+        message=req.message,
+        attachments=req.attachments,
+        aspect_ratio=req.aspect_ratio,
+        output_format=req.output_format,
+    )
+    if action_res and action_res.get("handled"):
+        conversation_id, messages, stored_user_message = _build_chat_context(req)
+
+        async def action_event_generator() -> AsyncGenerator[str, None]:
+            act_type = action_res.get("action_type", "direct")
+            active_model = f"Action Orchestrator ({act_type})"
+            final_answer = action_res.get("text", "")
+            try:
+                p1 = json.dumps({"token": final_answer, "conversation_id": conversation_id}, ensure_ascii=False)
+                yield f"data: {p1}\n\n"
+
+                user_msg_id, asst_msg_id = _save_chat_turn(conversation_id, req, stored_user_message, final_answer)
+                try:
+                    detect_and_learn_from_turn(req.message, final_answer)
+                except Exception as _e:
+                    logger.warning("detect_and_learn_from_turn failed: %s", _e)
+
+                done_payload = json.dumps(
+                    {
+                        "done": True,
+                        "conversation_id": conversation_id,
+                        "model": active_model,
+                        "user_message_id": user_msg_id,
+                        "message_id": asst_msg_id,
+                        "attachments_received": len(req.attachments),
+                        "action_type": act_type,
+                        "artifacts": action_res.get("artifacts", []),
+                    },
+                    ensure_ascii=False,
+                )
+                yield f"data: {done_payload}\n\n"
+            except Exception as exc:
+                err_payload = json.dumps({"error": str(exc), "conversation_id": conversation_id}, ensure_ascii=False)
+                yield f"data: {err_payload}\n\n"
+
+        return StreamingResponse(
+            action_event_generator(),
+            media_type="text/event-stream",
+            headers={
+                "Cache-Control": "no-cache",
+                "Connection": "keep-alive",
+                "X-Accel-Buffering": "no",
+            },
+        )
+
     # 1. Image Generation Intent Check (Studio Sáng tạo Merge)
     is_img, subject, extra = detect_image_generation_intent(req.message)
     if is_img:
@@ -1351,6 +1450,10 @@ async def chat_stream(req: ChatRequest) -> StreamingResponse:
 
                 saved_answer = init_msg + final_answer
                 user_msg_id, asst_msg_id = _save_chat_turn(conversation_id, req, stored_user_message, saved_answer)
+                try:
+                    detect_and_learn_from_turn(req.message, saved_answer)
+                except Exception as _e:
+                    logger.warning("detect_and_learn_from_turn failed: %s", _e)
                 done_payload = json.dumps(
                     {
                         "done": True,
@@ -1406,6 +1509,10 @@ async def chat_stream(req: ChatRequest) -> StreamingResponse:
 
             final_answer = "".join(accumulated_answer)
             user_msg_id, asst_msg_id = _save_chat_turn(conversation_id, req, stored_user_message, final_answer)
+            try:
+                detect_and_learn_from_turn(req.message, final_answer)
+            except Exception as _e:
+                logger.warning("detect_and_learn_from_turn failed: %s", _e)
             done_payload = json.dumps(
                 {
                     "done": True,
@@ -1813,6 +1920,8 @@ from video_generator import register_routes as register_video_routes
 register_video_routes(app)
 from job_queue import register_routes as register_job_queue_routes
 register_job_queue_routes(app)
+from memory_engine import register_routes as register_memory_routes
+register_memory_routes(app)
 
 
 if __name__ == "__main__":
