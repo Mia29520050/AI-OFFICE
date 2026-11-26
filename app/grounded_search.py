@@ -189,6 +189,40 @@ def _compress_context_snippet(raw_text: str, query: str, max_chars: int = 420) -
     return raw_text[:max_chars].rsplit(" ", 1)[0] + "..."
 
 
+def _decode_bing_url(raw_url: str) -> str:
+    """Decode Bing tracking redirect (/ck/a?...&u=a1...) to the real destination URL."""
+    import html as _html
+    raw_url = _html.unescape(raw_url)
+    if "bing.com/ck/a" in raw_url and "&u=" in raw_url:
+        try:
+            u_param = raw_url.split("&u=")[-1].split("&")[0]
+            if u_param.startswith("a1"):
+                b64 = u_param[2:]
+                b64 += "=" * (-len(b64) % 4)
+                import base64
+                decoded = base64.urlsafe_b64decode(b64.encode("ascii")).decode("utf-8", errors="ignore")
+                if decoded.startswith(("http://", "https://")):
+                    return decoded
+        except Exception:
+            pass
+    return raw_url
+
+
+def _clean_search_query(raw_query: str) -> str:
+    """Strip Vietnamese conversational filler so search engines return relevant results."""
+    q = raw_query.strip()
+    q = re.sub(
+        r"^(?:hãy\s+|em\s+|thử\s+|giúp\s+(?:anh|tôi|mình)\s+|làm\s+ơn\s+)*"
+        r"(?:tra\s+cứu|tìm\s+kiếm|tìm\s+trên\s+(?:mạng|web)|lên\s+mạng|search|google)\s*(?:về|cho|giúp)?\s*",
+        "",
+        q,
+        flags=re.IGNORECASE,
+    )
+    q = re.sub(r"\b(?:xem|đi|nhé|nha|giúp anh|cho anh|nào)\b", "", q, flags=re.IGNORECASE)
+    q = re.sub(r"\s+", " ", q).strip(" .,!?")
+    return q or raw_query.strip()
+
+
 def execute_web_search(
     query: str,
     max_results: int = 3,
@@ -196,7 +230,7 @@ def execute_web_search(
     mock_results: Optional[List[Dict[str, str]]] = None,
 ) -> List[SearchResult]:
     """
-    Executes selective search via DuckDuckGo HTML / Instant Answers, with cache and mock support.
+    Executes selective search via DuckDuckGo HTML / Bing HTML fallback, with cache and mock support.
     """
     if mock_results is not None:
         results = []
@@ -215,8 +249,9 @@ def execute_web_search(
             ))
         return results
 
+    cleaned_q = _clean_search_query(query)
     # Check local search cache first
-    cache_key = hashlib.sha256(f"{query}_{max_results}".encode("utf-8")).hexdigest()
+    cache_key = hashlib.sha256(f"{cleaned_q}_{max_results}".encode("utf-8")).hexdigest()
     cache_file = CACHE_DIR / f"{cache_key}.json"
     if cache_file.exists():
         try:
@@ -231,14 +266,13 @@ def execute_web_search(
     }
 
     try:
-        # Step 1: DuckDuckGo HTML search
-        encoded_query = urllib.parse.quote_plus(query)
-        search_url = f"https://html.duckduckgo.com/html/?q={encoded_query}"
+        encoded_query = urllib.parse.quote_plus(cleaned_q)
         with httpx.Client(timeout=timeout, follow_redirects=True, headers=headers) as client:
-            resp = client.get(search_url)
+            # Step 1: DuckDuckGo HTML search
+            ddg_url = f"https://html.duckduckgo.com/html/?q={encoded_query}"
+            resp = client.get(ddg_url)
             if resp.status_code == 200:
                 html = resp.text
-                # Extract results: class="result__body" -> result__snippet & result__url
                 snippets = re.findall(r'<a[^>]*class="result__snippet"[^>]*>(.*?)</a>', html, re.DOTALL)
                 titles = re.findall(r'<a[^>]*class="result__url"[^>]*href="([^"]+)"[^>]*>(.*?)</a>', html, re.DOTALL)
 
@@ -246,13 +280,12 @@ def execute_web_search(
                 for idx in range(count):
                     raw_snippet = _clean_html_to_markdown(snippets[idx])
                     target_url = titles[idx][0] if idx < len(titles) else f"https://duckduckgo.com/?q={encoded_query}"
-                    # Decode DDG redirect URL if needed
                     if "/l/?uddg=" in target_url:
                         target_url = urllib.parse.unquote(target_url.split("/l/?uddg=")[-1].split("&")[0])
                     domain = urllib.parse.urlparse(target_url).netloc
                     title_text = _clean_html_to_markdown(titles[idx][1]) if idx < len(titles) else f"Result {idx+1}"
 
-                    comp = _compress_context_snippet(raw_snippet, query)
+                    comp = _compress_context_snippet(raw_snippet, cleaned_q)
                     results.append(SearchResult(
                         index=idx + 1,
                         title=title_text or f"Nguồn {idx+1}",
@@ -261,7 +294,75 @@ def execute_web_search(
                         compressed_text=comp,
                         domain=domain,
                     ))
-    except Exception as e:
+
+            # Step 2: Google News RSS (great for Vietnamese current news, game updates, releases)
+            if not results:
+                import xml.etree.ElementTree as ET
+                sub_queries = [s.strip() for s in re.split(r"\bvà\b|\bcùng\b|,", cleaned_q) if len(s.strip()) >= 4]
+                if not sub_queries:
+                    sub_queries = [cleaned_q]
+                for sq in sub_queries[:2]:
+                    rss_url = f"https://news.google.com/rss/search?q={urllib.parse.quote_plus(sq)}&hl=vi&gl=VN&ceid=VN:vi"
+                    g_resp = client.get(rss_url)
+                    if g_resp.status_code != 200:
+                        continue
+                    try:
+                        root = ET.fromstring(g_resp.text)
+                        per_q = max(1, (max_results + len(sub_queries[:2]) - 1) // len(sub_queries[:2]))
+                        added_q = 0
+                        for item in root.findall(".//item"):
+                            if len(results) >= max_results or added_q >= per_q:
+                                break
+                            title_text = (item.findtext("title") or "").strip()
+                            link_text = (item.findtext("link") or "").strip()
+                            pub_date = (item.findtext("pubDate") or "").strip()
+                            desc = _clean_html_to_markdown(item.findtext("description") or title_text)
+                            snippet = f"[{pub_date}] {desc}" if pub_date else desc
+                            domain = urllib.parse.urlparse(link_text).netloc or "news.google.com"
+                            results.append(SearchResult(
+                                index=len(results) + 1,
+                                title=title_text or f"Tin tức {len(results) + 1}",
+                                url=link_text,
+                                snippet=snippet,
+                                compressed_text=_compress_context_snippet(snippet, sq),
+                                domain=domain,
+                            ))
+                            added_q += 1
+                    except Exception:
+                        pass
+
+            # Step 3: Bing HTML fallback when DuckDuckGo & News RSS yield 0 results
+            if not results:
+                sub_queries = [s.strip() for s in re.split(r"\bvà\b|\bcùng\b|,", cleaned_q) if len(s.strip()) >= 4]
+                if not sub_queries:
+                    sub_queries = [cleaned_q]
+                for sq in sub_queries[:2]:
+                    bing_url = f"https://www.bing.com/search?q={urllib.parse.quote_plus(sq)}"
+                    b_resp = client.get(bing_url)
+                    if b_resp.status_code != 200:
+                        continue
+                    blocks = re.findall(r'<li class="b_algo"[^>]*>(.*?)</li>', b_resp.text, re.DOTALL)
+                    for block in blocks:
+                        if len(results) >= max_results:
+                            break
+                        m_link = re.search(r'<h2[^>]*>.*?<a[^>]*href="([^"]+)"[^>]*>(.*?)</a>', block, re.DOTALL)
+                        if not m_link:
+                            continue
+                        target_url = _decode_bing_url(m_link.group(1).strip())
+                        title_text = _clean_html_to_markdown(m_link.group(2))
+                        m_snip = re.search(r'<p[^>]*>(.*?)</p>', block, re.DOTALL)
+                        raw_snippet = _clean_html_to_markdown(m_snip.group(1)) if m_snip else title_text
+                        domain = urllib.parse.urlparse(target_url).netloc or "bing.com"
+                        comp = _compress_context_snippet(raw_snippet, sq)
+                        results.append(SearchResult(
+                            index=len(results) + 1,
+                            title=title_text or f"Nguồn {len(results) + 1}",
+                            url=target_url,
+                            snippet=raw_snippet,
+                            compressed_text=comp,
+                            domain=domain,
+                        ))
+    except Exception:
         # Fallback to local offline synthetic source if network is unavailable
         results.append(SearchResult(
             index=1,
@@ -272,11 +373,12 @@ def execute_web_search(
             domain="ai-office.local",
         ))
 
-    # Cache results
-    try:
-        cache_file.write_text(json.dumps([asdict(r) for r in results], ensure_ascii=False, indent=2), encoding="utf-8")
-    except Exception:
-        pass
+    # Cache only non-empty results so transient blocks don't poison cache
+    if results:
+        try:
+            cache_file.write_text(json.dumps([asdict(r) for r in results], ensure_ascii=False, indent=2), encoding="utf-8")
+        except Exception:
+            pass
 
     return results
 
