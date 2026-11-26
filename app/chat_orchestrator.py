@@ -303,6 +303,159 @@ def detect_kho_intent(message: str) -> Tuple[bool, str]:
 
 
 # ---------------------------------------------------------------------------
+# 1b. Hybrid Complexity & Privacy Router (0ms Rule-First)
+# ---------------------------------------------------------------------------
+_PRIVATE_KEYWORDS = (
+    "riêng tư",
+    "rieng tu",
+    "bảo mật",
+    "bao mat",
+    "bí mật",
+    "bi mat",
+    "local only",
+    "offline",
+    "private",
+    "confidential",
+    "không gửi lên cloud",
+    "khong gui len cloud",
+    "đừng gửi cloud",
+    "dung gui cloud",
+)
+
+_SENSITIVE_PATTERNS = (
+    r"\bsk-[A-Za-z0-9_\-]{10,}\b",
+    r"\bghp_[A-Za-z0-9]{10,}\b",
+    r"\bAIza[A-Za-z0-9_\-]{10,}\b",
+    r"\b(?:password|passwd|secret|api_key|token|mật\s*khẩu)\s*[:=]\s*\S+",
+    r"(?:^|\s)(?:\.env|id_rsa|credentials\.json)(?:\s|$)",
+)
+
+_COMPLEX_PLANNING_QA_KEYWORDS = (
+    "kế hoạch",
+    "ke hoach",
+    "lập kế hoạch",
+    "lap ke hoach",
+    "kiến trúc",
+    "kien truc",
+    "thiết kế hệ thống",
+    "thiet ke he thong",
+    "chiến lược",
+    "chien luoc",
+    "phân rã",
+    "phan ra",
+    "phân tích",
+    "phan tich",
+    "suy luận",
+    "suy luan",
+    "chứng minh",
+    "chung minh",
+    "so sánh",
+    "so sanh",
+    "đánh giá",
+    "danh gia",
+    "giải thích chi tiết",
+    "giai thich chi tiet",
+    "kiểm thử",
+    "kiem thu",
+    "kiểm tra lỗi",
+    "kiem tra loi",
+    "roadmap",
+    "architecture",
+    "system design",
+    "planning",
+    "plan",
+    "breakdown",
+    "analyze",
+    "analysis",
+    "reasoning",
+    "reason",
+    "compare",
+    "evaluate",
+    "trade-off",
+    "tradeoff",
+    "root cause",
+    "debug",
+    "refactor",
+    "review",
+    "audit",
+    "test plan",
+    "edge case",
+    "verify",
+    "qa",
+)
+
+_LOCAL_TASK_TYPES = {"simple", "fast", "private", "local", "chat_simple"}
+_CLOUD_TASK_TYPES = {"planning", "plan", "reasoning", "qa", "review", "architecture", "complex"}
+
+
+def classify_chat_complexity(
+    message: str,
+    *,
+    has_images: bool = False,
+    message_count: int = 1,
+    num_predict: int = 4096,
+    json_mode: bool = False,
+    task_type: Optional[str] = None,
+    prefer_local: bool = False,
+) -> Dict[str, Any]:
+    """Classify a chat request for Hybrid routing between local Ollama and cloud LLM.
+
+    Returns ``{"target": "local" | "cloud", "reason": str, "task_type": str}``.
+    """
+    if prefer_local:
+        return {"target": "local", "reason": "prefer_local", "task_type": task_type or "local"}
+
+    norm_task = (task_type or "").strip().lower()
+    if norm_task in _LOCAL_TASK_TYPES:
+        return {"target": "local", "reason": f"task_type:{norm_task}", "task_type": norm_task}
+    if norm_task in _CLOUD_TASK_TYPES:
+        return {"target": "cloud", "reason": f"task_type:{norm_task}", "task_type": norm_task}
+
+    text = (message or "").strip()
+    lower = text.lower()
+
+    # 1. Privacy / sensitive content always stays on local Ollama
+    if any(kw in lower for kw in _PRIVATE_KEYWORDS) or any(
+        re.search(pat, text, re.IGNORECASE) for pat in _SENSITIVE_PATTERNS
+    ):
+        return {"target": "local", "reason": "private_or_sensitive", "task_type": "private"}
+
+    # 2. Instant math always stays on local
+    if text:
+        try:
+            from app.fast_calc import classify_prompt_speed
+        except ImportError:
+            from fast_calc import classify_prompt_speed
+
+        decision = classify_prompt_speed(text)
+        if decision.is_math:
+            return {"target": "local", "reason": "simple_or_fast", "task_type": "fast"}
+    else:
+        decision = None
+
+    # 3. Multimodal vision / QA / planning / deep reasoning routes to cloud
+    if has_images:
+        return {"target": "cloud", "reason": "multimodal_vision", "task_type": "qa"}
+
+    for kw in _COMPLEX_PLANNING_QA_KEYWORDS:
+        pattern = rf"(?:^|\s|[.,!?;:\"'(\[])({re.escape(kw)})(?=$|\s|[.,!?;:\"'!\)\]])"
+        if re.search(pattern, lower):
+            return {"target": "cloud", "reason": "complex_planning_or_qa", "task_type": "reasoning"}
+
+    # 4. Simple greetings / short casual prompts stay on local Ollama
+    if decision is not None and decision.is_simple_query:
+        return {"target": "local", "reason": "simple_or_fast", "task_type": "fast"}
+
+    if json_mode or len(text) >= 400 or len(text.split()) >= 60 or message_count >= 8:
+        return {"target": "cloud", "reason": "complex_context_or_structured", "task_type": "complex"}
+
+    if num_predict > 4096:
+        return {"target": "cloud", "reason": "long_form_generation", "task_type": "complex"}
+
+    return {"target": "local", "reason": "default_local", "task_type": "simple"}
+
+
+# ---------------------------------------------------------------------------
 # Internal Lazy Helpers & Resource Guards
 # ---------------------------------------------------------------------------
 def _extract_image_attachment(attachments: Optional[List[Any]]) -> Optional[str]:
