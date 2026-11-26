@@ -160,3 +160,14 @@ class EngineManager:
             except Exception as exc:
                 logger.warning("Error terminating %s: %s", name, exc)
         self.procs.clear()
+
+
+_MANAGER: EngineManager | None = None
+
+
+def get_engines() -> EngineManager:
+    """Return the singleton EngineManager instance."""
+    global _MANAGER
+    if _MANAGER is None:
+        _MANAGER = EngineManager()
+    return _MANAGER

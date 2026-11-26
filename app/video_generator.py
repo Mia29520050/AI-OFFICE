@@ -431,7 +431,8 @@ def de_ai_enhance_video(
         "+faststart",
         str(dst),
     ]
-    proc = subprocess.run(cmd, capture_output=True, text=True, timeout=180, check=False)
+    from app.proc_utils import run_hidden
+    proc = run_hidden(cmd, capture_output=True, text=True, timeout=180, check=False)
     if proc.returncode != 0 or not dst.is_file():
         raise RuntimeError(f"FFmpeg De-AI enhancement failed: {proc.stderr[-800:]}")
 
@@ -498,7 +499,8 @@ def _generate_offline_mp4(
         "+faststart",
         str(out_path),
     ]
-    proc = subprocess.run(cmd, capture_output=True, text=True, timeout=60, check=False)
+    from app.proc_utils import run_hidden
+    proc = run_hidden(cmd, capture_output=True, text=True, timeout=60, check=False)
     if proc.returncode != 0 or not out_path.is_file():
         raise RuntimeError(f"Offline MP4 synthesis failed: {proc.stderr[-600:]}")
     return out_path

@@ -19,7 +19,7 @@ for _p in (str(ROOT), str(APP_DIR)):
 
 import uvicorn
 import webview
-from engines import EngineManager
+from app.engines import get_engines
 from main import app, init_db
 LOG = ROOT / "data" / "launcher.log"
 APP_USER_MODEL_ID = "OpenAI.AIOffice.Desktop"
@@ -221,7 +221,7 @@ def main() -> None:
         else:
             raise RuntimeError("AI Office backend did not start on 127.0.0.1:8765")
 
-    engines = EngineManager()
+    engines = get_engines()
     app.state.engines = engines
 
     win = webview.create_window(

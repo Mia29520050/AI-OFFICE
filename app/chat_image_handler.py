@@ -313,53 +313,12 @@ def is_comfy_online() -> bool:
 
 
 async def ensure_comfy_online(timeout_secs: int = 90) -> bool:
-    """Ensures ComfyUI is launched and listening, auto-starting if offline."""
+    """Ensures ComfyUI is launched and listening via EngineManager Job Object."""
     if is_comfy_online():
         return True
-
-    logger.info("[ChatImage] ComfyUI is offline. Auto-starting in background...")
-    try:
-        import subprocess
-        creationflags = 0
-        if os.name == "nt":
-            creationflags = getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000)
-
-        cmd = [
-            str(COMFY_PYTHON if COMFY_PYTHON.exists() else "python"),
-            "main.py",
-            "--lowvram",
-            "--cpu-vae",
-            "--reserve-vram", "1.0",
-            "--preview-method", "auto",
-            "--listen", "127.0.0.1",
-            "--port", "8188"
-        ]
-        log_out = COMFY_DIR / "user" / "comfyui.stdout.log"
-        log_err = COMFY_DIR / "user" / "comfyui.stderr.log"
-        log_out.parent.mkdir(parents=True, exist_ok=True)
-
-        with open(log_out, "a", encoding="utf-8") as out_f, open(log_err, "a", encoding="utf-8") as err_f:
-            subprocess.Popen(
-                cmd,
-                cwd=str(COMFY_DIR),
-                stdout=out_f,
-                stderr=err_f,
-                creationflags=creationflags
-            )
-    except Exception as e:
-        logger.error(f"[ChatImage] Failed to auto-launch ComfyUI: {e}")
-        return False
-
-    # Poll until ready
-    start_time = time.time()
-    while time.time() - start_time < timeout_secs:
-        await asyncio.sleep(2)
-        if is_comfy_online():
-            logger.info("[ChatImage] ComfyUI auto-started successfully!")
-            return True
-
-    logger.warning("[ChatImage] ComfyUI startup timed out.")
-    return False
+    from app.engines import get_engines
+    loop = asyncio.get_running_loop()
+    return await loop.run_in_executor(None, lambda: get_engines().ensure_comfy(wait_secs=timeout_secs))
 
 
 async def run_comfy_workflow(

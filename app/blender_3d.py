@@ -493,8 +493,10 @@ def run_blender_headless(
     if exe is None or not exe.is_file():
         return {"ran": False, "reason": "blender.exe not found", "returncode": -1}
 
+    from app.proc_utils import run_hidden
+
     cmd = [str(exe), "--background", "--python", str(script_path)]
-    proc = subprocess.run(
+    proc = run_hidden(
         cmd,
         capture_output=True,
         text=True,
