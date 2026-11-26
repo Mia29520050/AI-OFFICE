@@ -433,13 +433,13 @@ async def run_comfy_workflow(
                     "model": [base_or_ref_model, 0],
                     "model_patch": ["14", 0],
                     "image": ["10", 0],
-                    "strength": 0.72,
+                    "strength": 0.40,
                     "start_percent": 0.0,
-                    "end_percent": 0.75,
+                    "end_percent": 0.45,
                 },
             }
             ksampler_model = ["15", 0]
-            default_denoise = 0.60
+            default_denoise = 0.68
         else:
             ksampler_model = [base_or_ref_model, 0]
             default_denoise = 0.48
@@ -460,7 +460,7 @@ async def run_comfy_workflow(
             "class_type": "KSampler"
         }
     elif ref_image_name:
-        # Height & Face Locking Pipeline via AnimaRefAdapter + Img2Img
+        # Character Identity Locking via AnimaRefAdapter + fresh EmptyLatentImage scene
         workflow["10"] = {"class_type": "LoadImage", "inputs": {"image": ref_image_name}}
         workflow["11"] = {
             "class_type": "AnimaRefAdapter",
@@ -476,7 +476,14 @@ async def run_comfy_workflow(
                 "ref_megapixels": 0.75,
             },
         }
-        workflow["12"] = {"class_type": "VAEEncode", "inputs": {"pixels": ["10", 0], "vae": ["3", 0]}}
+        workflow["6"] = {
+            "inputs": {
+                "width": width,
+                "height": height,
+                "batch_size": 1,
+            },
+            "class_type": "EmptyLatentImage",
+        }
         workflow["7"] = {
             "inputs": {
                 "seed": seed,
@@ -484,13 +491,13 @@ async def run_comfy_workflow(
                 "cfg": cfg,
                 "sampler_name": "euler",
                 "scheduler": "simple",
-                "denoise": denoise if denoise < 1.0 else 0.48,
+                "denoise": 1.0,
                 "model": ["11", 0],
                 "positive": ["4", 0],
                 "negative": ["5", 0],
-                "latent_image": ["12", 0]
+                "latent_image": ["6", 0],
             },
-            "class_type": "KSampler"
+            "class_type": "KSampler",
         }
     else:
         # Standard Text-to-Image Generation
@@ -992,6 +999,40 @@ def _normalize_init_image_for_vram(dest: Path) -> None:
         pass
 
 
+def _describe_init_image_tags(init_filename: str, *, outfit_only: bool = True) -> str:
+    """Use local multimodal Ollama (qwen3.5:4b) to extract Danbooru tags from the staged init image."""
+    try:
+        img_path = COMFY_DIR / "input" / Path(init_filename).name
+        if not img_path.is_file():
+            return ""
+        b64 = base64.b64encode(img_path.read_bytes()).decode("ascii")
+        instruction = (
+            "Describe ONLY the outfit, dress, sleeves, stockings, shoes, and accessories in this image "
+            "as concise comma-separated English Danbooru tags (no explanation, no character name)."
+            if outfit_only
+            else "Describe ONLY the pose, framing, outfit, and background in this image as concise comma-separated English Danbooru tags."
+        )
+        payload = json.dumps({
+            "model": os.environ.get("AI_OFFICE_LOCAL_MODEL", "qwen3.5:4b"),
+            "messages": [{"role": "user", "content": instruction, "images": [b64]}],
+            "stream": False,
+            "think": False,
+            "keep_alive": 0,
+            "options": {"num_predict": 140, "temperature": 0.15},
+        }).encode("utf-8")
+        req_obj = urllib.request.Request(
+            "http://127.0.0.1:11434/api/chat",
+            data=payload,
+            headers={"Content-Type": "application/json"},
+        )
+        with urllib.request.urlopen(req_obj, timeout=45) as resp:
+            content = str(json.loads(resp.read().decode("utf-8")).get("message", {}).get("content", "")).strip()
+        return re.sub(r"\s+", " ", content).strip(" ,.")
+    except Exception as exc:
+        logger.debug(f"[ChatImage] Vision init-image tagging skipped: {exc}")
+        return ""
+
+
 def _save_attached_images_for_comfy(attached_images: Optional[List[Any]]) -> Optional[str]:
     """
     Decodes the first attached chat image (ChatAttachment model, base64 data-URI,
@@ -1089,6 +1130,68 @@ def _save_attached_images_for_comfy(attached_images: Optional[List[Any]]) -> Opt
     return None
 
 
+def _parse_image_request_with_llm(user_message: str, has_init_ref: bool = False) -> Dict[str, Any]:
+    """
+    Use local Ollama (qwen3.5:4b, keep_alive=0, format=json) to parse structured
+    image generation intent. Returns {} gracefully if Ollama is offline or invalid.
+    """
+    prompt = (
+        "Extract structured Danbooru image-generation parameters from this user request. "
+        "Return ONLY valid JSON with keys: "
+        '{"character": str, "keep_default_outfit": bool, "outfit_tags": str, "framing": str, "background_tags": str}.\n'
+        f"has_init_ref: {str(bool(has_init_ref)).lower()}\n"
+        "Rules:\n"
+        "- character: character name if mentioned, else empty string.\n"
+        "- keep_default_outfit: true if the user wants the character's default/canonical outfit; "
+        "false if the user requests a custom/new outfit, cosplay, dress, or wearing the outfit from an attached image.\n"
+        "- outfit_tags: concise comma-separated English Danbooru tags for the requested outfit (empty if keep_default_outfit is true or copying attached image outfit).\n"
+        "- framing: concise English Danbooru framing/pose tags if specified, else empty string.\n"
+        "- background_tags: concise English Danbooru background tags ONLY if user explicitly requested a background/setting, else empty string.\n"
+        f"User request: {user_message}"
+    )
+    payload = json.dumps({
+        "model": os.environ.get("AI_OFFICE_LOCAL_MODEL", "qwen3.5:4b"),
+        "messages": [{"role": "user", "content": prompt}],
+        "stream": False,
+        "think": False,
+        "keep_alive": 0,
+        "format": "json",
+        "options": {"num_predict": 200, "temperature": 0.1},
+    }).encode("utf-8")
+    req_obj = urllib.request.Request(
+        "http://127.0.0.1:11434/api/chat",
+        data=payload,
+        headers={"Content-Type": "application/json"},
+    )
+    try:
+        with urllib.request.urlopen(req_obj, timeout=12) as resp:
+            raw_body = json.loads(resp.read().decode("utf-8"))
+        content = str(raw_body.get("message", {}).get("content", "")).strip()
+        if not content:
+            return {}
+        content = re.sub(r"^```(?:json)?\s*|\s*```$", "", content, flags=re.IGNORECASE | re.MULTILINE).strip()
+        parsed = json.loads(content)
+        if not isinstance(parsed, dict):
+            return {}
+        raw_keep = parsed.get("keep_default_outfit")
+        if isinstance(raw_keep, bool):
+            keep_default = raw_keep
+        elif isinstance(raw_keep, str):
+            keep_default = raw_keep.strip().lower() not in ("false", "0", "no")
+        else:
+            keep_default = True
+        return {
+            "character": str(parsed.get("character") or "").strip(),
+            "keep_default_outfit": keep_default,
+            "outfit_tags": str(parsed.get("outfit_tags") or "").strip(" ,."),
+            "framing": str(parsed.get("framing") or "").strip(" ,."),
+            "background_tags": str(parsed.get("background_tags") or "").strip(" ,."),
+        }
+    except Exception as exc:
+        logger.debug(f"[ChatImage] LLM request parsing skipped/fallback: {exc}")
+        return {}
+
+
 async def handle_chat_image_generation(
     user_message: str,
     conversation_id: str = "",
@@ -1140,8 +1243,33 @@ async def handle_chat_image_generation(
     display_name = canonical_names.get(subj_norm) or (char_info.display_name if char_info.display_name and char_info.display_name != subj_norm else subject.title())
 
     # 2. Build Danbooru positive & negative prompts
-    is_custom_outfit = bool(extra and any(k in extra.lower() for k in ["trang phục", "mặc", "outfit", "costume", "cosplay", "clothes", "màu", "whispers"]))
-    custom_outfit_prompt = ""
+    has_init_ref = bool(attached_images or init_image_name)
+    msg_lower = user_message.lower()
+    is_keep_ref_outfit = has_init_ref and any(
+        k in msg_lower for k in ("bộ đồ", "trang phục", "outfit", "váy", "mặc bộ", "mặc đồ", "đồ trong ảnh")
+    )
+
+    loop = asyncio.get_running_loop()
+    llm_parsed = await loop.run_in_executor(
+        None, lambda: _parse_image_request_with_llm(user_message, has_init_ref)
+    )
+    llm_outfit_tags = str(llm_parsed.get("outfit_tags") or "").strip(" ,.")
+    llm_framing = str(llm_parsed.get("framing") or "").strip(" ,.")
+    llm_background = str(llm_parsed.get("background_tags") or "").strip(" ,.")
+    llm_keep_default = llm_parsed.get("keep_default_outfit") if "keep_default_outfit" in llm_parsed else None
+
+    custom_outfit_keywords = (
+        "trang phục", "mặc", "outfit", "costume", "cosplay", "clothes",
+        "màu", "whispers", "váy", "áo", "dress", "suit", "uniform",
+        "kimono", "bikini", "hoodie", "pajama", "sleepwear",
+    )
+    is_custom_outfit = (not is_keep_ref_outfit) and (
+        bool(extra and any(k in extra.lower() for k in custom_outfit_keywords))
+        or (llm_keep_default is False)
+        or bool(llm_outfit_tags)
+    )
+    keep_default_outfit = (not is_keep_ref_outfit) and (not is_custom_outfit) and (llm_keep_default is not False)
+
     known_outfit_specs = {
         "whispers of stars and smoke": (
             "wearing Citlali Whispers of Stars and Smoke sleepwear outfit, "
@@ -1156,78 +1284,89 @@ async def handle_chat_image_generation(
     extra_lower = (extra or "").lower()
     matched_known_outfit = next((spec for key, spec in known_outfit_specs.items() if key in extra_lower), "")
 
-    if extra:
-        # Try local Ollama to translate Vietnamese/crossover outfit instructions into clean English anime tags
-        try:
-            ollama_prompt = (
-                f"Convert this anime illustration request into concise English Danbooru/anime visual tags ONLY (comma-separated, no explanation).\n"
-                f"Character core traits: {char_info.hair_tags}, {char_info.eye_tags}, {char_info.face_tags}\n"
-                f"Requested outfit / action / scene: {extra}\n"
-                + (f"Known outfit design details (include all visual items): {matched_known_outfit}\n" if matched_known_outfit else "")
-                + f"Keep the character's original hair, eyes, and gender ({'1boy, male' if '1boy' in char_info.danbooru_prompt else 'character'})."
-            )
-            req_body = json.dumps({
-                "model": os.environ.get("AI_OFFICE_LOCAL_MODEL", "qwen3.5:4b"),
-                "messages": [{"role": "user", "content": ollama_prompt}],
-                "stream": False,
-                "think": False,
-                "options": {"num_predict": 220, "temperature": 0.25},
-            }).encode("utf-8")
-            req_obj = urllib.request.Request(
-                "http://127.0.0.1:11434/api/chat",
-                data=req_body,
-                headers={"Content-Type": "application/json"},
-            )
-            def _ask_ollama() -> str:
-                with urllib.request.urlopen(req_obj, timeout=120) as r:
-                    return str(json.loads(r.read().decode("utf-8")).get("message", {}).get("content", "")).strip()
+    char_id = getattr(char_info, "character_id", "") or ""
+    char_hair = getattr(char_info, "hair_tags", "") or ""
+    char_eye = getattr(char_info, "eye_tags", "") or ""
+    char_face = getattr(char_info, "face_tags", "") or ""
+    char_outfit = getattr(char_info, "outfit_tags", "") or ""
+    char_acc = getattr(char_info, "accessories_tags", "") or ""
+    char_danbooru = getattr(char_info, "danbooru_prompt", "") or ""
 
-            loop = asyncio.get_running_loop()
-            custom_outfit_prompt = await loop.run_in_executor(None, _ask_ollama)
-            # Immediately unload Ollama from VRAM so ComfyUI has maximum headroom on 6GB GPUs
+    is_boy = "1boy" in char_danbooru.lower()
+    gender_hint = "1boy, solo" if is_boy else "1girl, solo"
+    char_identity = f"{char_id}, {gender_hint}" if char_id else gender_hint
+
+    if is_keep_ref_outfit:
+        vision_outfit_tags = ""
+        early_init = _save_attached_images_for_comfy(attached_images) or (
+            _stage_ref_image_for_comfy(init_image_name) or Path(init_image_name).name
+            if init_image_name
+            else None
+        )
+        if early_init:
             try:
-                unload_req = urllib.request.Request(
-                    "http://127.0.0.1:11434/api/generate",
-                    data=json.dumps({"model": os.environ.get("AI_OFFICE_LOCAL_MODEL", "qwen3.5:4b"), "keep_alive": 0}).encode("utf-8"),
-                    headers={"Content-Type": "application/json"},
+                vision_outfit_tags = await loop.run_in_executor(
+                    None, lambda: _describe_init_image_tags(early_init, outfit_only=True)
                 )
-                await loop.run_in_executor(None, lambda: urllib.request.urlopen(unload_req, timeout=5).read())
             except Exception:
-                pass
-        except Exception as llm_exc:
-            logger.warning(f"[ChatImage] Ollama prompt expansion failed/skipped: {llm_exc}")
-
-    if is_custom_outfit:
-        gender_hint = "1boy, solo" if "1boy" in char_info.danbooru_prompt else "solo"
-        # Use physical traits + outfit details without repeating default costume priors; force full-body framing
-        outfit_clause = ", ".join(filter(None, [matched_known_outfit, custom_outfit_prompt])) or extra
+                vision_outfit_tags = ""
+        core_parts = [
+            char_identity,
+            char_hair,
+            char_eye,
+            char_face,
+        ]
+        if vision_outfit_tags:
+            core_parts.append(vision_outfit_tags)
+        elif llm_outfit_tags:
+            core_parts.append(llm_outfit_tags)
         positive_components = [
-            f"{gender_hint}, full body shot, standing pose, looking at viewer",
-            f"young anime boy with {char_info.hair_tags}, {char_info.eye_tags}, {char_info.face_tags}",
+            ", ".join(p for p in core_parts if p),
+            llm_framing,
+            llm_background,
+            "masterpiece, best quality, sharp details, vibrant colors, expressive eyes, professional illustration",
+        ]
+    elif not keep_default_outfit:
+        # Custom outfit: keep ONLY hair/eye/face tags + user's/LLM's outfit_tags (never char_info.outfit_tags)
+        outfit_clause = ", ".join(filter(None, [matched_known_outfit, llm_outfit_tags])) or extra
+        framing_clause = llm_framing or "full body shot, standing pose, looking at viewer"
+        bg_clause = llm_background
+        if not bg_clause and any(k in msg_lower for k in ("night room", "phòng đêm", "celestial room")):
+            bg_clause = "cozy celestial night room background"
+        core_parts = [
+            char_identity,
+            framing_clause,
+            char_hair,
+            char_eye,
+            char_face,
             outfit_clause,
-            "masterpiece, best quality, vibrant anime illustration, crisp cel shading, sharp details, expressive eyes, cozy celestial night room background"
+            bg_clause,
+        ]
+        positive_components = [
+            ", ".join(p for p in core_parts if p),
+            "masterpiece, best quality, vibrant anime illustration, crisp cel shading, sharp details, expressive eyes",
         ]
     else:
-        has_init_ref = bool(attached_images or init_image_name)
-        if has_init_ref and char_info.hair_tags:
-            # Img2Img character swap: keep core character traits/outfit without injecting conflicting props/arena
+        if has_init_ref and char_hair:
             core_parts = [
-                f"{char_info.character_id}, {'1boy' if '1boy' in (char_info.danbooru_prompt or '') else '1girl'}, solo",
-                char_info.hair_tags,
-                char_info.eye_tags,
-                char_info.face_tags,
-                char_info.outfit_tags,
-                char_info.accessories_tags,
+                char_identity,
+                char_hair,
+                char_eye,
+                char_face,
+                char_outfit,
+                char_acc,
             ]
             base_prompt = ", ".join(p for p in core_parts if p)
         else:
-            base_prompt = char_info.danbooru_prompt or f"{subject}, solo, anime aesthetic"
+            base_prompt = char_danbooru or f"{subject}, {gender_hint}, anime aesthetic"
         positive_components = [
             base_prompt,
-            "masterpiece, best quality, sharp details, vibrant colors, expressive eyes, professional illustration"
+            llm_framing,
+            llm_background,
+            "masterpiece, best quality, sharp details, vibrant colors, expressive eyes, professional illustration",
         ]
-        if custom_outfit_prompt or extra:
-            positive_components.append(custom_outfit_prompt or extra)
+        if extra and not llm_outfit_tags:
+            positive_components.append(extra)
 
     positive_prompt = ", ".join(filter(None, positive_components))
     negative_prompt = (

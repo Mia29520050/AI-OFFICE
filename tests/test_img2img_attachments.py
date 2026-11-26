@@ -290,13 +290,13 @@ async def test_run_comfy_workflow_with_lllite_patch(
             "model": [expected_base_model, 0],
             "model_patch": ["14", 0],
             "image": ["10", 0],
-            "strength": 0.72,
+            "strength": 0.40,
             "start_percent": 0.0,
-            "end_percent": 0.75,
+            "end_percent": 0.45,
         },
     }
     assert wf["7"]["inputs"]["model"] == ["15", 0]
-    assert wf["7"]["inputs"]["denoise"] == pytest.approx(0.60)
+    assert wf["7"]["inputs"]["denoise"] == pytest.approx(0.68)
 
 
 @pytest.mark.asyncio
@@ -334,3 +334,132 @@ async def test_run_comfy_workflow_without_lllite_patch(
 
     assert wf["7"]["inputs"]["latent_image"] == ["12", 0]
     assert 0.48 <= wf["7"]["inputs"]["denoise"] <= 0.55
+
+
+
+@pytest.mark.asyncio
+async def test_keep_ref_outfit_and_realistic_prompt_overrides(monkeypatch, tmp_path):
+    """When user asks for realistic Hu Tao wearing the attached outfit, omit default coat and unlock photorealistic."""
+    comfy_dir = tmp_path / "ComfyUI"
+    (comfy_dir / "input").mkdir(parents=True)
+    monkeypatch.setattr(chat_image_handler, "COMFY_DIR", comfy_dir)
+
+    async def _ok_online(*_a, **_kw):
+        return True
+
+    monkeypatch.setattr(chat_image_handler, "ensure_comfy_online", _ok_online)
+    monkeypatch.setattr(chat_image_handler, "resolve_user_profile_ref_image", lambda explicit_ref=None: None)
+    monkeypatch.setattr(
+        chat_image_handler,
+        "_describe_init_image_tags",
+        lambda *_a, **_kw: "ribbed dress, turtleneck, sleeveless, heart cutout, platform heels",
+    )
+
+    captured = {}
+
+    async def _fake_qa(**kwargs):
+        captured.update(kwargs)
+        out = tmp_path / "out.png"
+        out.write_bytes(b"\x89PNG\r\n\x1a\n" + b"\x00" * 32)
+        return out, {"passed": True, "attempts": 1, "issues": [], "used_golden_template": False}
+
+    monkeypatch.setattr(chat_image_handler, "run_comfy_with_auto_qa", _fake_qa)
+    fake_b64 = base64.b64encode(b"\x89PNG\r\n\x1a\n" + b"\x00" * 32).decode("ascii")
+
+    res = await chat_image_handler.handle_chat_image_generation(
+        user_message="Vẽ Hu Tao người thật mặc bộ đồ trong ảnh này",
+        attached_images=[{"name": "outfit.png", "media_type": "image/png", "data_base64": fake_b64}],
+    )
+    assert res["success"] is True
+    pos = captured["positive_prompt"].lower()
+    neg = captured["negative_prompt"].lower()
+    assert "heart cutout" in pos
+    assert "traditional chinese dark coat" not in pos
+    assert "photorealistic" in neg
+
+
+@pytest.mark.asyncio
+async def test_hutao_custom_outfit_no_hardcoded_boy_or_default_coat(monkeypatch, tmp_path):
+    """Hu Tao + custom outfit must use 1girl, solo and omit 'young anime boy', default coat, and forced night room."""
+    comfy_dir = tmp_path / "ComfyUI"
+    (comfy_dir / "input").mkdir(parents=True)
+    monkeypatch.setattr(chat_image_handler, "COMFY_DIR", comfy_dir)
+
+    async def _ok_online(*_a, **_kw):
+        return True
+
+    monkeypatch.setattr(chat_image_handler, "ensure_comfy_online", _ok_online)
+    monkeypatch.setattr(chat_image_handler, "resolve_user_profile_ref_image", lambda explicit_ref=None: None)
+    monkeypatch.setattr(
+        chat_image_handler,
+        "_parse_image_request_with_llm",
+        lambda msg, has_init_ref=False: {
+            "character": "Hu Tao",
+            "keep_default_outfit": False,
+            "outfit_tags": "red evening gown, elegant dress",
+            "framing": "full body",
+            "background_tags": "",
+        },
+    )
+
+    captured: Dict[str, Any] = {}
+
+    async def _fake_qa(**kwargs):
+        captured.update(kwargs)
+        out = tmp_path / "out_hutao_custom.png"
+        out.write_bytes(RAW_PNG)
+        return out, {"passed": True, "attempts": 1, "issues": [], "used_golden_template": False}
+
+    monkeypatch.setattr(chat_image_handler, "run_comfy_with_auto_qa", _fake_qa)
+
+    res = await chat_image_handler.handle_chat_image_generation(
+        user_message="Vẽ Hu Tao mặc váy dạ hội màu đỏ",
+    )
+    assert res["success"] is True
+    pos = captured["positive_prompt"].lower()
+    assert "1girl, solo" in pos
+    assert "red evening gown" in pos
+    assert "young anime boy" not in pos
+    assert "traditional chinese dark coat" not in pos
+    assert "cozy celestial night room background" not in pos
+
+
+def test_parse_image_request_with_llm_json_and_offline_fallback():
+    """Verify _parse_image_request_with_llm parses valid JSON from Ollama and returns {} when offline."""
+    captured_payload: Dict[str, Any] = {}
+
+    def _fake_urlopen_ok(req, timeout=12):
+        captured_payload.update(json.loads(req.data.decode("utf-8")))
+        resp = MagicMock()
+        resp.read.return_value = json.dumps({
+            "message": {
+                "content": json.dumps({
+                    "character": "Hu Tao",
+                    "keep_default_outfit": False,
+                    "outfit_tags": "white wedding dress, veil",
+                    "framing": "upper body",
+                    "background_tags": "cherry blossoms",
+                })
+            }
+        }).encode("utf-8")
+        resp.__enter__ = lambda s: s
+        resp.__exit__ = lambda s, *args: None
+        return resp
+
+    with patch("urllib.request.urlopen", side_effect=_fake_urlopen_ok):
+        parsed = chat_image_handler._parse_image_request_with_llm("Vẽ Hu Tao mặc váy cưới trắng", False)
+
+    assert captured_payload["model"] == "qwen3.5:4b"
+    assert captured_payload["keep_alive"] == 0
+    assert captured_payload["format"] == "json"
+    assert parsed == {
+        "character": "Hu Tao",
+        "keep_default_outfit": False,
+        "outfit_tags": "white wedding dress, veil",
+        "framing": "upper body",
+        "background_tags": "cherry blossoms",
+    }
+
+    with patch("urllib.request.urlopen", side_effect=OSError("Connection refused")):
+        fallback = chat_image_handler._parse_image_request_with_llm("Vẽ Hu Tao mặc váy cưới trắng", True)
+    assert fallback == {}

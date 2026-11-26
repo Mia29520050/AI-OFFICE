@@ -388,8 +388,9 @@ class AutonomousCharacterResearcher:
         # 5. Build prompt matrix
         gender_tag = traits.get("gender_tag")
         if not gender_tag:
+            combined_corpus = " ".join(corpus).lower()
             male_markers = ["1boy", "male", "boy", "his ", "him "]
-            gender_tag = "1boy" if any(m in combined for m in male_markers) else "1girl"
+            gender_tag = "1boy" if any(m in combined_corpus for m in male_markers) else "1girl"
         danbooru_core = f"{slug}, {gender_tag}, solo, {traits['hair_tags']}, {traits['eye_tags']}, {traits['face_tags']}"
         if traits['accessories_tags']:
             danbooru_core += f", {traits['accessories_tags']}"
