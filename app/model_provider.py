@@ -285,9 +285,8 @@ class ModelProviderManager:
                     return ""
                 return str(choices[0].get("message", {}).get("content", "") or "").strip()
 
-        ctx_size = int(num_ctx if num_ctx is not None else cfg["local_num_ctx"])
-        if num_predict > 4096 and ctx_size < 16384:
-            ctx_size = 16384
+        ctx_size = int(cfg["local_num_ctx"])
+        num_predict = min(num_predict, ctx_size // 2)
         model_name = str(cfg["local_model"]).lower()
         enable_think = think if think is not None else bool("r1" in model_name or "claude" in model_name)
         payload = {
@@ -317,7 +316,11 @@ class ModelProviderManager:
             async with httpx.AsyncClient(timeout=35.0) as client:
                 res = await client.post(
                     f"{DEFAULT_OLLAMA_URL}/api/generate",
-                    json={"model": target_model, "keep_alive": "24h"},
+                    json={
+                        "model": target_model,
+                        "keep_alive": "24h",
+                        "options": {"num_ctx": int(cfg["local_num_ctx"])},
+                    },
                 )
                 return res.status_code == 200
         except Exception:
@@ -394,9 +397,8 @@ class ModelProviderManager:
                             continue
             return
 
-        ctx_size = int(num_ctx if num_ctx is not None else cfg["local_num_ctx"])
-        if num_predict > 4096 and ctx_size < 16384:
-            ctx_size = 16384
+        ctx_size = int(cfg["local_num_ctx"])
+        num_predict = min(num_predict, ctx_size // 2)
         model_name = str(cfg["local_model"]).lower()
         enable_think = think if think is not None else bool("r1" in model_name or "claude" in model_name)
         payload = {

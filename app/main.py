@@ -1307,6 +1307,8 @@ async def chat(req: ChatRequest) -> dict[str, Any]:
         if not ready:
             raise HTTPException(503, reason_offline or "Model chưa sẵn sàng.")
     conversation_id, messages, stored_user_message = _build_chat_context(req)
+    if direct_answer is None:
+        await asyncio.to_thread(_apply_web_grounding, req.message, messages)
     answer = direct_answer if direct_answer is not None else await ollama_chat(messages)
     active_model_name = MODEL_MANAGER.active_route()["model"]
     _save_chat_turn(conversation_id, req, stored_user_message, answer)
@@ -1383,6 +1385,8 @@ async def chat_stream(req: ChatRequest) -> StreamingResponse:
             raise HTTPException(503, reason_offline or "Model chưa sẵn sàng.")
 
     conversation_id, messages, stored_user_message = _build_chat_context(req)
+    if direct_answer is None:
+        await asyncio.to_thread(_apply_web_grounding, req.message, messages)
 
     async def event_generator() -> AsyncGenerator[str, None]:
         accumulated_answer: list[str] = []
@@ -1772,8 +1776,31 @@ from manga_koharu import register_routes as register_koharu_routes
 register_koharu_routes(app)
 from motion_comic_routes import register_routes as register_motion_comic_routes
 register_motion_comic_routes(app)
-from grounded_search import register_routes as register_grounded_search_routes
+from grounded_search import (
+    build_grounded_prompt,
+    classify_search_intent,
+    execute_web_search,
+    register_routes as register_grounded_search_routes,
+)
 register_grounded_search_routes(app)
+
+_FORCE_WEB_RE = re.compile(r"tra cứu|tìm trên (mạng|web)|lên mạng|search|google", re.I)
+
+
+def _apply_web_grounding(message: str, messages: list[dict[str, Any]]) -> bool:
+    """Run grounded web search when user asks to search/tra cứu and inject sources."""
+    decision = classify_search_intent(message, force=bool(_FORCE_WEB_RE.search(message)))
+    if not decision.should_search:
+        return False
+    sources = execute_web_search(decision.cleaned_query or message, max_results=3)
+    if not sources:
+        return False
+    sys_prompt, augmented = build_grounded_prompt(message, sources)
+    messages[0]["content"] += "\n\n" + sys_prompt
+    last = messages[-1]
+    if last.get("role") == "user" and isinstance(last.get("content"), str):
+        last["content"] = augmented
+    return True
 from voice_engine import register_routes as register_voice_routes
 register_voice_routes(app)
 from game_translator import register_routes as register_game_translator_routes
