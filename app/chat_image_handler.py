@@ -420,7 +420,7 @@ async def run_comfy_workflow(
                 "cfg": cfg,
                 "sampler_name": "euler",
                 "scheduler": "simple",
-                "denoise": denoise if denoise < 1.0 else 0.84,
+                "denoise": denoise if denoise < 1.0 else 0.48,
                 "model": ["11", 0],
                 "positive": ["4", 0],
                 "negative": ["5", 0],
@@ -439,7 +439,7 @@ async def run_comfy_workflow(
                 "cfg": cfg,
                 "sampler_name": "euler",
                 "scheduler": "simple",
-                "denoise": denoise if denoise < 1.0 else 0.84,
+                "denoise": denoise if denoise < 1.0 else 0.48,
                 "model": ["1", 0],
                 "positive": ["4", 0],
                 "negative": ["5", 0],
@@ -472,7 +472,7 @@ async def run_comfy_workflow(
                 "cfg": cfg,
                 "sampler_name": "euler",
                 "scheduler": "simple",
-                "denoise": denoise if denoise < 1.0 else 0.84,
+                "denoise": denoise if denoise < 1.0 else 0.48,
                 "model": ["11", 0],
                 "positive": ["4", 0],
                 "negative": ["5", 0],
@@ -867,6 +867,8 @@ def _stage_ref_image_for_comfy(ref_url_or_name: str) -> Optional[str]:
         candidate_paths.insert(0, Path(raw))
 
     found_path = next((p for p in candidate_paths if p.is_file()), None)
+    if not found_path and EXPORT_IMAGES_DIR.exists():
+        found_path = next((p for p in EXPORT_IMAGES_DIR.rglob(filename) if p.is_file()), None)
     if not found_path:
         return None
 
@@ -925,37 +927,107 @@ def resolve_user_profile_ref_image(
     return None
 
 
+def _extract_attachment_fields(item: Any) -> Dict[str, Any]:
+    """Normalizes str, dict, or Pydantic/object attachment into a flat dict."""
+    if isinstance(item, str):
+        return {"data": item.strip()}
+    if hasattr(item, "model_dump") and callable(item.model_dump):
+        return item.model_dump()
+    if hasattr(item, "dict") and callable(item.dict):
+        return item.dict()
+    if isinstance(item, dict):
+        return item
+    fields: Dict[str, Any] = {}
+    for key in (
+        "name",
+        "media_type",
+        "data_base64",
+        "data_url",
+        "data",
+        "base64",
+        "url",
+        "path",
+        "file_path",
+        "content",
+    ):
+        if hasattr(item, key):
+            fields[key] = getattr(item, key)
+    return fields
+
+
 def _save_attached_images_for_comfy(attached_images: Optional[List[Any]]) -> Optional[str]:
     """
-    Decodes the first attached chat image (base64 data-URI / raw base64 / dict / path)
-    and saves it into `COMFY_DIR / "input"` as `init_image_name` for Img2Img pose/layout locking.
+    Decodes the first attached chat image (ChatAttachment model, base64 data-URI,
+    raw base64, dict with data_base64/data_url/base64/url/path, or /api/... asset URL)
+    and saves/stages it into `COMFY_DIR / "input"` as `init_image_name` for Img2Img.
     """
     if not attached_images:
         return None
 
     comfy_input_dir = COMFY_DIR / "input"
+    image_exts = {".png", ".jpg", ".jpeg", ".webp"}
+
     for item in attached_images:
+        item_dict = _extract_attachment_fields(item)
+        if not item_dict:
+            continue
+
+        media_type = str(item_dict.get("media_type") or "").strip().lower()
+        name = str(item_dict.get("name") or "").strip()
+
         raw_data: Optional[str] = None
-        if isinstance(item, str):
-            raw_data = item.strip()
-        elif isinstance(item, dict):
-            for key in ("data", "base64", "content", "url", "path", "file_path"):
-                val = item.get(key)
-                if isinstance(val, str) and val.strip():
-                    raw_data = val.strip()
-                    break
+        for key in (
+            "data_base64",
+            "data_url",
+            "data",
+            "base64",
+            "url",
+            "path",
+            "file_path",
+            "content",
+        ):
+            val = item_dict.get(key)
+            if isinstance(val, str) and val.strip():
+                raw_data = val.strip()
+                break
 
         if not raw_data:
             continue
 
-        # Local file path case
-        if not raw_data.startswith("data:") and Path(raw_data).is_file():
+        # Skip explicit non-image attachments (e.g. text/plain code snippets)
+        if (
+            media_type
+            and not media_type.startswith("image/")
+            and not raw_data.startswith("data:image/")
+            and not raw_data.startswith("/api/")
+            and Path(name or raw_data[:256]).suffix.lower() not in image_exts
+        ):
+            continue
+
+        # /api/... uploaded asset URL or local file path case
+        is_api_or_http = raw_data.startswith("/api/") or raw_data.startswith(("http://", "https://"))
+        is_short_local_path = (
+            not raw_data.startswith("data:")
+            and len(raw_data) < 512
+            and Path(raw_data).is_file()
+        )
+        if is_api_or_http or is_short_local_path:
             staged = _stage_ref_image_for_comfy(raw_data)
             if staged:
                 return staged
+            continue
 
         # Base64 / data-URI case
         ext = "png"
+        if media_type in ("image/jpeg", "image/jpg"):
+            ext = "jpg"
+        elif media_type == "image/webp":
+            ext = "webp"
+        elif Path(name).suffix.lower() in (".jpg", ".jpeg"):
+            ext = "jpg"
+        elif Path(name).suffix.lower() == ".webp":
+            ext = "webp"
+
         b64_payload = raw_data
         m_data_uri = re.match(r"^data:image/([a-zA-Z0-9+.\-]+);base64,(.+)$", raw_data, flags=re.DOTALL)
         if m_data_uri:
@@ -964,7 +1036,7 @@ def _save_attached_images_for_comfy(attached_images: Optional[List[Any]]) -> Opt
             b64_payload = m_data_uri.group(2).strip()
 
         try:
-            img_bytes = base64.b64decode(b64_payload, validate=True)
+            img_bytes = base64.b64decode(re.sub(r"\s+", "", b64_payload), validate=True)
             if not img_bytes:
                 continue
             comfy_input_dir.mkdir(parents=True, exist_ok=True)
@@ -1186,6 +1258,7 @@ async def handle_chat_image_generation(
             timeout_secs=240,
             ref_image_name=effective_ref,
             init_image_name=effective_init,
+            denoise=0.52 if effective_init else 1.0,
             aspect_ratio=chosen_ratio,
             output_format=chosen_format,
         )
