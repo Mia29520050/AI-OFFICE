@@ -392,27 +392,58 @@ async def run_comfy_workflow(
         },
     }
 
-    if init_image_name and ref_image_name:
-        # Dual-Image Character Swap:
+    if init_image_name:
         # Branch 1 (Init Image): LoadImage ("10") -> VAEEncode ("12") keeps original pose/composition
-        # Branch 2 (Ref Image):  LoadImage ("13") -> AnimaRefAdapter ("11") locks new character identity
         workflow["10"] = {"class_type": "LoadImage", "inputs": {"image": init_image_name}}
         workflow["12"] = {"class_type": "VAEEncode", "inputs": {"pixels": ["10", 0], "vae": ["3", 0]}}
-        workflow["13"] = {"class_type": "LoadImage", "inputs": {"image": ref_image_name}}
-        workflow["11"] = {
-            "class_type": "AnimaRefAdapter",
-            "inputs": {
-                "model": ["1", 0],
-                "vae": ["3", 0],
-                "image": ["13", 0],
-                "lora_name": "anima_ref_adapter_v2_r64.safetensors",
-                "ref_guidance": ref_guidance,
-                "correction": "apg",
-                "strength": ref_strength,
-                "ref_end": 0.55,
-                "ref_megapixels": 0.75,
-            },
-        }
+
+        if ref_image_name:
+            # Dual-Image Character Swap:
+            # Branch 2 (Ref Image): LoadImage ("13") -> AnimaRefAdapter ("11") locks new character identity
+            workflow["13"] = {"class_type": "LoadImage", "inputs": {"image": ref_image_name}}
+            workflow["11"] = {
+                "class_type": "AnimaRefAdapter",
+                "inputs": {
+                    "model": ["1", 0],
+                    "vae": ["3", 0],
+                    "image": ["13", 0],
+                    "lora_name": "anima_ref_adapter_v2_r64.safetensors",
+                    "ref_guidance": ref_guidance,
+                    "correction": "apg",
+                    "strength": ref_strength,
+                    "ref_end": 0.55,
+                    "ref_megapixels": 0.75,
+                },
+            }
+            base_or_ref_model = "11"
+        else:
+            base_or_ref_model = "1"
+
+        lllite_patch_name = "anima-lllite-any-test-like-v2.safetensors"
+        lllite_patch_path = COMFY_DIR / "models" / "model_patches" / lllite_patch_name
+        use_lllite = lllite_patch_path.is_file()
+        if use_lllite:
+            workflow["14"] = {
+                "class_type": "ModelPatchLoader",
+                "inputs": {"name": lllite_patch_name},
+            }
+            workflow["15"] = {
+                "class_type": "AnimaLLLiteApply",
+                "inputs": {
+                    "model": [base_or_ref_model, 0],
+                    "model_patch": ["14", 0],
+                    "image": ["10", 0],
+                    "strength": 0.72,
+                    "start_percent": 0.0,
+                    "end_percent": 0.75,
+                },
+            }
+            ksampler_model = ["15", 0]
+            default_denoise = 0.60
+        else:
+            ksampler_model = [base_or_ref_model, 0]
+            default_denoise = 0.48
+
         workflow["7"] = {
             "inputs": {
                 "seed": seed,
@@ -420,27 +451,8 @@ async def run_comfy_workflow(
                 "cfg": cfg,
                 "sampler_name": "euler",
                 "scheduler": "simple",
-                "denoise": denoise if denoise < 1.0 else 0.48,
-                "model": ["11", 0],
-                "positive": ["4", 0],
-                "negative": ["5", 0],
-                "latent_image": ["12", 0]
-            },
-            "class_type": "KSampler"
-        }
-    elif init_image_name:
-        # Img2Img only: LoadImage ("10") -> VAEEncode ("12") + prompt (no AnimaRefAdapter)
-        workflow["10"] = {"class_type": "LoadImage", "inputs": {"image": init_image_name}}
-        workflow["12"] = {"class_type": "VAEEncode", "inputs": {"pixels": ["10", 0], "vae": ["3", 0]}}
-        workflow["7"] = {
-            "inputs": {
-                "seed": seed,
-                "steps": steps,
-                "cfg": cfg,
-                "sampler_name": "euler",
-                "scheduler": "simple",
-                "denoise": denoise if denoise < 1.0 else 0.48,
-                "model": ["1", 0],
+                "denoise": denoise if denoise < 1.0 else default_denoise,
+                "model": ksampler_model,
                 "positive": ["4", 0],
                 "negative": ["5", 0],
                 "latent_image": ["12", 0]
@@ -955,6 +967,31 @@ def _extract_attachment_fields(item: Any) -> Dict[str, Any]:
     return fields
 
 
+def _normalize_init_image_for_vram(dest: Path) -> None:
+    """Ensure init image has diffusion-friendly dimensions (>=512 short side, <=1280 long side, mult of 16)."""
+    try:
+        from PIL import Image
+        with Image.open(dest) as img:
+            w, h = img.size
+            if w <= 0 or h <= 0:
+                return
+            short_side = min(w, h)
+            long_side = max(w, h)
+            scale = 1.0
+            if short_side < 512:
+                scale = 512.0 / short_side
+            if long_side * scale > 1280:
+                scale = 1280.0 / long_side
+            new_w = max(64, int(round((w * scale) / 16.0)) * 16)
+            new_h = max(64, int(round((h * scale) / 16.0)) * 16)
+            if (new_w, new_h) != (w, h):
+                resized = img.convert("RGB").resize((new_w, new_h), Image.Resampling.LANCZOS)
+                resized.save(dest)
+                logger.info(f"[ChatImage] Normalized init image {w}x{h} -> {new_w}x{new_h} at {dest}")
+    except Exception:
+        pass
+
+
 def _save_attached_images_for_comfy(attached_images: Optional[List[Any]]) -> Optional[str]:
     """
     Decodes the first attached chat image (ChatAttachment model, base64 data-URI,
@@ -1043,6 +1080,7 @@ def _save_attached_images_for_comfy(attached_images: Optional[List[Any]]) -> Opt
             filename = f"chat_init_{uuid.uuid4().hex[:8]}.{ext}"
             dest = comfy_input_dir / filename
             dest.write_bytes(img_bytes)
+            _normalize_init_image_for_vram(dest)
             logger.info(f"[ChatImage] Saved attached init image to {dest}")
             return filename
         except Exception as exc:
@@ -1170,9 +1208,23 @@ async def handle_chat_image_generation(
             "masterpiece, best quality, vibrant anime illustration, crisp cel shading, sharp details, expressive eyes, cozy celestial night room background"
         ]
     else:
+        has_init_ref = bool(attached_images or init_image_name)
+        if has_init_ref and char_info.hair_tags:
+            # Img2Img character swap: keep core character traits/outfit without injecting conflicting props/arena
+            core_parts = [
+                f"{char_info.character_id}, {'1boy' if '1boy' in (char_info.danbooru_prompt or '') else '1girl'}, solo",
+                char_info.hair_tags,
+                char_info.eye_tags,
+                char_info.face_tags,
+                char_info.outfit_tags,
+                char_info.accessories_tags,
+            ]
+            base_prompt = ", ".join(p for p in core_parts if p)
+        else:
+            base_prompt = char_info.danbooru_prompt or f"{subject}, solo, anime aesthetic"
         positive_components = [
-            char_info.danbooru_prompt or f"{subject}, solo, anime aesthetic",
-            "masterpiece, best quality, sharp details, vibrant colors, expressive eyes, dynamic lighting, professional illustration"
+            base_prompt,
+            "masterpiece, best quality, sharp details, vibrant colors, expressive eyes, professional illustration"
         ]
         if custom_outfit_prompt or extra:
             positive_components.append(custom_outfit_prompt or extra)

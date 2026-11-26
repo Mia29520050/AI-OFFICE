@@ -248,5 +248,89 @@ def test_chat_stream_endpoint_passes_frontend_attachment_to_img2img(tmp_path: Pa
     wf = captured_prompts[0]
     assert wf["10"]["class_type"] == "LoadImage"
     assert wf["12"]["class_type"] == "VAEEncode"
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("ref_image_name,expected_base_model", [(None, "1"), ("hutao_ref.png", "11")])
+async def test_run_comfy_workflow_with_lllite_patch(
+    tmp_path: Path, monkeypatch, ref_image_name: str | None, expected_base_model: str
+):
+    comfy_dir = tmp_path / "ComfyUI"
+    patch_file = comfy_dir / "models" / "model_patches" / "anima-lllite-any-test-like-v2.safetensors"
+    patch_file.parent.mkdir(parents=True, exist_ok=True)
+    patch_file.write_bytes(b"lllite-stub")
+
+    monkeypatch.setattr(chat_image_handler, "COMFY_DIR", comfy_dir)
+    monkeypatch.setattr(chat_image_handler, "CHAT_IMAGES_DIR", tmp_path)
+
+    captured_prompts: List[Dict[str, Any]] = []
+
+    def _fake_urlretrieve(url: str, filename: str):
+        Path(filename).write_bytes(RAW_PNG)
+
+    with patch("urllib.request.urlopen", side_effect=_make_comfy_urlopen(captured_prompts)), \
+         patch("urllib.request.urlretrieve", side_effect=_fake_urlretrieve), \
+         patch("asyncio.sleep", return_value=None):
+        await chat_image_handler.run_comfy_workflow(
+            positive_prompt="1girl, Hu Tao, anime",
+            negative_prompt="bad quality",
+            init_image_name="pose.png",
+            ref_image_name=ref_image_name,
+        )
+
+    assert len(captured_prompts) == 1
+    wf = captured_prompts[0]
+    assert wf["14"] == {
+        "class_type": "ModelPatchLoader",
+        "inputs": {"name": "anima-lllite-any-test-like-v2.safetensors"},
+    }
+    assert wf["15"] == {
+        "class_type": "AnimaLLLiteApply",
+        "inputs": {
+            "model": [expected_base_model, 0],
+            "model_patch": ["14", 0],
+            "image": ["10", 0],
+            "strength": 0.72,
+            "start_percent": 0.0,
+            "end_percent": 0.75,
+        },
+    }
+    assert wf["7"]["inputs"]["model"] == ["15", 0]
+    assert wf["7"]["inputs"]["denoise"] == pytest.approx(0.60)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("ref_image_name,expected_model", [(None, "1"), ("hutao_ref.png", "11")])
+async def test_run_comfy_workflow_without_lllite_patch(
+    tmp_path: Path, monkeypatch, ref_image_name: str | None, expected_model: str
+):
+    comfy_dir = tmp_path / "ComfyUI"
+    comfy_dir.mkdir(parents=True, exist_ok=True)
+
+    monkeypatch.setattr(chat_image_handler, "COMFY_DIR", comfy_dir)
+    monkeypatch.setattr(chat_image_handler, "CHAT_IMAGES_DIR", tmp_path)
+
+    captured_prompts: List[Dict[str, Any]] = []
+
+    def _fake_urlretrieve(url: str, filename: str):
+        Path(filename).write_bytes(RAW_PNG)
+
+    with patch("urllib.request.urlopen", side_effect=_make_comfy_urlopen(captured_prompts)), \
+         patch("urllib.request.urlretrieve", side_effect=_fake_urlretrieve), \
+         patch("asyncio.sleep", return_value=None):
+        await chat_image_handler.run_comfy_workflow(
+            positive_prompt="1girl, Hu Tao, anime",
+            negative_prompt="bad quality",
+            init_image_name="pose.png",
+            ref_image_name=ref_image_name,
+        )
+
+    assert len(captured_prompts) == 1
+    wf = captured_prompts[0]
+    assert "14" not in wf
+    assert "15" not in wf
+    assert wf["7"]["inputs"]["model"] == [expected_model, 0]
+    assert wf["7"]["inputs"]["denoise"] == pytest.approx(0.48)
+
     assert wf["7"]["inputs"]["latent_image"] == ["12", 0]
     assert 0.48 <= wf["7"]["inputs"]["denoise"] <= 0.55

@@ -177,6 +177,7 @@ def _make_fake_urlopen(captured_prompts: List[Dict[str, Any]]):
 async def test_run_comfy_workflow_dual_image_separation(tmp_path: Path, monkeypatch):
     captured_prompts: List[Dict[str, Any]] = []
     monkeypatch.setattr(chat_image_handler, "CHAT_IMAGES_DIR", tmp_path)
+    monkeypatch.setattr(chat_image_handler, "COMFY_DIR", tmp_path / "ComfyUI")
 
     def _fake_urlretrieve(url: str, filename: str):
         Path(filename).write_bytes(b"\x89PNG\r\n\x1a\nfake")
@@ -214,6 +215,7 @@ async def test_run_comfy_workflow_dual_image_separation(tmp_path: Path, monkeypa
 async def test_run_comfy_workflow_init_only_img2img(tmp_path: Path, monkeypatch):
     captured_prompts: List[Dict[str, Any]] = []
     monkeypatch.setattr(chat_image_handler, "CHAT_IMAGES_DIR", tmp_path)
+    monkeypatch.setattr(chat_image_handler, "COMFY_DIR", tmp_path / "ComfyUI")
 
     def _fake_urlretrieve(url: str, filename: str):
         Path(filename).write_bytes(b"\x89PNG\r\n\x1a\nfake")
