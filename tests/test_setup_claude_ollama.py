@@ -5,7 +5,7 @@ import sqlite3
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-from scripts.setup_claude_ollama import (
+from scripts.tools.setup_claude_ollama import (
     check_ollama_alive,
     get_available_models,
     set_active_office_model,

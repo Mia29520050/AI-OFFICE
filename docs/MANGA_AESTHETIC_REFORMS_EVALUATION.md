@@ -1,7 +1,7 @@
 # BÁO CÁO GIÁM ĐỊNH MỸ THUẬT TOÀN DIỆN: CẢI TIẾN FONT, SFX & KHỬ NHỰA AI
 ## Đánh giá Trực quan (Visual QA) theo Phản hồi Trực tiếp từ Người dùng
 
-> **Thời gian đánh giá**: `2026-11-26 00:57:54`  
+> **Thời gian đánh giá**: `2026-11-26 19:12:55`  
 > **Tổng điểm thẩm mỹ (Aesthetic Score)**: **`100.0/100.0`**  
 > **Kết luận giám định**: 🟢 ĐẠT CHUẨN XUẤT SẮC (Manga Studio hoàn toàn loại bỏ chất nhựa AI và đạt chuẩn mỹ thuật truyện tranh)  
 > **Minh chứng trực quan**: [manga_aesthetic_comparison_before_after.png](file:///F:/AI-Office/data/screenshots/manga_aesthetic_comparison_before_after.png)  
@@ -32,9 +32,9 @@
 - **Kỹ thuật render SFX chuyên nghiệp**: Hỗ trợ đổ bóng khối 3D (Extruded Block Shadow), viền kép (Dual Stroke: trắng viền đen) và tia chớp năng lượng huyết khí (Blood Lightning).
 
 ### 2.3. Khử chất nhựa AI & Tăng cường Nét G-Pen Hữu cơ (De-AI Organic Art)
-- **Chỉ số phương sai hạt bề mặt (Laplacian Variance)**: Đạt `1926.96` (Vượt xa mức phẳng nhựa `< 45.0` của ảnh AI gốc).
-- **Độ sắc nét đường mực (G-Pen Edge Sharpness)**: Đạt `0.3` - Tạo nét mực vẽ tay sắc sảo trên viền nhân vật và trang phục gothic.
-- **Tương phản Chiaroscuro**: Đạt `42.12%` - Đảm bảo mực đen sâu thẳm kết hợp ánh sáng trăng máu ma mị đúng tinh thần Dark Fantasy Pinterest / Castlevania.
+- **Chỉ số phương sai hạt bề mặt (Laplacian Variance)**: Đạt `1480.64` (Vượt xa mức phẳng nhựa `< 45.0` của ảnh AI gốc).
+- **Độ sắc nét đường mực (G-Pen Edge Sharpness)**: Đạt `0.57` - Tạo nét mực vẽ tay sắc sảo trên viền nhân vật và trang phục gothic.
+- **Tương phản Chiaroscuro**: Đạt `58.13%` - Đảm bảo mực đen sâu thẳm kết hợp ánh sáng trăng máu ma mị đúng tinh thần Dark Fantasy Pinterest / Castlevania.
 
 ## 3. ẢNH MINH CHỨNG SO SÁNH TRỰC QUAN (BEFORE / AFTER)
 

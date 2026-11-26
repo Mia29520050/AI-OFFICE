@@ -1425,11 +1425,14 @@
 
   <!-- ===== 3. FLOATING CAPSULE OMNIBAR ===== -->
   <div class="gemini-floating-bar-wrap">
+    <div id="mob-tool-chip-strip" style="display:none;padding:0 4px 6px;gap:6px;flex-wrap:wrap;align-items:center;"></div>
     <div class="mobile-attach-strip" id="mobile-attach-strip"></div>
     <div class="gemini-omnibar">
       <button class="omnibar-attach-btn omni-attach-btn" id="btn-attach" title="Đính kèm ảnh hoặc tệp" aria-label="Đính kèm ảnh">
         <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
       </button>
+
+      <button type="button" class="omnibar-ratio-pill" id="btn-mob-tools" title="Chọn công cụ AI">+ Công cụ</button>
 
       <textarea class="omnibar-input" id="chatinput" placeholder="Hỏi AI Office..." rows="1" inputmode="text" enterkeyhint="send"></textarea>
 
@@ -1480,10 +1483,6 @@
       <button class="drawer-nav-item" id="btn-drawer-radar" data-drawer-view="radar">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="2"/><path d="M16.24 7.76a6 6 0 0 1 0 8.49m-8.48-.01a6 6 0 0 1 0-8.49m11.31-2.82a10 10 0 0 1 0 14.14m-14.14 0a10 10 0 0 1 0-14.14"/></svg>
         <span>Weekly Lore Radar</span>
-      </button>
-      <button class="drawer-nav-item" id="btn-drawer-studio">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
-        <span>Studio Sáng tạo</span>
       </button>
       <button class="drawer-nav-item" id="btn-drawer-workspace">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
@@ -1589,6 +1588,19 @@
       <button type="button" class="img-opt-btn active" data-img-format="PNG">PNG</button>
       <button type="button" class="img-opt-btn" data-img-format="WEBP">WEBP</button>
       <button type="button" class="img-opt-btn" data-img-format="JPEG">JPEG</button>
+    </div>
+  </div>
+
+  <!-- + Công cụ Popover -->
+  <div class="gemini-popover" id="popover-mob-tools" style="bottom:82px;left:16px;right:16px;max-width:340px;">
+    <div class="img-opts-section-lbl">🧰 Chọn công cụ AI</div>
+    <div class="img-opts-grid" style="grid-template-columns:1fr 1fr;gap:6px;">
+      <button type="button" class="img-opt-btn mob-tool-opt" data-tool-mode="image" data-tool-label="🎨 Tạo ảnh" data-tool-prefix="Tạo ảnh ">🎨 Tạo ảnh</button>
+      <button type="button" class="img-opt-btn mob-tool-opt" data-tool-mode="video" data-tool-label="🎬 Tạo video" data-tool-prefix="Tạo video ">🎬 Tạo video</button>
+      <button type="button" class="img-opt-btn mob-tool-opt" data-tool-mode="web" data-tool-label="🌐 Tra cứu web" data-tool-prefix="Tra cứu web ">🌐 Tra cứu web</button>
+      <button type="button" class="img-opt-btn mob-tool-opt" data-tool-mode="3d" data-tool-label="🧊 Tạo 3D" data-tool-prefix="Tạo mô hình 3D ">🧊 Tạo 3D</button>
+      <button type="button" class="img-opt-btn mob-tool-opt" data-tool-mode="manga" data-tool-label="📖 Dựng Manga" data-tool-prefix="Dựng Manga ">📖 Dựng Manga</button>
+      <button type="button" class="img-opt-btn mob-tool-opt" data-tool-mode="kho" data-tool-label="📦 Kho AI" data-tool-prefix="Tìm Kho AI ">📦 Kho AI</button>
     </div>
   </div>
 
@@ -1846,6 +1858,21 @@
         </div>
       </div>
     `);
+    const renderMobMedia = (label, url) => {
+      if (/(\.mp4|\.webm)(\?.*)?$|\/api\/video\/file\//i.test(url)) {
+        return `<div class="gemini-image-card" style="padding:8px;"><video controls playsinline preload="metadata" src="${url}" style="width:100%;max-height:360px;border-radius:10px;background:#000;"></video><div class="gemini-image-footer"><span class="gemini-image-title">🎬 ${label || 'Video'}</span><a href="${url}" download class="gemini-image-btn">💾 Tải video</a></div></div>`;
+      }
+      if (/(\.mp3|\.wav)(\?.*)?$|\/api\/voice\/audio\//i.test(url)) {
+        return `<div class="gemini-image-card" style="padding:10px;"><audio controls preload="metadata" src="${url}" style="width:100%;"></audio><div class="gemini-image-footer"><span class="gemini-image-title">🔊 ${label || 'Âm thanh'}</span><a href="${url}" download class="gemini-image-btn">💾 Tải audio</a></div></div>`;
+      }
+      return `<a href="${url}" target="_blank" rel="noopener" style="color:#93c5fd;">${label || url}</a>`;
+    };
+    html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_, label, url) => renderMobMedia(label, url));
+    html = html.replace(/(^|[\s(>])((?:https?:\/\/[^\s<)]+|\/api\/(?:video\/file|voice\/audio)\/[^\s<)]+))(?=$|[\s)<.,!?])/gm, (m, lead, url) => {
+      if (/(\.mp4|\.webm)(\?.*)?$|\/api\/video\/file\//i.test(url)) return lead + renderMobMedia('Video', url);
+      if (/(\.mp3|\.wav)(\?.*)?$|\/api\/voice\/audio\//i.test(url)) return lead + renderMobMedia('Âm thanh', url);
+      return m;
+    });
     html = html.replace(/^###\s+(.+)$/gm, '<h3>$1</h3>');
     html = html.replace(/^##\s+(.+)$/gm, '<h2>$1</h2>');
     html = html.replace(/^#\s+(.+)$/gm, '<h1>$1</h1>');
@@ -1931,6 +1958,7 @@
     popoverModel.classList.remove('show');
     popoverChat.classList.remove('show');
     if (popoverImgOpts) popoverImgOpts.classList.remove('show');
+    if ($('popover-mob-tools')) $('popover-mob-tools').classList.remove('show');
     popoverBackdrop.classList.remove('show');
   }
   popoverBackdrop.onclick = closeAllPopovers;
@@ -2379,7 +2407,14 @@
     const input = $('chatinput');
     const text = input.value.trim();
     if (!text && !pendingAttachments.length) return;
-    const messageText = text || 'Phân tích tệp đính kèm giúp tôi.';
+    let messageText = text || 'Phân tích tệp đính kèm giúp tôi.';
+    const usedMobTool = window._mobActiveTool || null;
+    if (usedMobTool && usedMobTool.prefix) {
+      const lower = messageText.toLowerCase();
+      if (!lower.startsWith(usedMobTool.prefix.trim().toLowerCase())) {
+        messageText = usedMobTool.prefix + messageText;
+      }
+    }
     const attachmentsToSend = pendingAttachments.slice();
 
     lastUserMessage = messageText;
@@ -2397,7 +2432,12 @@
     const aiRow = document.createElement('div');
     aiRow.className = 'gemini-msg-ai-row';
     aiRow.innerHTML = `
-      <div class="gemini-ai-bubble" style="color:var(--text-muted);">Đang suy nghĩ...<span class="stream-caret"></span></div>
+      <div class="gemini-ai-bubble" style="color:var(--text-muted);">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 10px;border-radius:10px;background:rgba(99,102,241,0.12);border:1px solid rgba(129,140,248,0.3);font-size:13px;color:#e0e7ff;">
+          <span>⏳ ${usedMobTool ? `Đang dùng công cụ: ${esc(usedMobTool.label)}...` : 'Đang dùng công cụ...'}</span>
+          <button type="button" class="mob-cancel-job-btn" style="padding:4px 10px;border-radius:8px;border:1px solid rgba(248,113,113,0.45);background:rgba(239,68,68,0.18);color:#fca5a5;font-size:12px;font-weight:600;cursor:pointer;">Hủy</button>
+        </div>
+      </div>
       <div class="gemini-ai-actions" style="display:none;">
         <button class="ai-action-btn" title="Thích"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg></button>
         <button class="ai-action-btn" title="Không thích"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h3a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-3"/></svg></button>
@@ -2931,12 +2971,58 @@
     settingsView.classList.remove('open');
   };
 
-  // 7. Navigation links
+  // 7. Navigation links & + Công cụ popover
+  const mobToolsPopover = $('popover-mob-tools');
+  function renderMobToolChip() {
+    const strip = $('mob-tool-chip-strip');
+    if (!strip) return;
+    const t = window._mobActiveTool;
+    if (!t) {
+      strip.style.display = 'none';
+      strip.innerHTML = '';
+      return;
+    }
+    strip.style.display = 'flex';
+    const meta = ['image', 'video', 'manga'].includes(t.mode) ? ` · ${selectedAspectRatio} · ${selectedOutputFormat}` : '';
+    strip.innerHTML = `<span style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;background:rgba(99,102,241,0.2);border:1px solid rgba(129,140,248,0.45);color:#e0e7ff;font-size:12px;font-weight:600;">${esc(t.label)}${esc(meta)} <button type="button" id="mob-clear-tool-btn" style="background:none;border:none;color:#c7d2fe;cursor:pointer;font-size:13px;padding:0 2px;">✕</button></span>`;
+    $('mob-clear-tool-btn').onclick = () => {
+      window._mobActiveTool = null;
+      document.querySelectorAll('.mob-tool-opt').forEach(b => b.classList.remove('active'));
+      renderMobToolChip();
+    };
+  }
+  if ($('btn-mob-tools') && mobToolsPopover) {
+    $('btn-mob-tools').onclick = (e) => {
+      e.stopPropagation();
+      const isShowing = mobToolsPopover.classList.contains('show');
+      if (typeof closeAllPopovers === 'function') closeAllPopovers();
+      if (!isShowing) {
+        mobToolsPopover.classList.add('show');
+        popoverBackdrop?.classList.add('show');
+      }
+    };
+    mobToolsPopover.querySelectorAll('.mob-tool-opt').forEach(btn => {
+      btn.onclick = () => {
+        const mode = btn.dataset.toolMode;
+        if (window._mobActiveTool && window._mobActiveTool.mode === mode) {
+          window._mobActiveTool = null;
+        } else {
+          window._mobActiveTool = { mode, label: btn.dataset.toolLabel, prefix: btn.dataset.toolPrefix };
+        }
+        mobToolsPopover.querySelectorAll('.mob-tool-opt').forEach(b => b.classList.toggle('active', window._mobActiveTool && b.dataset.toolMode === window._mobActiveTool.mode));
+        renderMobToolChip();
+        if (typeof closeAllPopovers === 'function') closeAllPopovers();
+        $('chatinput')?.focus();
+      };
+    });
+  }
+  $('gemini-chat-feed')?.addEventListener('click', (e) => {
+    if (e.target.closest('.mob-cancel-job-btn') && activeAbortController) {
+      activeAbortController.abort();
+    }
+  });
   $('btn-drawer-desktop-mode').onclick = () => {
     window.location.href = '/pc';
-  };
-  $('btn-drawer-studio').onclick = () => {
-    window.location.href = '/pc?view=studio';
   };
   $('btn-drawer-workspace').onclick = () => {
     window.location.href = '/pc?view=workspace';

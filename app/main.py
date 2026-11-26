@@ -1325,7 +1325,12 @@ async def chat(req: ChatRequest) -> dict[str, Any]:
             img_kwargs["output_format"] = req.output_format
         if req.ref_image_name:
             img_kwargs["ref_image_name"] = req.ref_image_name
-        gen_res = await handle_chat_image_generation(req.message, conversation_id, **img_kwargs)
+        gen_res = await handle_chat_image_generation(
+            req.message,
+            conversation_id,
+            attached_images=req.attachments,
+            **img_kwargs,
+        )
         answer = gen_res.get("text", "Không thể tạo ảnh.")
         active_model_name = "Anima DeltaMix 2.9B (Studio Sáng tạo)"
         _save_chat_turn(conversation_id, req, stored_user_message, answer)
@@ -1442,7 +1447,12 @@ async def chat_stream(req: ChatRequest) -> StreamingResponse:
                     img_kwargs["output_format"] = req.output_format
                 if req.ref_image_name:
                     img_kwargs["ref_image_name"] = req.ref_image_name
-                gen_res = await handle_chat_image_generation(req.message, conversation_id, **img_kwargs)
+                gen_res = await handle_chat_image_generation(
+            req.message,
+            conversation_id,
+            attached_images=req.attachments,
+            **img_kwargs,
+        )
                 final_answer = gen_res.get("text", "Không thể tạo ảnh.")
 
                 p2 = json.dumps({"token": final_answer, "conversation_id": conversation_id}, ensure_ascii=False)
@@ -1922,6 +1932,13 @@ from job_queue import register_routes as register_job_queue_routes
 register_job_queue_routes(app)
 from memory_engine import register_routes as register_memory_routes
 register_memory_routes(app)
+try:
+    import kho_catalog
+    kho_catalog.register_routes(app)
+except ImportError:
+    logger.warning("kho_catalog module not found; skipping /api/kho routes")
+except Exception as _kho_err:
+    logger.warning("Failed to register kho_catalog routes: %s", _kho_err)
 
 
 if __name__ == "__main__":

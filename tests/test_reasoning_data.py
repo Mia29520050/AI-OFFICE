@@ -9,7 +9,7 @@ and <think> reasoning structure.
 import json
 import pytest
 from pathlib import Path
-from scripts.generate_reasoning_data import (
+from scripts.experiments.generate_reasoning_data import (
     generate_dataset,
     format_chatml_text,
     LilypadExponentialGenerator,

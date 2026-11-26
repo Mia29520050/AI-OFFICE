@@ -34,7 +34,7 @@ from typing import Any, Callable, Dict, List, Optional, Tuple
 
 import httpx
 
-ROOT_DIR = Path(__file__).resolve().parent.parent
+ROOT_DIR = Path(__file__).resolve().parents[2]
 DEFAULT_OLLAMA_HOST = "http://127.0.0.1:11434"
 DEFAULT_AIOFFICE_HOST = "http://127.0.0.1:8765"
 DEFAULT_MODEL = "qwen3.5:4b"

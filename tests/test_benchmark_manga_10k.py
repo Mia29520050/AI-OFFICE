@@ -10,7 +10,7 @@ import json
 from pathlib import Path
 import pytest
 
-from scripts.benchmark_manga_10k import (
+from scripts.benchmarks.benchmark_manga_10k import (
     evaluate_single_case,
     run_10k_benchmark,
     export_json_report,

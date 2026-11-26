@@ -7,8 +7,8 @@ import sys
 from pathlib import Path
 import httpx
 
-ROOT_DIR = Path(__file__).resolve().parent.parent
-MODELFILE_PATH = ROOT_DIR / "scripts" / "Modelfile.claude-office"
+ROOT_DIR = Path(__file__).resolve().parents[2]
+MODELFILE_PATH = ROOT_DIR / "scripts" / "tools" / "Modelfile.claude-office"
 DB_PATH = ROOT_DIR / "data" / "office.db"
 DEFAULT_OLLAMA_HOST = "http://127.0.0.1:11434"
 

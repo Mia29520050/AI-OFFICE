@@ -139,6 +139,23 @@ _TTS_TRIGGERS = (
     "tts",
 )
 
+_KHO_TRIGGERS = (
+    "anhkysuai.com/kho",
+    "anh ky su ai",
+    "anhkysuai",
+    "kho ai",
+    "kho github",
+    "tim repo",
+    "tìm repo",
+    "tim github",
+    "tìm github",
+    "github ai",
+    "tìm mã nguồn",
+    "tim ma nguon",
+    "search repo",
+    "find repo",
+)
+
 _VIDEO_DIMENSIONS: Dict[str, Tuple[int, int]] = {
     "16:9": (480, 272),
     "9:16": (272, 480),
@@ -262,6 +279,27 @@ def detect_tts_intent(message: str) -> Tuple[bool, str]:
     if not speech_text:
         return False, ""
     return True, speech_text
+
+
+def detect_kho_intent(message: str) -> Tuple[bool, str]:
+    """Detect anhkysuai.com/kho AI repository search intent and extract query."""
+    cleaned = (message or "").strip()
+    if not cleaned:
+        return False, ""
+
+    matched, trailing = _match_trigger(cleaned, _KHO_TRIGGERS)
+    if not matched:
+        return False, ""
+
+    query = re.sub(
+        r"^(?:về|ve|liên\s+quan\s+(?:đến|tới)|lien\s+quan\s+(?:den|toi)|của|cua|với|voi)\s+",
+        "",
+        trailing,
+        flags=re.IGNORECASE,
+    ).strip()
+    query = re.sub(r"\s+(?:nhé|nha|đi|di|không|khong)$", "", query, flags=re.IGNORECASE).strip()
+    query = query.strip("\"'? ")
+    return True, query
 
 
 # ---------------------------------------------------------------------------
@@ -545,6 +583,50 @@ async def orchestrate_chat_action(
                 "handled": True,
                 "action_type": "tts",
                 "text": f"⚠️ Đã xảy ra lỗi khi tạo giọng nói: `{exc}`",
+                "artifacts": [],
+            }
+
+    # 5) Kho AI (anhkysuai.com/kho) repository search
+    is_kho, kho_query = detect_kho_intent(message)
+    if is_kho:
+        try:
+            try:
+                from app import kho_catalog  # type: ignore
+            except ImportError:
+                import kho_catalog  # type: ignore
+
+            repos = await asyncio.to_thread(kho_catalog.search_kho, kho_query, 5)
+            if not repos:
+                md_text = (
+                    f"Không tìm thấy repo phù hợp trong **Kho AI (anhkysuai.com/kho)** "
+                    f"cho từ khóa `{kho_query}`."
+                )
+            else:
+                lines = [
+                    f"Kết quả từ **Kho AI anhkysuai.com/kho**"
+                    + (f" cho `{kho_query}`" if kho_query else " (nổi bật)")
+                    + ":\n"
+                ]
+                for idx, repo in enumerate(repos, start=1):
+                    full_name = repo.get("full_name") or repo.get("name", "unknown")
+                    gh_url = repo.get("github_url", "")
+                    stars_str = repo.get("stars_str") or f"★ {repo.get('stars', 0)}"
+                    desc_vi = repo.get("description_vi", "")
+                    lines.append(f"{idx}. **[{full_name}]({gh_url})** ({stars_str})\n   {desc_vi}")
+                md_text = "\n".join(lines)
+
+            return {
+                "handled": True,
+                "action_type": "kho",
+                "text": md_text,
+                "artifacts": [{"type": "kho_repo", **r} for r in repos],
+            }
+        except Exception as exc:
+            logger.error("Kho search failed: %s", exc, exc_info=True)
+            return {
+                "handled": True,
+                "action_type": "kho",
+                "text": f"⚠️ Không thể tra cứu Kho AI lúc này: `{exc}`",
                 "artifacts": [],
             }
 

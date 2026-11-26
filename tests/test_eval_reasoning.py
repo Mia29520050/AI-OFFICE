@@ -10,7 +10,7 @@ import json
 from pathlib import Path
 import pytest
 
-from scripts.eval_reasoning import (
+from scripts.benchmarks.eval_reasoning import (
     ReasoningCategory,
     TestCase,
     ParsedResponse,

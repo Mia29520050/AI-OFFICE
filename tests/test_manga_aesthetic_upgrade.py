@@ -15,7 +15,7 @@ import pytest
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 
-from scripts.verify_manga_aesthetic_upgrade import (
+from scripts.qa.verify_manga_aesthetic_upgrade import (
     audit_manga_typography,
     audit_sfx_realism,
     compute_de_ai_metrics,

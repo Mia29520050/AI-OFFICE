@@ -14,6 +14,7 @@ Merges Creative Studio (ComfyUI Anima DeltaMix 2.9B) seamlessly into the Chat in
 from __future__ import annotations
 
 import asyncio
+import base64
 import json
 import logging
 import os
@@ -332,6 +333,7 @@ async def run_comfy_workflow(
     cfg: float = 4.5,
     timeout_secs: int = 240,
     ref_image_name: Optional[str] = None,
+    init_image_name: Optional[str] = None,
     denoise: float = 1.0,
     ref_strength: float = 0.75,
     ref_guidance: float = 2.5,
@@ -339,8 +341,12 @@ async def run_comfy_workflow(
     output_format: str = "PNG",
 ) -> Path:
     """Submits workflow to ComfyUI and polls until image is downloaded.
-    Supports AnimaRefAdapter + VAEEncode Img2Img height & identity locking when ref_image_name is provided.
-    Supports aspect ratios (1:1, 3:4, 16:9, 9:16) and output format conversion (PNG, WEBP, JPEG).
+    Supports:
+    - Dual-image character swap: `init_image_name` (LoadImage -> VAEEncode for pose/layout)
+      + `ref_image_name` (2nd LoadImage -> AnimaRefAdapter for new character identity).
+    - Init-only Img2Img: `init_image_name` -> LoadImage -> VAEEncode + prompt.
+    - Ref-only identity/pose lock: `ref_image_name` -> AnimaRefAdapter + VAEEncode.
+    - Text-to-Image when neither is provided.
     """
     if aspect_ratio:
         width, height = get_dimensions_for_aspect_ratio(aspect_ratio)
@@ -386,7 +392,62 @@ async def run_comfy_workflow(
         },
     }
 
-    if ref_image_name:
+    if init_image_name and ref_image_name:
+        # Dual-Image Character Swap:
+        # Branch 1 (Init Image): LoadImage ("10") -> VAEEncode ("12") keeps original pose/composition
+        # Branch 2 (Ref Image):  LoadImage ("13") -> AnimaRefAdapter ("11") locks new character identity
+        workflow["10"] = {"class_type": "LoadImage", "inputs": {"image": init_image_name}}
+        workflow["12"] = {"class_type": "VAEEncode", "inputs": {"pixels": ["10", 0], "vae": ["3", 0]}}
+        workflow["13"] = {"class_type": "LoadImage", "inputs": {"image": ref_image_name}}
+        workflow["11"] = {
+            "class_type": "AnimaRefAdapter",
+            "inputs": {
+                "model": ["1", 0],
+                "vae": ["3", 0],
+                "image": ["13", 0],
+                "lora_name": "anima_ref_adapter_v2_r64.safetensors",
+                "ref_guidance": ref_guidance,
+                "correction": "apg",
+                "strength": ref_strength,
+                "ref_end": 0.55,
+                "ref_megapixels": 0.75,
+            },
+        }
+        workflow["7"] = {
+            "inputs": {
+                "seed": seed,
+                "steps": steps,
+                "cfg": cfg,
+                "sampler_name": "euler",
+                "scheduler": "simple",
+                "denoise": denoise if denoise < 1.0 else 0.84,
+                "model": ["11", 0],
+                "positive": ["4", 0],
+                "negative": ["5", 0],
+                "latent_image": ["12", 0]
+            },
+            "class_type": "KSampler"
+        }
+    elif init_image_name:
+        # Img2Img only: LoadImage ("10") -> VAEEncode ("12") + prompt (no AnimaRefAdapter)
+        workflow["10"] = {"class_type": "LoadImage", "inputs": {"image": init_image_name}}
+        workflow["12"] = {"class_type": "VAEEncode", "inputs": {"pixels": ["10", 0], "vae": ["3", 0]}}
+        workflow["7"] = {
+            "inputs": {
+                "seed": seed,
+                "steps": steps,
+                "cfg": cfg,
+                "sampler_name": "euler",
+                "scheduler": "simple",
+                "denoise": denoise if denoise < 1.0 else 0.84,
+                "model": ["1", 0],
+                "positive": ["4", 0],
+                "negative": ["5", 0],
+                "latent_image": ["12", 0]
+            },
+            "class_type": "KSampler"
+        }
+    elif ref_image_name:
         # Height & Face Locking Pipeline via AnimaRefAdapter + Img2Img
         workflow["10"] = {"class_type": "LoadImage", "inputs": {"image": ref_image_name}}
         workflow["11"] = {
@@ -604,12 +665,68 @@ def resolve_user_profile_ref_image(
     return None
 
 
+def _save_attached_images_for_comfy(attached_images: Optional[List[Any]]) -> Optional[str]:
+    """
+    Decodes the first attached chat image (base64 data-URI / raw base64 / dict / path)
+    and saves it into `COMFY_DIR / "input"` as `init_image_name` for Img2Img pose/layout locking.
+    """
+    if not attached_images:
+        return None
+
+    comfy_input_dir = COMFY_DIR / "input"
+    for item in attached_images:
+        raw_data: Optional[str] = None
+        if isinstance(item, str):
+            raw_data = item.strip()
+        elif isinstance(item, dict):
+            for key in ("data", "base64", "content", "url", "path", "file_path"):
+                val = item.get(key)
+                if isinstance(val, str) and val.strip():
+                    raw_data = val.strip()
+                    break
+
+        if not raw_data:
+            continue
+
+        # Local file path case
+        if not raw_data.startswith("data:") and Path(raw_data).is_file():
+            staged = _stage_ref_image_for_comfy(raw_data)
+            if staged:
+                return staged
+
+        # Base64 / data-URI case
+        ext = "png"
+        b64_payload = raw_data
+        m_data_uri = re.match(r"^data:image/([a-zA-Z0-9+.\-]+);base64,(.+)$", raw_data, flags=re.DOTALL)
+        if m_data_uri:
+            mime_sub = m_data_uri.group(1).lower()
+            ext = "jpg" if mime_sub in ("jpeg", "jpg") else ("webp" if mime_sub == "webp" else "png")
+            b64_payload = m_data_uri.group(2).strip()
+
+        try:
+            img_bytes = base64.b64decode(b64_payload, validate=True)
+            if not img_bytes:
+                continue
+            comfy_input_dir.mkdir(parents=True, exist_ok=True)
+            filename = f"chat_init_{uuid.uuid4().hex[:8]}.{ext}"
+            dest = comfy_input_dir / filename
+            dest.write_bytes(img_bytes)
+            logger.info(f"[ChatImage] Saved attached init image to {dest}")
+            return filename
+        except Exception as exc:
+            logger.debug(f"[ChatImage] Skipping non-base64 attachment: {exc}")
+
+    return None
+
+
 async def handle_chat_image_generation(
     user_message: str,
     conversation_id: str = "",
     aspect_ratio: Optional[str] = None,
     output_format: Optional[str] = None,
     ref_image_name: Optional[str] = None,
+    attached_images: Optional[List[Any]] = None,
+    init_image_name: Optional[str] = None,
 ) -> Dict[str, Any]:
     """
     Executes full pipeline:
@@ -763,6 +880,12 @@ async def handle_chat_image_generation(
 
     # Resolve optional height/face reference from user_profile (Mobile Settings) or explicit param
     effective_ref = resolve_user_profile_ref_image(explicit_ref=ref_image_name)
+    # Resolve init image from attached_images (base64 -> COMFY_DIR/input) or explicit init_image_name
+    effective_init = _save_attached_images_for_comfy(attached_images) or (
+        _stage_ref_image_for_comfy(init_image_name) or Path(init_image_name).name
+        if init_image_name
+        else None
+    )
 
     # 4. Generate Image (free Ollama VRAM first to prevent 6GB OOM)
     try:
@@ -782,6 +905,7 @@ async def handle_chat_image_generation(
             cfg=4.5,
             timeout_secs=240,
             ref_image_name=effective_ref,
+            init_image_name=effective_init,
             aspect_ratio=chosen_ratio,
             output_format=chosen_format,
         )
@@ -823,12 +947,14 @@ async def handle_chat_image_generation(
     outfit_desc = char_info.outfit_tags or "Trang phục đặc trưng"
     weapon_desc = char_info.weapon_tags or "Hiệu ứng chiến đấu"
     ref_line = f"- **Khóa dáng/mặt (Ref):** `{effective_ref}`\n" if effective_ref else ""
+    init_line = f"- **Ảnh gốc (Init/Pose):** `{effective_init}`\n" if effective_init else ""
 
     markdown_text = (
         f"Đã tạo ảnh cho **{display_name}** theo yêu cầu của bạn!\n\n"
         f"**Thông số cấu hình:**\n"
         f"- **Tỉ lệ khung hình:** `{chosen_ratio}` ({width}×{height})\n"
         f"- **Định dạng file:** `{chosen_format}`\n"
+        f"{init_line}"
         f"{ref_line}\n"
         f"**Đặc điểm ngoại hình chuẩn canonical:**\n"
         f"- **Tóc:** {hair_desc}\n"
@@ -849,4 +975,5 @@ async def handle_chat_image_generation(
         "dimensions": [width, height],
         "format": chosen_format,
         "ref_image_name": effective_ref,
+        "init_image_name": effective_init,
     }

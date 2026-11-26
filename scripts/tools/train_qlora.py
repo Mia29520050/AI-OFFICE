@@ -40,7 +40,7 @@ from typing import Any, Dict, List, Optional, Tuple
 os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
-ROOT_DIR = Path(__file__).resolve().parent.parent
+ROOT_DIR = Path(__file__).resolve().parents[2]
 DEFAULT_DATA_PATH = ROOT_DIR / "data" / "training" / "reasoning_cot_train.jsonl"
 DEFAULT_OUTPUT_DIR = ROOT_DIR / "models" / "qlora-reasoning-adapter"
 DEFAULT_MERGED_DIR = ROOT_DIR / "models" / "merged-reasoning-qwen"

@@ -11,7 +11,7 @@ import pytest
 from pathlib import Path
 import random
 
-from scripts.generate_manga_japanese_grammar_10k import (
+from scripts.experiments.generate_manga_japanese_grammar_10k import (
     generate_single_sample,
     DARK_FANTASY_CHARACTERS,
     PANEL_LAYOUT_PRESETS,

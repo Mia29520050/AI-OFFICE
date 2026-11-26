@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-from scripts.train_qlora import (
+from scripts.tools.train_qlora import (
     check_gpu_environment,
     generate_ollama_modelfile,
     generate_gguf_conversion_guide,

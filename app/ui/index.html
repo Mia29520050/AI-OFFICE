@@ -5340,6 +5340,76 @@ body[data-theme="light"] .settings-modal-nav-btn.active {
   gap: 8px;
   flex-shrink: 0;
 }
+/* ChatGPT-style + Công cụ Menu, Chip & Media Cards */
+.chatgpt-tools-wrap { position: relative; display: inline-flex; align-items: center; }
+.chatgpt-tools-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 12px; border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.14);
+  background: rgba(255,255,255,0.06); color: #f1f5f9;
+  font-size: 13px; font-weight: 500; cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.chatgpt-tools-btn:hover { background: rgba(255,255,255,0.12); border-color: rgba(255,255,255,0.28); }
+.chatgpt-tools-menu {
+  position: absolute; bottom: calc(100% + 10px); left: 0; z-index: 90;
+  width: 300px; padding: 12px; border-radius: 16px;
+  background: #1a1b23; border: 1px solid rgba(255,255,255,0.14);
+  box-shadow: 0 16px 40px rgba(0,0,0,0.55);
+  display: flex; flex-direction: column; gap: 10px;
+}
+.chatgpt-tools-menu[hidden] { display: none !important; }
+.chatgpt-tools-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.chatgpt-tool-opt {
+  display: flex; align-items: center; gap: 7px;
+  padding: 8px 10px; border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.04); color: #e2e8f0;
+  font-size: 12.5px; font-weight: 500; cursor: pointer; text-align: left;
+  transition: all 0.15s ease;
+}
+.chatgpt-tool-opt:hover { background: rgba(255,255,255,0.1); }
+.chatgpt-tool-opt.active { background: rgba(99,102,241,0.22); border-color: #818cf8; color: #fff; }
+.chatgpt-tools-sub { border-top: 1px solid rgba(255,255,255,0.08); padding-top: 8px; display: flex; flex-direction: column; gap: 6px; }
+.chatgpt-tools-sub-row { display: flex; align-items: center; justify-content: space-between; gap: 6px; font-size: 12px; color: #94a3b8; }
+.chatgpt-pill-group { display: flex; gap: 4px; flex-wrap: wrap; }
+.chatgpt-mini-pill {
+  padding: 3px 8px; border-radius: 999px; font-size: 11.5px; font-weight: 600;
+  border: 1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.04); color: #cbd5e1; cursor: pointer;
+}
+.chatgpt-mini-pill.active { background: #6366f1; border-color: #6366f1; color: #fff; }
+.active-tool-chip-bar { display: flex; align-items: center; gap: 8px; padding: 4px 12px 0; flex-wrap: wrap; }
+.active-tool-chip-bar[hidden] { display: none !important; }
+.chatgpt-tool-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 10px; border-radius: 999px;
+  background: rgba(99,102,241,0.18); border: 1px solid rgba(129,140,248,0.45);
+  color: #e0e7ff; font-size: 12.5px; font-weight: 600;
+}
+.chatgpt-tool-chip-meta { font-size: 11px; color: #a5b4fc; font-weight: 500; }
+.chatgpt-tool-chip-x {
+  background: none; border: none; color: #c7d2fe; cursor: pointer;
+  font-size: 13px; line-height: 1; padding: 0 2px;
+}
+.chat-tool-status-card {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 10px 14px; margin: 8px 0; border-radius: 12px;
+  background: rgba(99,102,241,0.12); border: 1px solid rgba(129,140,248,0.3);
+  color: #e0e7ff; font-size: 13px;
+}
+.chat-tool-status-card[hidden] { display: none !important; }
+.chat-tool-cancel-btn {
+  padding: 4px 12px; border-radius: 8px; border: 1px solid rgba(248,113,113,0.45);
+  background: rgba(239,68,68,0.16); color: #fca5a5; font-size: 12px; font-weight: 600; cursor: pointer;
+}
+.chat-tool-cancel-btn:hover { background: rgba(239,68,68,0.3); }
+.chat-media-card {
+  max-width: 520px; width: 100%; margin: 10px 0; border-radius: 14px; overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.12); background: #111118; padding: 10px;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.chat-media-card video { width: 100%; max-height: 420px; border-radius: 10px; background: #000; }
+.chat-media-card audio { width: 100%; }
 .chat-img-btn {
   padding: 5px 12px;
   font-size: 12px;
@@ -6782,7 +6852,6 @@ body[data-theme="light"] .settings-modal-nav-btn.active {
 <nav class="activity" aria-label="Điều hướng chính">
 <button class="act" type="button" title="Explorer" aria-label="Explorer" data-layout-toggle="explorer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h7l2 2h9v11H3z"/><path d="M3 10h18"/></svg></button>
 <button class="act active" type="button" title="Trò chuyện AI & Trợ lý Đa năng" aria-label="Trò chuyện AI" data-view="home"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5V21H3z"/><path d="M9 21v-7h6v7"/></svg></button>
-<button class="act" type="button" title="Studio Sáng Tạo Đa Năng (Motion Comic & Manga)" aria-label="Studio Sáng Tạo Đa Năng" data-view="studio"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="2" width="20" height="20" rx="3"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/><circle cx="12" cy="7" r="1.5"/><circle cx="12" cy="17" r="1.5"/></svg></button>
 <button class="act" type="button" title="Không gian Lập trình & Workspace" aria-label="Không gian Lập trình & Workspace" data-view="workspace"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M8 13h8M8 17h6"/></svg></button>
 <button class="act" type="button" title="Game & AI VTuber Đồng hành" aria-label="Game & AI VTuber" data-view="game"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="6" width="20" height="12" rx="4"/><path d="M6 12h4M8 10v4"/><circle cx="15.5" cy="11" r="1"/><circle cx="18" cy="13" r="1"/></svg></button>
 <span class="rail-separator"></span>
@@ -6812,9 +6881,6 @@ body[data-theme="light"] .settings-modal-nav-btn.active {
     </button>
     <button type="button" class="sidebar-nav-item" data-view="library" id="sidebar-nav-library">
       <span class="nav-icon">📁</span> <span>Thư viện tệp & ảnh</span>
-    </button>
-    <button type="button" class="sidebar-nav-item" data-view="studio">
-      <span class="nav-icon">🎬</span> <span>Studio Sáng tạo</span>
     </button>
     <button type="button" class="sidebar-nav-item" data-view="workspace">
       <span class="nav-icon">💻</span> <span>Workspace</span>
@@ -6866,9 +6932,6 @@ body[data-theme="light"] .settings-modal-nav-btn.active {
     </button>
     <button type="button" class="topbar-pill-btn" id="topbar-open-library" title="Mở Thư viện tệp & ảnh" data-view="library">
       <span>Thư viện</span>
-    </button>
-    <button type="button" class="topbar-pill-btn" id="topbar-open-studio" title="Mở Studio Sáng Tạo Đa Năng" data-view="studio">
-      <span>Studio Sáng tạo</span>
     </button>
     <button type="button" class="topbar-pill-btn" id="topbar-open-workspace" title="Mở Không gian làm việc" data-view="workspace">
       <span>Không gian làm việc</span>
@@ -6923,7 +6986,7 @@ body[data-theme="light"] .settings-modal-nav-btn.active {
       <span class="card-arrow">➔</span>
     </div>
   </div>
-</div><details class="chat-progress" id="chat-progress" hidden open><summary><span class="progress-spinner"></span><strong id="chat-progress-title">Đang xử lý yêu cầu</strong><span class="progress-time" id="chat-progress-time">0s</span></summary><div class="progress-details" id="chat-progress-details">Đã nhận yêu cầu · Đang chờ model local xử lý</div></details><div class="log" id="chatlog" aria-live="polite"><div class="msg assistant"><div class="msg-content">Xin chào Master! Em là CEO Agent của AI Office. Anh muốn giao nhiệm vụ gì hôm nay?</div></div></div>
+</div><details class="chat-progress" id="chat-progress" hidden open><summary><span class="progress-spinner"></span><strong id="chat-progress-title">Đang xử lý yêu cầu</strong><span class="progress-time" id="chat-progress-time">0s</span></summary><div class="progress-details" id="chat-progress-details">Đã nhận yêu cầu · Đang chờ model local xử lý</div></details><div class="chat-tool-status-card" id="chat-tool-status-card" hidden><div style="display:flex;align-items:center;gap:8px;"><span class="progress-spinner"></span><span id="chat-tool-status-text">Đang dùng công cụ...</span></div><button type="button" class="chat-tool-cancel-btn" id="btn-cancel-chat-job">Hủy</button></div><div class="log" id="chatlog" aria-live="polite"><div class="msg assistant"><div class="msg-content">Xin chào Master! Em là CEO Agent của AI Office. Anh muốn giao nhiệm vụ gì hôm nay?</div></div></div>
 
 <form class="composer" id="chatform">
 <div class="composer-attachments" id="composer-attachments" hidden></div>
@@ -6950,16 +7013,50 @@ body[data-theme="light"] .settings-modal-nav-btn.active {
   </div>
   
   <div class="smart-intent-badge" id="smart-intent-badge" hidden></div>
+  <div class="active-tool-chip-bar" id="active-tool-chip-bar" hidden></div>
   
   <div class="omni-input-wrapper">
-    <textarea id="chatinput" lang="vi-VN" spellcheck="true" autocomplete="on" autocapitalize="off" inputmode="text" enterkeyhint="send" placeholder="Nhắn tin cho AI Office, dán ảnh (Ctrl+V) hoặc nhập phép tính..." rows="2"></textarea>
+    <textarea id="chatinput" lang="vi-VN" spellcheck="true" autocomplete="on" autocapitalize="off" inputmode="text" enterkeyhint="send" placeholder="Nhắn tin cho AI Office, chọn + Công cụ hoặc dán ảnh (Ctrl+V)..." rows="2"></textarea>
   </div>
   
   <div class="claude-composer-toolbar smart-toolbar">
-    <div class="claude-toolbar-left smart-toolbar-left" style="display:flex;align-items:center;gap:8px">
+    <div class="claude-toolbar-left smart-toolbar-left" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
       <button type="button" class="omni-attach-btn" id="btn-quick-attach-img" title="Đính kèm ảnh, tài liệu hoặc dán ảnh (Ctrl+V)">
         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
       </button>
+      <div class="chatgpt-tools-wrap" id="chatgpt-tools-wrap">
+        <button type="button" class="chatgpt-tools-btn" id="btn-tools-menu" title="Chọn công cụ AI (Tạo ảnh, Video, Web, 3D, Manga, Kho AI)">
+          <span>+ Công cụ</span>
+        </button>
+        <div class="chatgpt-tools-menu" id="tools-popover-menu" hidden>
+          <div class="chatgpt-tools-grid">
+            <button type="button" class="chatgpt-tool-opt" data-tool-mode="image" data-tool-label="🎨 Tạo ảnh" data-tool-prefix="Tạo ảnh ">🎨 Tạo ảnh</button>
+            <button type="button" class="chatgpt-tool-opt" data-tool-mode="video" data-tool-label="🎬 Tạo video" data-tool-prefix="Tạo video ">🎬 Tạo video</button>
+            <button type="button" class="chatgpt-tool-opt" data-tool-mode="web" data-tool-label="🌐 Tra cứu web" data-tool-prefix="Tra cứu web ">🌐 Tra cứu web</button>
+            <button type="button" class="chatgpt-tool-opt" data-tool-mode="3d" data-tool-label="🧊 Tạo 3D" data-tool-prefix="Tạo mô hình 3D ">🧊 Tạo 3D</button>
+            <button type="button" class="chatgpt-tool-opt" data-tool-mode="manga" data-tool-label="📖 Dựng Manga" data-tool-prefix="Dựng Manga ">📖 Dựng Manga</button>
+            <button type="button" class="chatgpt-tool-opt" data-tool-mode="kho" data-tool-label="📦 Kho AI" data-tool-prefix="Tìm Kho AI ">📦 Kho AI</button>
+          </div>
+          <div class="chatgpt-tools-sub">
+            <div class="chatgpt-tools-sub-row">
+              <span>Tỉ lệ</span>
+              <div class="chatgpt-pill-group" id="pc-ratio-group">
+                <button type="button" class="chatgpt-mini-pill" data-ratio="1:1">1:1</button>
+                <button type="button" class="chatgpt-mini-pill active" data-ratio="3:4">3:4</button>
+                <button type="button" class="chatgpt-mini-pill" data-ratio="16:9">16:9</button>
+                <button type="button" class="chatgpt-mini-pill" data-ratio="9:16">9:16</button>
+              </div>
+            </div>
+            <div class="chatgpt-tools-sub-row">
+              <span>Định dạng</span>
+              <div class="chatgpt-pill-group" id="pc-format-group">
+                <button type="button" class="chatgpt-mini-pill active" data-format="PNG">PNG</button>
+                <button type="button" class="chatgpt-mini-pill" data-format="WEBP">WEBP</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
       <div class="agent-select-wrapper">
         <select id="agent-select" aria-label="Chọn tác nhân AI" title="Chọn tác nhân AI">
           <option value="CEO">Điều phối chính (CEO)</option>
@@ -6972,9 +7069,6 @@ body[data-theme="light"] .settings-modal-nav-btn.active {
       </div>
       <button type="button" class="tool-pill turbo-chip" id="btn-quick-calc" title="Máy tính số học 12+ chữ số trong 1ms">
         <span>⚡</span> <span>Siêu tốc 1ms</span>
-      </button>
-      <button type="button" class="tool-pill" id="btn-quick-studio" title="Mở Studio sáng tạo hoạt họa & Manga">
-        <span>🎬</span> <span>Studio Sáng tạo</span>
       </button>
       <button type="button" class="tool-pill" id="btn-quick-library" title="Mở Thư viện tệp & ảnh đã tạo/gửi">
         <span>📁</span> <span>Thư viện</span>
@@ -7030,6 +7124,22 @@ function renderMarkdown(text){
  s=escHtml(s);
  // Image Card Rendering for Generated Images & Attachments
  s=s.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<div class="chat-img-card"><div class="chat-img-wrap"><img src="$2" alt="$1" loading="lazy" /></div><div class="chat-img-footer"><span class="chat-img-title">🎨 $1</span><div class="chat-img-actions"><a href="$2" target="_blank" class="chat-img-btn">🔍 Xem lớn</a><a href="$2" download class="chat-img-btn primary">💾 Tải ảnh</a></div></div></div>');
+ // Video & Audio player rendering for markdown links and direct API media paths
+ const renderMediaLink = (label, url) => {
+  if (/(\.mp4|\.webm)(\?.*)?$|\/api\/video\/file\//i.test(url)) {
+   return `<div class="chat-media-card"><video controls playsinline preload="metadata" src="${url}"></video><div class="chat-img-footer"><span class="chat-img-title">🎬 ${label || 'Video'}</span><a href="${url}" download class="chat-img-btn primary">💾 Tải video</a></div></div>`;
+  }
+  if (/(\.mp3|\.wav)(\?.*)?$|\/api\/voice\/audio\//i.test(url)) {
+   return `<div class="chat-media-card"><audio controls preload="metadata" src="${url}"></audio><div class="chat-img-footer"><span class="chat-img-title">🔊 ${label || 'Âm thanh'}</span><a href="${url}" download class="chat-img-btn primary">💾 Tải audio</a></div></div>`;
+  }
+  return `<a href="${url}" target="_blank" rel="noopener">${label || url}</a>`;
+ };
+ s=s.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_, label, url) => renderMediaLink(label, url));
+ s=s.replace(/(^|[\s(>])((?:https?:\/\/[^\s<)]+|\/api\/(?:video\/file|voice\/audio)\/[^\s<)]+))(?=$|[\s)<.,!?])/gm, (m, lead, url) => {
+  if (/(\.mp4|\.webm)(\?.*)?$|\/api\/video\/file\//i.test(url)) return lead + renderMediaLink('Video', url);
+  if (/(\.mp3|\.wav)(\?.*)?$|\/api\/voice\/audio\//i.test(url)) return lead + renderMediaLink('Âm thanh', url);
+  return m;
+ });
  s=s.replace(/\*\*([^*\n]+)\*\*/g,'<strong>$1</strong>');
  s=s.replace(/__([^_\n]+)__/g,'<strong>$1</strong>');
  s=s.replace(/(?:^|[^*])\*([^*\n]+)\*(?!\*)/g,(match,p1)=>{
@@ -7658,14 +7768,113 @@ function setChatProgress(state,detail=''){
   }
  }
 }
+let activeToolMode = null;
+let pcAspectRatio = localStorage.getItem('ai-office-img-ratio') || '3:4';
+let pcOutputFormat = localStorage.getItem('ai-office-img-fmt') || 'PNG';
+let chatAbortController = null;
+
+function renderActiveToolChip() {
+ const bar = $('active-tool-chip-bar');
+ if (!bar) return;
+ if (!activeToolMode) {
+  bar.hidden = true;
+  bar.innerHTML = '';
+  return;
+ }
+ bar.hidden = false;
+ const showMediaMeta = ['image', 'video', 'manga'].includes(activeToolMode.mode);
+ const metaText = showMediaMeta ? ` · ${pcAspectRatio} · ${pcOutputFormat}` : '';
+ bar.innerHTML = `<span class="chatgpt-tool-chip"><span>${escHtml(activeToolMode.label)}</span><span class="chatgpt-tool-chip-meta">${escHtml(metaText)}</span><button type="button" class="chatgpt-tool-chip-x" id="clear-active-tool-btn" title="Bỏ công cụ">✕</button></span>`;
+ $('clear-active-tool-btn')?.addEventListener('click', () => {
+  activeToolMode = null;
+  document.querySelectorAll('#tools-popover-menu .chatgpt-tool-opt').forEach(b => b.classList.remove('active'));
+  renderActiveToolChip();
+ });
+}
+
+function setActiveToolMode(mode, label, prefix) {
+ activeToolMode = mode ? { mode, label, prefix } : null;
+ document.querySelectorAll('#tools-popover-menu .chatgpt-tool-opt').forEach(b => {
+  b.classList.toggle('active', b.dataset.toolMode === mode);
+ });
+ renderActiveToolChip();
+}
+
+(function initChatGptToolsMenu() {
+ const btn = $('btn-tools-menu');
+ const menu = $('tools-popover-menu');
+ if (btn && menu) {
+  btn.addEventListener('click', (e) => {
+   e.stopPropagation();
+   menu.hidden = !menu.hidden;
+  });
+  document.addEventListener('click', (e) => {
+   if (!menu.hidden && !e.target.closest('#chatgpt-tools-wrap')) menu.hidden = true;
+  });
+  menu.querySelectorAll('.chatgpt-tool-opt').forEach(opt => {
+   opt.addEventListener('click', () => {
+    const mode = opt.dataset.toolMode;
+    if (activeToolMode && activeToolMode.mode === mode) {
+     setActiveToolMode(null, '', '');
+    } else {
+     setActiveToolMode(mode, opt.dataset.toolLabel, opt.dataset.toolPrefix);
+    }
+    menu.hidden = true;
+    $('chatinput')?.focus();
+   });
+  });
+  menu.querySelectorAll('#pc-ratio-group .chatgpt-mini-pill').forEach(p => {
+   p.classList.toggle('active', p.dataset.ratio === pcAspectRatio);
+   p.addEventListener('click', () => {
+    pcAspectRatio = p.dataset.ratio || '3:4';
+    localStorage.setItem('ai-office-img-ratio', pcAspectRatio);
+    menu.querySelectorAll('#pc-ratio-group .chatgpt-mini-pill').forEach(x => x.classList.toggle('active', x === p));
+    renderActiveToolChip();
+   });
+  });
+  menu.querySelectorAll('#pc-format-group .chatgpt-mini-pill').forEach(p => {
+   p.classList.toggle('active', p.dataset.format === pcOutputFormat);
+   p.addEventListener('click', () => {
+    pcOutputFormat = p.dataset.format || 'PNG';
+    localStorage.setItem('ai-office-img-fmt', pcOutputFormat);
+    menu.querySelectorAll('#pc-format-group .chatgpt-mini-pill').forEach(x => x.classList.toggle('active', x === p));
+    renderActiveToolChip();
+   });
+  });
+ }
+ $('btn-cancel-chat-job')?.addEventListener('click', () => {
+  if (chatAbortController) chatAbortController.abort();
+ });
+})();
+
+function setToolStatusCard(visible, text = 'Đang dùng công cụ...') {
+ const card = $('chat-tool-status-card');
+ const label = $('chat-tool-status-text');
+ if (!card) return;
+ card.hidden = !visible;
+ if (label) label.textContent = text;
+}
+
 $('chatform').addEventListener('submit',async e=>{
  e.preventDefault();const typed=$('chatinput').value.trim();if(!typed&&!chatAttachments.length)return;
  if(currentAgent==='Workspace'&&!chatAttachments.length){$('chatinput').value='';addMsg('user',typed);addMsg('assistant','Em đã chuyển yêu cầu sang Trình chỉnh sửa Workspace. Chọn đường dẫn file để em đọc và tạo diff; file chưa bị sửa.');document.dispatchEvent(new CustomEvent('aioffice:open-workspace-editor',{detail:{goal:typed}}));return}
- const message=typed||'Hãy phân tích các tệp đính kèm và giải thích nội dung quan trọng.';
+ let rawMessage=typed||'Hãy phân tích các tệp đính kèm và giải thích nội dung quan trọng.';
+ const usedTool = activeToolMode;
+ if (usedTool && usedTool.prefix) {
+  const lower = rawMessage.toLowerCase();
+  const prefLower = usedTool.prefix.trim().toLowerCase();
+  if (!lower.startsWith(prefLower)) {
+   rawMessage = usedTool.prefix + rawMessage;
+  }
+ }
+ const message = rawMessage;
  const attachments=chatAttachments.map(({name,media_type,content,data_base64})=>({name,media_type,content:content||'',data_base64:data_base64||''}));
  const names=attachments.map(x=>x.name);$('chatinput').value='';resizeChatInput();chatAttachments=[];renderChatAttachments();
  addMsg('user',message+(names.length?'\n📎 '+names.join(', '):''));
- $('sendbtn').disabled=true;setChatProgress('running','Đang kết nối model Qwen3.5-4B local...');
+ $('sendbtn').disabled=true;
+ const statusLabel = usedTool ? `Đang dùng công cụ: ${usedTool.label}...` : 'Đang dùng công cụ & xử lý yêu cầu...';
+ setChatProgress('running','Đang kết nối model Qwen3.5-4B local...');
+ setToolStatusCard(true, statusLabel);
 
  const asstEl = addMsg('assistant', '');
  const asstBody = asstEl.querySelector('.msg-content') || asstEl;
@@ -7677,19 +7886,31 @@ $('chatform').addEventListener('submit',async e=>{
  let fullText = '';
  let finalConversationId = currentConversationId;
  let assistantMsgId = null;
+ chatAbortController = new AbortController();
 
  try{
+  const reqBody = {
+   message,
+   agent:currentAgent,
+   attachments,
+   conversation_id:currentConversationId,
+   aspect_ratio: pcAspectRatio,
+   output_format: pcOutputFormat
+  };
   let r = await fetch('/api/chat/stream',{
    method:'POST',
    headers:{'Content-Type':'application/json'},
-   body:JSON.stringify({message,agent:currentAgent,attachments,conversation_id:currentConversationId})
+   body:JSON.stringify(reqBody),
+   signal: chatAbortController.signal
   });
   if(r.status===404&&currentConversationId){
    currentConversationId='';
+   reqBody.conversation_id = '';
    r = await fetch('/api/chat/stream',{
     method:'POST',
     headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({message,agent:currentAgent,attachments,conversation_id:''})
+    body:JSON.stringify(reqBody),
+    signal: chatAbortController.signal
    });
   }
   if(!r.ok){
@@ -7751,15 +7972,19 @@ $('chatform').addEventListener('submit',async e=>{
   setChatProgress('done', 'Model local đã tạo phản hồi.');
  }catch(err){
   cursor.remove();
-  const errMsg = err.message || String(err);
+  const errMsg = err.name === 'AbortError' ? 'Đã hủy tác vụ theo yêu cầu.' : (err.message || String(err));
   if(!fullText){
-   asstBody.innerHTML = '<span style="color:var(--red)">Không thể hoàn thành: ' + escHtml(errMsg) + '</span>';
+   asstBody.innerHTML = err.name === 'AbortError'
+    ? '<em>Đã hủy tác vụ.</em>'
+    : '<span style="color:var(--red)">Không thể hoàn thành: ' + escHtml(errMsg) + '</span>';
   }else{
-   asstBody.innerHTML = renderMarkdown(fullText + '\n\n**[Gián đoạn: ' + errMsg + ']**');
+   asstBody.innerHTML = renderMarkdown(fullText + '\n\n**[' + (err.name === 'AbortError' ? 'Đã hủy' : 'Gián đoạn: ' + errMsg) + ']**');
   }
   updateSuggestionVisibility();
-  setChatProgress('error', errMsg);
+  setChatProgress(err.name === 'AbortError' ? 'done' : 'error', errMsg);
  }finally{
+  chatAbortController = null;
+  setToolStatusCard(false);
   $('sendbtn').disabled = false;
   $('chatinput').focus();
  }
@@ -9813,7 +10038,6 @@ async function navigate(view) {
 
   // Hook Quick Tools in Composer
   byId('btn-quick-attach-img')?.addEventListener('click', () => $('chat-files')?.click());
-  byId('btn-quick-studio')?.addEventListener('click', () => navigate('studio'));
   byId('btn-quick-calc')?.addEventListener('click', () => {
     $('chatinput').value = '123456789012 * 987654321098';
     triggerSmartIntentCheck();
@@ -9828,20 +10052,14 @@ async function navigate(view) {
     }
   });
 
-  // Hero Cards Listeners
+  // Hero Cards Listeners (Unified Chat Mode)
   byId('hero-card-motion')?.addEventListener('click', () => {
-    navigate('studio');
-    setTimeout(() => {
-      unifiedStudioActiveTab = 'motion';
-      renderUnifiedStudio();
-    }, 50);
+    setActiveToolMode('video', '🎬 Tạo video', 'Tạo video ');
+    $('chatinput')?.focus();
   });
   byId('hero-card-manga')?.addEventListener('click', () => {
-    navigate('studio');
-    setTimeout(() => {
-      unifiedStudioActiveTab = 'manga';
-      renderUnifiedStudio();
-    }, 50);
+    setActiveToolMode('manga', '📖 Dựng Manga', 'Dựng Manga ');
+    $('chatinput')?.focus();
   });
   byId('hero-card-code')?.addEventListener('click', () => navigate('workspace'));
   byId('hero-card-calc')?.addEventListener('click', () => {
@@ -9857,18 +10075,12 @@ async function navigate(view) {
     $('sendbtn')?.click();
   });
   byId('action-inpaint-btn')?.addEventListener('click', () => {
-    navigate('studio');
-    setTimeout(() => {
-      unifiedStudioActiveTab = 'inpaint';
-      renderUnifiedStudio();
-    }, 50);
+    setActiveToolMode('manga', '📖 Dựng Manga', 'Tẩy chữ bóng thoại ');
+    $('chatinput')?.focus();
   });
   byId('action-motion-btn')?.addEventListener('click', () => {
-    navigate('studio');
-    setTimeout(() => {
-      unifiedStudioActiveTab = 'motion';
-      renderUnifiedStudio();
-    }, 50);
+    setActiveToolMode('video', '🎬 Tạo video', 'Tạo video từ ảnh này ');
+    $('chatinput')?.focus();
   });
   byId('action-remove-img')?.addEventListener('click', () => {
     chatAttachments = chatAttachments.filter(x => x.kind !== 'image');
@@ -10428,10 +10640,6 @@ function updateWelcomeHeroVisibility() {
     <button type="button" class="gemini-drawer-item" data-drawer-view="library" onclick="closeMobileDrawer(); navigate('library');">
       <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></svg>
       <span>Thư viện</span>
-    </button>
-    <button type="button" class="gemini-drawer-item" data-drawer-view="studio" onclick="closeMobileDrawer(); navigate('studio');">
-      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
-      <span>Studio Sáng tạo</span>
     </button>
     <button type="button" class="gemini-drawer-item" data-drawer-view="workspace" onclick="closeMobileDrawer(); navigate('workspace');">
       <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
