@@ -433,13 +433,13 @@ async def run_comfy_workflow(
                     "model": [base_or_ref_model, 0],
                     "model_patch": ["14", 0],
                     "image": ["10", 0],
-                    "strength": 0.40,
+                    "strength": 0.45,
                     "start_percent": 0.0,
-                    "end_percent": 0.45,
+                    "end_percent": 0.70,
                 },
             }
             ksampler_model = ["15", 0]
-            default_denoise = 0.68
+            default_denoise = 0.72
         else:
             ksampler_model = [base_or_ref_model, 0]
             default_denoise = 0.48
@@ -449,8 +449,8 @@ async def run_comfy_workflow(
                 "seed": seed,
                 "steps": steps,
                 "cfg": cfg,
-                "sampler_name": "euler",
-                "scheduler": "simple",
+                "sampler_name": "er_sde",
+                "scheduler": "beta",
                 "denoise": denoise if denoise < 1.0 else default_denoise,
                 "model": ksampler_model,
                 "positive": ["4", 0],
@@ -1269,7 +1269,6 @@ async def handle_chat_image_generation(
         or bool(llm_outfit_tags)
     )
     keep_default_outfit = (not is_keep_ref_outfit) and (not is_custom_outfit) and (llm_keep_default is not False)
-
     known_outfit_specs = {
         "whispers of stars and smoke": (
             "wearing Citlali Whispers of Stars and Smoke sleepwear outfit, "
@@ -1444,12 +1443,12 @@ async def handle_chat_image_generation(
             prefix=prefix,
             width=width,
             height=height,
-            steps=25,
+            steps=30,
             cfg=4.5,
             timeout_secs=240,
             ref_image_name=effective_ref,
             init_image_name=effective_init,
-            denoise=0.52 if effective_init else 1.0,
+            denoise=0.72 if effective_init else 1.0,
             aspect_ratio=chosen_ratio,
             output_format=chosen_format,
         )

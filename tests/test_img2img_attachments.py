@@ -191,7 +191,7 @@ async def test_handle_chat_image_generation_triggers_vae_encode_and_denoise(tmp_
     assert wf["12"]["inputs"]["pixels"] == ["10", 0]
     assert "6" not in wf  # No EmptyLatentImage
     assert wf["7"]["inputs"]["latent_image"] == ["12", 0]
-    assert 0.48 <= wf["7"]["inputs"]["denoise"] <= 0.55
+    assert 0.48 <= wf["7"]["inputs"]["denoise"] <= 0.75
 
 
 def test_chat_stream_endpoint_passes_frontend_attachment_to_img2img(tmp_path: Path, monkeypatch):
@@ -290,13 +290,13 @@ async def test_run_comfy_workflow_with_lllite_patch(
             "model": [expected_base_model, 0],
             "model_patch": ["14", 0],
             "image": ["10", 0],
-            "strength": 0.40,
+            "strength": 0.45,
             "start_percent": 0.0,
-            "end_percent": 0.45,
+            "end_percent": 0.70,
         },
     }
     assert wf["7"]["inputs"]["model"] == ["15", 0]
-    assert wf["7"]["inputs"]["denoise"] == pytest.approx(0.68)
+    assert wf["7"]["inputs"]["denoise"] == pytest.approx(0.72)
 
 
 @pytest.mark.asyncio
@@ -333,7 +333,7 @@ async def test_run_comfy_workflow_without_lllite_patch(
     assert wf["7"]["inputs"]["denoise"] == pytest.approx(0.48)
 
     assert wf["7"]["inputs"]["latent_image"] == ["12", 0]
-    assert 0.48 <= wf["7"]["inputs"]["denoise"] <= 0.55
+    assert 0.48 <= wf["7"]["inputs"]["denoise"] <= 0.75
 
 
 
